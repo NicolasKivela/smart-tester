@@ -14,6 +14,9 @@ frontend/.idea
 
 # Poetry
 #backend/poetry.lock   # ❌ OPTIONAL: keep if you want always latest; ✅ RECOMMENDED: commit for reproducible builds
+__pycache__/
+*.pyc
+
 
 # Docker
 *.log
