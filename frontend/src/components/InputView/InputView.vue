@@ -99,26 +99,26 @@ const handleContinue = () => {
     
     <!-- File input -->
     <div class="titles">
-      <span>Add requirements file</span>
+      <span>Add requirements file <span class="required-input">*</span></span>
       <input type="file" @change="handleFileUpload" :key="fileInputKey"/>
       <p class="input-description">PDF (.pdf) or Text (.txt) file accepted</p>
     </div>
 
     <!-- URL input -->
     <div class="titles">
-      <span>URL</span>
+      <span>URL <span class="required-input">*</span></span>
       <input type="text" v-model="url" placeholder="URL" class="url-input"/>
     </div>
 
     <!-- Username input -->
     <div class="titles">
-      <span>Username</span>
+      <span>Username <small class="input-description">(optional)</small></span>
       <input type="text" v-model="username" placeholder="Username" class="text-input"/>
     </div>
 
     <!-- Password input -->
     <div class="titles">
-      <span>Password</span>
+      <span>Password <small class="input-description">(optional)</small></span>
       <input type="password" v-model="password" placeholder="Password" class="text-input"/>
     </div>
 
@@ -225,6 +225,10 @@ const handleContinue = () => {
   font-size: 18px;
   font-weight: bold;
   margin-bottom: 4px;
+}
+
+.required-input{
+  color: #cc0000be;
 }
 
 .input-description {
