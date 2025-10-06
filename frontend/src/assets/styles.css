@@ -1,0 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+body {
+  font-family: 'Inter', sans-serif;
+}
+
+button {
+  padding: 8px 14px;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  cursor: pointer;
+  height: 40px;
+}
+
+button.primary {
+  background: #1b7b7f;
+  color: white;
+}
+
+button.secondary {
+  background: #218a9138;
+  color: black;
+}
+
+.round-button {
+  border: none;
+  background-color: #218A91;
+  color: white;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
