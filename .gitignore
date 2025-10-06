@@ -17,7 +17,6 @@ frontend/.idea
 __pycache__/
 *.pyc
 
-
 # Docker
 *.log
 *.pid

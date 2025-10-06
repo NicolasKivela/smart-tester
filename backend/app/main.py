@@ -1,7 +1,6 @@
 from fastapi import FastAPI
+from .bdd_scenarios.router import router as bdd_router
 
 app = FastAPI()
 
-@app.get("/ping")
-def ping():
-    return {"ping": "pong"}
+app.include_router(bdd_router)
