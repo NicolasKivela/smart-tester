@@ -10,6 +10,10 @@ const generateTests = () => {
   // TODO: Implement generating tests logic
   console.log('Generating tests...')
 }
+
+const addEmptyScenario = () => {
+  bddScenarios.value.push('Feature: \n\tScenario: \n\tGiven \n\tWhen \n\tThen ')
+}
 </script>
 
 <template>
@@ -29,6 +33,9 @@ const generateTests = () => {
         @delete="bddScenarios.splice(index, 1)"
       />
     </ul>
+    <button class="primary add-button" @click="addEmptyScenario">
+      <span class="material-icons" style="font-size: 20px">add</span> Add New Scenario
+    </button>
   </div>
 </template>
 
@@ -57,5 +64,9 @@ const generateTests = () => {
 }
 button {
   flex: 2;
+}
+.add-button {
+  display: flex;
+  align-items: center;
 }
 </style>
