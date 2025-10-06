@@ -8,3 +8,6 @@ class BDD_Scenario(BaseModel):
     when: list
     then: list
 
+class Generate_BDD(BaseModel):
+    prompt: str
+    feature: str
