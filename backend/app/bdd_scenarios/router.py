@@ -1,7 +1,6 @@
 from fastapi import APIRouter
 from .schemas import BDD_Scenario
-
-BDD_SCENARIOS ={}
+from .storage import BDD_SCENARIOS
 router = APIRouter()
 
 @router.get("/bdd_scenarios",tags=["bdd_scenarios"])
