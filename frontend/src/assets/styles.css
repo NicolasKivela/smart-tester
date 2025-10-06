@@ -21,3 +21,15 @@ button.secondary {
   background: #218a9138;
   color: black;
 }
+
+.round-button {
+  border: none;
+  background-color: #218A91;
+  color: white;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

@@ -1,14 +1,24 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import BddCard from '@/components/ResultView/BddCard.vue'
+import { ref } from 'vue';
+
+const bddScenarios = ref(['Feature: Login\n\tScenario: Successful login\n\tGiven user on login page\n\tWhen valid credentials are entered\n\tThen redirect to dashboard\n\tAnd show welcome message'])
+
+const generateTests = () => {
+    // TODO: Implement generating tests logic
+    console.log('Generating tests...');
+}
+</script>
 
 <template>
     <div class="bdd-view">
         <div class="column">
             <h3 class="title">BDD Scenarios</h3>
-            <button class="primary">Generate Tests</button>
+            <button class="primary" @click="generateTests">Generate Tests</button>
         </div>
-        <div class="code-block">
-            BDD Scenarios
-        </div>
+        <ul v-for="(bddScenario, index) in bddScenarios" :key="index" style="list-style: none; padding-left: 0; margin-left: 0;">
+            <BddCard :modelValue="bddScenario" @update:modelValue="value => bddScenarios[index] = value" />
+        </ul>
     </div>
 </template>
 
