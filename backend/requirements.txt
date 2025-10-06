@@ -1,2 +1,0 @@
-litellm # Specify version in the future
-python-dotenv
