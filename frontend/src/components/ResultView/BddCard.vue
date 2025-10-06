@@ -8,7 +8,7 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'delete'])
 
 const bddScenario = ref(props.modelValue)
 
@@ -51,7 +51,7 @@ const rows = ref(bddScenario.value.split('\n').length)
       <button v-else class="round-button save-button" @click="saveEdited">
         <span class="material-icons" style="font-size: 20px">check</span>
       </button>
-      <button class="round-button delete-button">
+      <button class="round-button delete-button" @click="emit('delete')">
         <span class="material-icons" style="font-size: 20px">close</span>
       </button>
     </div>
