@@ -5,8 +5,8 @@ import ResultView from '@/components/ResultView/ResultView.vue'
 </script>
 
 <template>
+  <MainHeader />
   <div class="app">
-    <MainHeader />
     <InputView />
     <ResultView />
   </div>
@@ -14,6 +14,7 @@ import ResultView from '@/components/ResultView/ResultView.vue'
 
 <style scoped>
 .app {
+  margin-top: 50px;
   display: flex;
   flex-direction: column;
   gap: 1rem;
