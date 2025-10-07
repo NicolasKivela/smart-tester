@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import BddCard from '@/components/ResultView/BddCard.vue'
 import { ref } from 'vue'
+import { getBddScenarios } from '@/services/bddService.ts'
 
 const bddScenarios = ref([
   'Feature: Login\n\tScenario: Successful login\n\tGiven user on login page\n\tWhen valid credentials are entered\n\tThen redirect to dashboard\n\tAnd show welcome message',
@@ -14,6 +15,8 @@ const generateTests = () => {
 const addEmptyScenario = () => {
   bddScenarios.value.push('Feature: \n\tScenario: \n\tGiven \n\tWhen \n\tThen ')
 }
+
+getBddScenarios()
 </script>
 
 <template>
