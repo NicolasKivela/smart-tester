@@ -11,6 +11,8 @@ frontend/.vscode/*
 !frontend/.vscode/extensions.json
 frontend/.idea
 
+# Virtual environment
+venv
 
 # Poetry
 #backend/poetry.lock   # ❌ OPTIONAL: keep if you want always latest; ✅ RECOMMENDED: commit for reproducible builds
