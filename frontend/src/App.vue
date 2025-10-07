@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import MainHeader from '@/components/mainHeader.vue'
+import MainHeader from '@/components/MainHeader.vue'
 import InputView from '@/components/InputView/InputView.vue'
 import ResultView from '@/components/ResultView/ResultView.vue'
 </script>
