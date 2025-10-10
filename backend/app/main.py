@@ -1,8 +1,19 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from .bdd_scenarios.router import router as bdd_router
 from .test_script_generator.router import router as test_script_gen
 from .requirement_handling.router import router as req_processing
 app = FastAPI()
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5174"],  # Allow our frontend to access
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(bdd_router)
 app.include_router(test_script_gen)
 app.include_router(req_processing)
