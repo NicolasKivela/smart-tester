@@ -9,13 +9,20 @@ defineEmits(["close"]);
 </script>
 
 <template>
-  <div v-if="visible" class="popup-overlay">
-    <div class="popup">
+  <div v-if="visible" class="popup-overlay" data-testid="error-popup-overlay">
+    <div class="popup" data-testid="error-popup">
       <!-- Close button (X) -->
-      <button class="close-btn" @click="$emit('close')">&times;</button>
+      <button 
+        class="close-btn"
+        @click="$emit('close')"
+        data-testid="error-popup-close-btn">
+        &times;
+      </button>
 
       <!-- Error message -->
-      <p class="instruction-text error-instruction">{{ message }}</p>
+      <p class="instruction-text error-instruction" data-testid="error-popup-message">
+        {{ message }}
+      </p>
     </div>
   </div>
 </template>
