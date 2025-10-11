@@ -4,7 +4,7 @@ Author: Mikael Alamäki
 Implementation for abstract BaseAgent class:
 Gives the right context to LLM-agent for bdd scenario generation
 """
-from backend.app.common.base_agent import BaseAgent
+from app.common.base_agent import BaseAgent
 
 class   BddGenerationAgent(BaseAgent):
 
