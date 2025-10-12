@@ -37,3 +37,8 @@ docker-compose.override.yml  # local-only config
 # OS files
 .DS_Store
 Thumbs.db
+
+
+
+# Ignore Requirement handeling outputs
+/backend/app/requirement_handling/output/
