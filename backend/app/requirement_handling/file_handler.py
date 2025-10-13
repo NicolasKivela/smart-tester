@@ -1,28 +1,27 @@
 import re
+import io
 import pdfplumber
 from docx import Document
 
 
 
-def extract_text(file_path):
+def extract_text(file_bytes: bytes, filename: str):
     # Extract text from PDF, DOCX, or TXT file.
-
-    if file_path.endswith(".pdf"):
-        with pdfplumber.open(file_path) as pdf:
+    if filename.endswith(".pdf"):
+        with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
             text = "\n".join(page.extract_text() or "" for page in pdf.pages)
 
-    elif file_path.endswith(".docx"):
-        doc = Document(file_path)
+    elif filename.endswith(".docx"):
+        doc = Document(io.BytesIO(file_bytes))
         text = "\n".join(p.text for p in doc.paragraphs)
 
-    elif file_path.endswith(".txt"):
-        with open(file_path, "r", encoding="utf-8") as f:
-            text = f.read()
+    elif filename.endswith(".txt"):
+        text = file_bytes.decode("utf-8")
 
     else:
         raise ValueError("Unsupported file type")
-    return clean_text(text)
 
+    return clean_text(text)
 def clean_text(text):
     # Basic cleaning for whitespace and line breaks.
 

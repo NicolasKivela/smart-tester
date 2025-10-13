@@ -17,5 +17,7 @@ services:
       - "8010:8000"
     volumes:
       - ./backend:/app
+    env_file:
+      - .env
     environment:
       - PYTHONUNBUFFERED=1
