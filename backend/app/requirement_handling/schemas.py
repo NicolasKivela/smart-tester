@@ -8,6 +8,10 @@ class Req_Process(BaseModel):
     url: HttpUrl
     credentials: Credentials
 
+class Processed_Req(BaseModel):
+    id: int
+    feature: str
+    summary: str 
 class Req_Topics(BaseModel):
     # topics: list
-    topics: list[str]
+    topics: list[Processed_Req]

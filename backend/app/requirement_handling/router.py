@@ -23,4 +23,6 @@ async def process_requirements(json_item:str = Form(...), file: UploadFile = Fil
     process=RequirementsProcessor(json_item, text, req_file=file)
     process.run_pipeline()
     topics = process.topics
-    return {"message": "Requirements processed", "topics": topics}
+    global REQ_TOPICS
+    REQ_TOPICS = topics
+    return {"message": "Requirements processed", "topics": REQ_TOPICS}
