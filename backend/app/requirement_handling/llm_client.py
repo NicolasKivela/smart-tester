@@ -11,4 +11,3 @@ genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 # Initialize the model once and reuse
 client = genai.GenerativeModel("gemini-2.5-flash")
-print(client)

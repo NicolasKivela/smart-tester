@@ -19,8 +19,6 @@ async def fetch_requirement_topics():
 @router.post("/requirements",tags=["requirements"])
 async def process_requirements(json_item:str = Form(...), file: UploadFile = File(...)):
     content = await file.read()
-    with open("temp.pdf", "wb") as f:
-        f.write(content)
     text = extract_text(content,file.filename)
     process=RequirementsProcessor(json_item, text, req_file=file)
     process.run_pipeline()
