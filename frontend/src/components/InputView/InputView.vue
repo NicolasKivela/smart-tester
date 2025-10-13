@@ -2,12 +2,16 @@
 import { ref } from "vue";
 import ErrorPopup from '@/components/InputView/ErrorPopup.vue'
 import ProcessDataPopup from '@/components/InputView/ProcessDataPopup.vue'
+import { postRequirements, getTopics, postSelectedTopic } from '@/services/requirementService.ts'
 
 // Initialize inputs 
 const file = ref<File | null>(null);
 const url = ref("");
 const username = ref("");
 const password = ref("");
+
+// Storage for topics fetched from the backend
+const topics = ref<string[]>([]);
 
 // Key to force the file input to reset if inputs are resetted
 const fileInputKey = ref(0); 
@@ -53,23 +57,57 @@ const handleFileUpload = (event: Event) => {
 };
 
 // Show popup after clicking the "Process data button"
-// TODO: pass the inputs to the backend
-const processdata = () => {
+// TODO: add a loader screen while the backend processes the req. file
+const processdata = async () => {
   showError.value = false; // Reset URL error always
 
   try {
     // Try to validate URL
     new URL(url.value);
-    
-    // If successful, proceed to show the popup
-    showPopup.value = true;
   } 
-  catch (e) {
+  catch (error) {
     // If invalid, show error and reset url field
     errorMessage.value = "Please enter a valid URL!";
     showError.value = true;
     url.value = "";
+    return;
   }
+
+  // Construct a json out of the text inputs
+  const jsonItem = {
+    url: url.value,
+    username: username.value,
+    password: password.value,
+  };
+
+  // Just to validate what is passed to backend
+  console.log(file.value, jsonItem);
+
+  try {
+    // Post requirements to backend
+    await postRequirements(file.value!, jsonItem);
+
+  } catch (error) {
+    errorMessage.value = "Failed to POST requirements!";
+    showError.value = true;
+    return;  
+  }
+  
+  try {
+    // Get topics from backend
+    const getResponse = await getTopics();
+
+    // Assign topics
+    topics.value = getResponse;
+  
+  } catch (error) {
+    errorMessage.value = "Failed to GET topics!";
+    showError.value = true;
+    return;
+  }
+
+  // If everything went successfully, proceed to show the popup
+  showPopup.value = true;
 };
 
 // Reset the inputs
@@ -82,50 +120,93 @@ const resetInputs = () => {
 };
 
 // "Continue" button pressed in popup
-// String "selected" is the option selected to create BDD:s and tests to
-// TODO: pass the selected option to backend
-const handleContinue = (selected: string) => {
+// String "selected" is the option selected in the "Process Data" - popup
+// TODO: validate this actually works when the POST /bdd_scenarios/generate is actually implemented
+// Now always proceeds to error state, because POST /bdd_scenarios/generate does not exist.
+const handleContinue = async (selected: string) => {
     showPopup.value = false;
 
     // Show the selected option in console for now
     console.log("Selected option from popup:", selected);
+
+    try {
+    // Post the selected topic to backend
+    await postSelectedTopic(selected);
+
+  } catch (error) {
+    errorMessage.value = "Failed to POST the selected topic!";
+    showError.value = true;
+    return;  
+  }
+
 }
 
 </script>
 
 <template>
   <!-- Inputview -->  
-  <div class="inputview">
+  <div class="inputview" data-testid="inputview-component">
     
     <!-- File input -->
-    <div class="titles">
-      <span>Add requirements file <span class="required-input">*</span></span>
-      <input type="file" @change="handleFileUpload" :key="fileInputKey"/>
+    <div class="titles" data-testid="file-input-section">
+      <span>Add requirements file <span class="required-input" title="Required">*</span></span>
+      <input 
+        type="file"
+        @change="handleFileUpload" 
+        :key="fileInputKey"
+        data-testid="file-input"/>
       <p class="input-description">PDF (.pdf) or Text (.txt) file accepted</p>
     </div>
 
     <!-- URL input -->
-    <div class="titles">
-      <span>URL <span class="required-input">*</span></span>
-      <input type="text" v-model="url" placeholder="URL" class="url-input"/>
+    <div class="titles" data-testid="url-input-section">
+      <span>URL <span class="required-input"  title="Required">*</span></span>
+      <input 
+        type="text"
+        v-model="url"
+        placeholder="URL"
+        class="url-input"
+        data-testid="url-input"/>
     </div>
 
     <!-- Username input -->
-    <div class="titles">
+    <div class="titles" data-testid="username-input-section">
       <span>Username <small class="input-description">(optional)</small></span>
-      <input type="text" v-model="username" placeholder="Username" class="text-input"/>
+      <input 
+        type="text"
+        v-model="username"
+        placeholder="Username"
+        class="text-input"
+        data-testid="username-input"/>
     </div>
 
     <!-- Password input -->
-    <div class="titles">
+    <div class="titles" data-testid="password-input-section">
       <span>Password <small class="input-description">(optional)</small></span>
-      <input type="password" v-model="password" placeholder="Password" class="text-input"/>
+      <input 
+        type="password"
+        v-model="password"
+        placeholder="Password"
+        class="text-input"
+        data-testid="password-input"/>
     </div>
 
     <!-- Buttons -->
-    <div class="buttons">
-      <button class="primary" @click="processdata" :disabled="!file || !url.trim()">Process data</button>
-      <button class="secondary" @click="resetInputs">Reset Inputs</button>
+    <div class="buttons" data-testid="buttons-section">
+      <button 
+        class="primary"
+        @click="processdata"
+        :disabled="!file || !url.trim()"
+        data-testid="process-data-btn">
+        Process data
+      </button>
+
+      <button 
+        class="secondary"
+        @click="resetInputs"
+        data-testid="reset-inputs-btn">
+        Reset Inputs
+      </button>
     </div>
   </div>
 
@@ -134,13 +215,16 @@ const handleContinue = (selected: string) => {
     :visible="showError"
     :message="errorMessage"
     @close="showError = false"
+    data-testid="error-popup"
     />
 
     <!-- Process data popup -->
     <ProcessDataPopup
     :visible="showPopup"
+    :options="topics"
     @close="showPopup = false"
     @continue="handleContinue"
+    data-testid="processdata-popup"
     />
 
 </template>

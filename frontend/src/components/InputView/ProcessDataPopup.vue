@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
 
-const props = defineProps<{visible: boolean;}>();
+const props = defineProps<{
+  visible: boolean;
+  options: string[];
+}>();
 
 // Call for parent in case of an event
 defineEmits(["close", "continue"]);
-
-// Temporary list of the scenarios for demo effect
-// TODO: fetch the actual options of req. file from backend 
-const options = ["Login", "Checkout", "Add to cart"];
 
 // Selected option for implementing BDD:s
 const selectedOption = ref("");
@@ -27,31 +26,56 @@ watch(
 
 <template>
     <!-- Process data popup -->
-  <div v-if="visible" class="popup-overlay">
-    <div class="popup">
-
+  <div v-if="visible" class="popup-overlay" data-testid="process-popup-overlay">
+    <div class="popup" data-testid="processdata-popup">
 
       <!-- Close button (X) in top right -->
-      <button class="close-btn" @click="$emit('close')">&times;</button>
+      <button 
+        class="close-btn"
+        @click="$emit('close')"
+        data-testid="processdata-popup-close-btn">
+        &times;</button>
       
-      <h2>Requirements have been processed</h2>
+      <h2 data-testid="processdata-popup-title">Requirements have been processed</h2>
         <!-- Instruction text -->
-        <p class="instruction-text">Choose the feature you want to continue making BDD scenarios and tests for.</p>
+        <p class="instruction-text" data-testid="processdata-popup-instruction-text">
+          Choose the feature you want to continue making BDD scenarios and tests for.
+        </p>
 
       <!-- Radio Buttons -->
-      <div class="radio-group">
-        <label v-for="option in options" :key="option" class="radio-label">
-          <input type="radio" :value="option" v-model="selectedOption"/>
+      <div class="radio-group" data-testid="popup-radio-group">
+        <label 
+          v-for="option in props.options"
+          :key="option"
+          class="radio-label"
+          :data-testid="`popup-radio-${option.replace(/\s+/g, '-').toLowerCase()}`">
+
+          <input 
+            type="radio"
+            :value="option"
+            v-model="selectedOption"
+            data-testid="radio-input"/>
           {{ option }}
         </label>
       </div>
 
       <!-- Action Buttons -->
       <div class="popup-buttons">
-        <button class="secondary cancel-btn" @click="$emit('close')">Cancel</button>
-        <button class="primary continue-btn" @click="$emit('continue', selectedOption)" :disabled="!selectedOption" >Continue</button>
-      </div>
+        <button 
+          class="secondary cancel-btn"
+          @click="$emit('close')"
+          data-testid="processdata-popup-cancel-btn">
+          Cancel
+        </button>
 
+        <button 
+          class="primary continue-btn"
+          @click="$emit('continue', selectedOption)"
+          :disabled="!selectedOption"
+          data-testid="processdata-popup-continue-btn">
+          Continue
+        </button>
+      </div>
     </div>  
   </div>
 </template>
