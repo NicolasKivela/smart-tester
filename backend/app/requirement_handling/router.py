@@ -18,7 +18,8 @@ async def fetch_requirement_topics():
 async def process_requirements(json_item:str = Form(...), file: UploadFile = File(...)):
     content = await file.read()
     text = extract_text(content,file.filename)
-    process=RequirementsProcessor(json_item, text, req_file=file)
-    process.run_pipeline()
-    topics = process.topics
+    #process=RequirementsProcessor(json_item, text, req_file=file)
+    #process.run_pipeline()
+    #topics = process.topics
+    print("processing", REQUIREMENTS)
     return {"message": "Requirements processed", "Requirements": REQUIREMENTS}
