@@ -1,7 +1,6 @@
 # temporary storage
 from app.requirement_handling.schemas import Processed_Req
 REQ_TOPICS = []
-<<<<<<< HEAD
 REQUIREMENTS = {
     1: Processed_Req(
         id=1,
@@ -35,6 +34,3 @@ REQUIREMENTS = {
         ]
     )
 }
-=======
-REQUIREMENTS = {}
->>>>>>> feature/backend-requirement-handling
