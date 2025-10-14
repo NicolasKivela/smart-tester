@@ -2,19 +2,17 @@
 import json
 from fastapi import APIRouter, UploadFile, Form, File
 from .schemas import Req_Process, Req_Topics
-from .storage import REQ_TOPICS
 from .agents import RequirementAgent
 from .service import RequirementsProcessor
 from .file_handler import extract_text
-import json
 
+from .storage import REQ_TOPICS, REQUIREMENTS
 router = APIRouter()
 
 #Get requirement file features
 @router.get("/requirements", tags=["requirements"])
 async def fetch_requirement_topics():
-    return REQ_TOPICS
-
+    return REQUIREMENTS
 #Process requirements
 @router.post("/requirements",tags=["requirements"])
 async def process_requirements(json_item:str = Form(...), file: UploadFile = File(...)):

@@ -1,3 +1,4 @@
+from .storage import REQUIREMENTS
 from .agents import RequirementAgent
 from .save_file import save_to_file
 class RequirementsProcessor:
@@ -32,3 +33,5 @@ class RequirementsProcessor:
         self.summarize()
         # Detailed requirements
         reqs = self.get_requirements()
+def get_requirements(req_id):
+    return REQUIREMENTS[req_id]
