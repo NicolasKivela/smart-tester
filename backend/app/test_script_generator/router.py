@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from ..bdd_scenarios.storage import BDD_SCENARIOS
 from .storage import TEST_SCRIPTS
 router = APIRouter()
-@router.post("/test_scripts",tags=["test_scripts"])
+@router.post("/test_scripts/generate",tags=["test_scripts"])
 async def create_test(bdd_item_id: int):
     retrieve_bdd_item = BDD_SCENARIOS[bdd_item_id]
     locators = {}

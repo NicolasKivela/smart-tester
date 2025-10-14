@@ -10,6 +10,9 @@ services:
       - /app/node_modules  # prevent overwriting node_modules
     environment:
       - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+    networks:
+      - app-network
 
   backend:
     build: ./backend
@@ -17,5 +20,13 @@ services:
       - "8010:8000"
     volumes:
       - ./backend:/app
+    env_file:
+      - .env
     environment:
       - PYTHONUNBUFFERED=1
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
