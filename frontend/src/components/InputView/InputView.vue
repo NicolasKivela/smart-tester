@@ -10,8 +10,12 @@ const url = ref("");
 const username = ref("");
 const password = ref("");
 
-// Storage for topics fetched from the backend
-const topics = ref<string[]>([]);
+// Interface and storage for topics fetched from the backend
+interface Topic {
+  id: number;
+  name: string;
+}
+const topics = ref<Topic[]>([]);
 
 // Key to force the file input to reset if inputs are resetted
 const fileInputKey = ref(0); 
@@ -98,7 +102,10 @@ const processdata = async () => {
     const getResponse = await getTopics();
 
     // Assign topics
-    topics.value = getResponse;
+    topics.value = Object.values(getResponse).map((item: any) => ({
+      id: item.id,
+      name: item.feature,
+    }));
   
   } catch (error) {
     errorMessage.value = "Failed to GET topics!";
@@ -120,18 +127,17 @@ const resetInputs = () => {
 };
 
 // "Continue" button pressed in popup
-// String "selected" is the option selected in the "Process Data" - popup
-// TODO: validate this actually works when the POST /bdd_scenarios/generate is actually implemented
-// Now always proceeds to error state, because POST /bdd_scenarios/generate does not exist.
-const handleContinue = async (selected: string) => {
+// Number "selected" is the topic's id selected in the "Process Data" - popup
+const handleContinue = async (selected: number) => {
     showPopup.value = false;
 
     // Show the selected option in console for now
-    console.log("Selected option from popup:", selected);
+    console.log("Selected topic ID:", selected);
 
     try {
-    // Post the selected topic to backend
-    await postSelectedTopic(selected);
+    // Post the selected topic's id to backend
+    const response = await postSelectedTopic(selected);
+    console.log(response);
 
   } catch (error) {
     errorMessage.value = "Failed to POST the selected topic!";

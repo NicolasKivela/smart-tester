@@ -36,11 +36,12 @@ const getTopics = async () =>{
 }
 
 // Post the selected topic to backend
-const postSelectedTopic = async (selected: string) => {
+const postSelectedTopic = async (id: number) => {
 
     try {
-        const response = await axios.post(API_URL + '/bdd_scenarios/generate', selected);
-
+        const response = await axios.post(`${API_URL}/bdd_scenarios/generate/${id}`, 
+        null, { params: { item_id: id }});
+        
         return response.data;
     } catch (error: any) {
         throw error;

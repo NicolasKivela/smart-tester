@@ -3,21 +3,21 @@ import { ref, watch } from "vue";
 
 const props = defineProps<{
   visible: boolean;
-  options: string[];
+  options: { id: number; name: string }[];
 }>();
 
 // Call for parent in case of an event
 defineEmits(["close", "continue"]);
 
 // Selected option for implementing BDD:s
-const selectedOption = ref("");
+const selectedOption = ref<number | null>(null);
 
 // Reset the selectedOption when opening the popup
 watch(
   () => props.visible,
   (newVal) => {
     if (newVal) {
-      selectedOption.value = ""; // Reset immediately when popup opens
+      selectedOption.value = null; // Reset immediately when popup opens
     }
   }
 );
@@ -46,16 +46,16 @@ watch(
       <div class="radio-group" data-testid="popup-radio-group">
         <label 
           v-for="option in props.options"
-          :key="option"
+          :key="option.id"
           class="radio-label"
-          :data-testid="`popup-radio-${option.replace(/\s+/g, '-').toLowerCase()}`">
+          :data-testid="`popup-radio-${option.name.replace(/\s+/g, '-').toLowerCase()}`">
 
           <input 
             type="radio"
-            :value="option"
+            :value="option.id"
             v-model="selectedOption"
-            data-testid="radio-input"/>
-          {{ option }}
+            :data-testid="`radio-input-${option.id}`" />
+          {{ option.name }}
         </label>
       </div>
 
