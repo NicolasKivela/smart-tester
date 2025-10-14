@@ -26,7 +26,7 @@ class RequirementsProcessor:
         return requirements
 
     def run_pipeline(self):
-        
+        #TODO: Combine all these components and form Processed_Req objects from them and save to REQUIREMENTS dict in storage
         self.process_req_document()
         # Summaries
         self.summarize()
