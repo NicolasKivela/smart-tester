@@ -12,7 +12,7 @@ const emit = defineEmits(['updateTests', 'start-tests-loader', 'stop-tests-loade
 
 const mutatedBddScenarios = ref<BddScenario[]>(props.bddScenarios)
 
-// TODO: remove unneccessary timeouts once actual logic is implemented
+// TODO: remove unnecessary timeouts once actual logic is implemented
 const generateTests = async () => {
   // Start loader
   emit('start-tests-loader', 'Generating tests, please wait...')
@@ -28,7 +28,7 @@ const generateTests = async () => {
 
   emit('updateTests', testScripts)
 
-  // Start loader
+  // Stop loader
   emit('stop-tests-loader')
 }
 

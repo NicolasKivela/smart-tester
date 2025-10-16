@@ -63,7 +63,7 @@ const handleFileUpload = (event: Event) => {
 }
 
 // Show popup after clicking the "Process data button"
-// TODO: remove unneccessary timeouts once actual logic is implemented
+// TODO: remove unnecessary timeouts once actual logic is implemented
 const processdata = async () => {
   showError.value = false // Reset URL error always
 
