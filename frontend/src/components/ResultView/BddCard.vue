@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import type { BddScenario } from './types'
 
 const props = defineProps({
   modelValue: {
-    type: String,
+    type: Object as () => BddScenario,
     required: true,
   },
 })
 
-const emit = defineEmits(['update:modelValue', 'delete'])
+const emit = defineEmits(['updateScenario', 'delete'])
 
 const bddScenario = ref(props.modelValue)
+const bddScenarioString = ref()
 
 watch(
   () => props.modelValue,
@@ -21,15 +23,16 @@ watch(
 
 const saveEdited = () => {
   editable.value = false
-  updateValue()
-}
-
-const updateValue = () => {
-  emit('update:modelValue', bddScenario.value)
+  emit('updateScenario', bddScenario.value)
 }
 
 const editable = ref(false)
-const rows = ref(bddScenario.value.split('\n').length)
+const rows = ref(
+  2 +
+    bddScenario.value.given.length +
+    bddScenario.value.when.length +
+    bddScenario.value.then.length,
+)
 </script>
 
 <template>
@@ -37,14 +40,31 @@ const rows = ref(bddScenario.value.split('\n').length)
     <div class="bdd-text">
       <textarea
         v-if="editable"
-        v-model="bddScenario"
+        :v-model="bddScenarioString"
         cols="50"
         :rows="rows"
         @blur="saveEdited"
       ></textarea>
-      <span v-else> {{ bddScenario }}</span>
+      <div v-else>
+        <span>Feature: {{ bddScenario.feature }}<br /></span>
+        <span>Scenario: {{ bddScenario.scenario }}<br /></span>
+        <div style="margin-left: 20px">
+          <span>Given {{ bddScenario.given[0] }}<br /></span>
+          <span v-for="(given, index) in bddScenario.given.slice(1)" :key="index"
+            >And {{ given }}<br
+          /></span>
+          <span>When {{ bddScenario.when[0] }}<br /></span>
+          <span v-for="(when, index) in bddScenario.when.slice(1)" :key="index"
+            >And {{ when }}<br
+          /></span>
+          <span>Then {{ bddScenario.then[0] }}<br /></span>
+          <span v-for="(then, index) in bddScenario.then.slice(1)" :key="index"
+            >And {{ then }}<br
+          /></span>
+        </div>
+      </div>
     </div>
-    <div class="actions">
+    <!-- <div class="actions">
       <button v-if="!editable" class="round-button edit-button" @click="editable = true">
         <span class="material-icons" style="font-size: 20px">edit</span>
       </button>
@@ -54,7 +74,7 @@ const rows = ref(bddScenario.value.split('\n').length)
       <button class="round-button delete-button" @click="emit('delete')">
         <span class="material-icons" style="font-size: 20px">close</span>
       </button>
-    </div>
+    </div> -->
   </div>
 </template>
 

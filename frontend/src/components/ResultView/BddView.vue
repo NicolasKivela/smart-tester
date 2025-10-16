@@ -1,22 +1,44 @@
 <script setup lang="ts">
 import BddCard from '@/components/ResultView/BddCard.vue'
-import { ref } from 'vue'
-import { getBddScenarios } from '@/services/bddService.ts'
+import { watch, ref } from 'vue'
+import type { BddScenario } from './types'
+import { postBddIds } from '@/services/resultsService.ts'
 
-const bddScenarios = ref([
-  'Feature: Login\n\tScenario: Successful login\n\tGiven user on login page\n\tWhen valid credentials are entered\n\tThen redirect to dashboard\n\tAnd show welcome message',
-])
+const props = defineProps<{
+  bddScenarios: BddScenario[]
+}>()
 
-const generateTests = () => {
-  // TODO: Implement generating tests logic
-  console.log('Generating tests...')
+const emit = defineEmits(['updateTests'])
+
+const mutatedBddScenarios = ref<BddScenario[]>(props.bddScenarios)
+
+const generateTests = async () => {
+  let testScripts = []
+  for (const scenario of mutatedBddScenarios.value) {
+    const result = await postBddIds(scenario.id)
+    testScripts = result
+  }
+
+  emit('updateTests', testScripts)
 }
 
-const addEmptyScenario = () => {
-  bddScenarios.value.push('Feature: \n\tScenario: \n\tGiven \n\tWhen \n\tThen ')
-}
+// const addEmptyScenario = () => {
+//   mutatedBddScenarios.value.push({
+//     feature: 'New Feature',
+//     scenario: 'New Scenario',
+//     given: [''],
+//     when: [''],
+//     then: [''],
+//   })
+// }
 
-getBddScenarios()
+watch(
+  () => props.bddScenarios,
+  (newValue) => {
+    mutatedBddScenarios.value = newValue
+    console.log(mutatedBddScenarios.value)
+  },
+)
 </script>
 
 <template>
@@ -25,20 +47,22 @@ getBddScenarios()
       <h3 class="title">BDD Scenarios</h3>
       <button class="primary" @click="generateTests">Generate Tests</button>
     </div>
-    <ul
-      v-for="(bddScenario, index) in bddScenarios"
-      :key="index"
-      style="list-style: none; padding-left: 0; margin-left: 0"
-    >
-      <BddCard
-        :modelValue="bddScenario"
-        @update:modelValue="(value) => (bddScenarios[index] = value)"
-        @delete="bddScenarios.splice(index, 1)"
-      />
-    </ul>
-    <button class="primary add-button" @click="addEmptyScenario">
+    <div class="scrollable-section">
+      <ul
+        v-for="(bddScenario, index) in bddScenarios"
+        :key="index"
+        style="list-style: none; padding-left: 0; margin-left: 0"
+      >
+        <BddCard
+          :modelValue="bddScenario"
+          @update-scenario="(value) => (mutatedBddScenarios[index] = value)"
+          @delete="mutatedBddScenarios.splice(index, 1)"
+        />
+      </ul>
+      <!-- <button class="primary add-button" @click="addEmptyScenario">
       <span class="material-icons" style="font-size: 20px">add</span> Add New Scenario
-    </button>
+    </button> -->
+    </div>
   </div>
 </template>
 
@@ -47,13 +71,13 @@ getBddScenarios()
   border: 2px solid #ccc;
   padding: 1rem;
   border-radius: 4px;
+  height: calc(100vh - 275px);
+  display: flex;
+  flex-direction: column;
 }
-.code-block {
-  background-color: black;
-  color: white;
-  height: 400px;
-  border-radius: 4px;
-  padding: 1rem;
+.scrollable-section {
+  flex: 1;
+  overflow-y: auto;
 }
 .column {
   display: flex;
