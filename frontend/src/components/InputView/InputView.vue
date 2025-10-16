@@ -4,6 +4,9 @@ import ErrorPopup from '@/components/InputView/ErrorPopup.vue'
 import ProcessDataPopup from '@/components/InputView/ProcessDataPopup.vue'
 import { postRequirements, getTopics, postSelectedTopic } from '@/services/requirementService.ts'
 
+// Emits for loader functionality and bdd scenario updates
+const emit = defineEmits(['start-loader', 'stop-loader', 'bddScenariosUpdated'])
+
 // Initialize inputs
 const file = ref<File | null>(null)
 const url = ref('')
@@ -29,8 +32,6 @@ const errorMessage = ref('')
 
 // Popup visibility variable
 const showPopup = ref(false)
-
-const emit = defineEmits(['bddScenariosUpdated'])
 
 // Handle file input
 const handleFileUpload = (event: Event) => {
@@ -62,7 +63,7 @@ const handleFileUpload = (event: Event) => {
 }
 
 // Show popup after clicking the "Process data button"
-// TODO: add a loader screen while the backend processes the req. file
+// TODO: remove unneccessary timeouts once actual logic is implemented
 const processdata = async () => {
   showError.value = false // Reset URL error always
 
@@ -86,6 +87,12 @@ const processdata = async () => {
 
   // Just to validate what is passed to backend
   console.log(file.value, jsonItem)
+
+  // Start loader
+  emit('start-loader',"Processing requirements, please wait...");
+
+  // Timeout for demoing the loader while no actual processing is done
+  await new Promise((resolve) => setTimeout(resolve, 1000));
 
   try {
     // Post requirements to backend
@@ -111,6 +118,9 @@ const processdata = async () => {
     return
   }
 
+  // Stop the loader
+  emit('stop-loader')
+
   // If everything went successfully, proceed to show the popup
   showPopup.value = true
 }
@@ -132,12 +142,15 @@ const handleContinue = async (selected: number) => {
   // Show the selected option in console for now
   console.log('Selected topic ID:', selected)
 
+  emit('start-loader',"Generating BDD scenarios, please wait...");
+
   try {
     // Post the selected topic's id to backend
     const response = await postSelectedTopic(selected)
 
     // Emit the generated scenarios to parent component
     emit('bddScenariosUpdated', response.generated_scenarios)
+    emit('stop-loader')
   } catch (error) {
     errorMessage.value = 'Failed to POST the selected topic!'
     showError.value = true

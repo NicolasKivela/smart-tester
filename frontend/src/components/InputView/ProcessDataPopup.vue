@@ -1,23 +1,23 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, watch } from 'vue';
 
 const props = defineProps<{
-  visible: boolean;
-  options: { id: number; name: string }[];
+  visible: boolean
+  options: { id: number; name: string }[]
 }>();
 
 // Call for parent in case of an event
-defineEmits(["close", "continue"]);
+defineEmits(['close', 'continue'])
 
 // Selected option for implementing BDD:s
-const selectedOption = ref<number | null>(null);
+const selectedOption = ref<number | null>(null)
 
 // Reset the selectedOption when opening the popup
 watch(
   () => props.visible,
   (newVal) => {
     if (newVal) {
-      selectedOption.value = null; // Reset immediately when popup opens
+      selectedOption.value = null // Reset immediately when popup opens
     }
   }
 );

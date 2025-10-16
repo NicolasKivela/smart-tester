@@ -8,11 +8,18 @@ const props = defineProps<{
   bddScenarios: BddScenario[]
 }>()
 
-const emit = defineEmits(['updateTests'])
+const emit = defineEmits(['updateTests', 'start-tests-loader', 'stop-tests-loader'])
 
 const mutatedBddScenarios = ref<BddScenario[]>(props.bddScenarios)
 
+// TODO: remove unneccessary timeouts once actual logic is implemented
 const generateTests = async () => {
+  // Start loader
+  emit('start-tests-loader', 'Generating tests, please wait...')
+
+  // Timeout for demoing the loader while no actual processing is done
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
   let testScripts = []
   for (const scenario of mutatedBddScenarios.value) {
     const result = await postBddIds(scenario.id)
@@ -20,6 +27,9 @@ const generateTests = async () => {
   }
 
   emit('updateTests', testScripts)
+
+  // Start loader
+  emit('stop-tests-loader')
 }
 
 // const addEmptyScenario = () => {
