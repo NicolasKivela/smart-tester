@@ -1,16 +1,25 @@
 import os
+import json
 from app.requirement_handling.file_handler import extract_text
 from app.requirement_handling.topic_detection import detect_topics
 from app.requirement_handling.topic_summary import summarize_topic
 from app.requirement_handling.requirement_extractor import extract_requirements
 from app.requirement_handling.save_file import save_to_file
 
+
 OUTPUT_DIR = "app/requirement_handling/output"
 
 
 def process_document(file_path):
-    # Extract text
-    text = extract_text(file_path)
+    # Ensure output directory exists
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+    # Extract filename and text
+    filename = os.path.basename(file_path)
+    with open(file_path, "rb") as f:
+        file_bytes = f.read()
+
+    text = extract_text(file_bytes, filename)
 
     # PASS 1: Detect Topics
     topics = detect_topics(text)
@@ -50,9 +59,8 @@ def process_document(file_path):
 
 if __name__ == "__main__":
     FILE_PATH = "app/requirement_handling/vaatimukset.pdf"  # Replace with your PDF file path
-
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
     process_document(FILE_PATH)
+
     """
     text = extract_text(FILE_PATH)
     print("Extracting text...")
