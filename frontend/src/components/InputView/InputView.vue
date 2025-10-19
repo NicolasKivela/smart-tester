@@ -98,6 +98,7 @@ const processdata = async () => {
     // Post requirements to backend
     await postRequirements(file.value!, jsonItem)
   } catch (error) {
+    emit('stop-loader')
     errorMessage.value = 'Failed to POST requirements!'
     showError.value = true
     return
@@ -113,6 +114,7 @@ const processdata = async () => {
       name: item.feature,
     }))
   } catch (error) {
+    emit('stop-loader')
     errorMessage.value = 'Failed to GET topics!'
     showError.value = true
     return
@@ -152,6 +154,7 @@ const handleContinue = async (selected: number) => {
     emit('bddScenariosUpdated', response.generated_scenarios)
     emit('stop-loader')
   } catch (error) {
+    emit('stop-loader')
     errorMessage.value = 'Failed to POST the selected topic!'
     showError.value = true
     return
