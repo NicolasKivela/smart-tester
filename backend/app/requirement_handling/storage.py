@@ -11,7 +11,8 @@ REQUIREMENTS = {
             "User can log in with valid credentials",
             "Invalid credentials return error message",
             "Password must be hashed in the database"
-        ]
+        ],
+        bdd_scenarios={}
     ),
     2: Processed_Req(
         id=2,
@@ -21,7 +22,8 @@ REQUIREMENTS = {
             "User can update name, email, and phone number",
             "Email must be unique across all accounts",
             "Profile picture upload supported (JPG, PNG)"
-        ]
+        ],
+        bdd_scenarios={}
     ),
     3: Processed_Req(
         id=3,
@@ -31,6 +33,7 @@ REQUIREMENTS = {
             "Projects are listed with name, status, and deadline",
             "Search and filter functionality",
             "Dashboard auto-refresh every 60 seconds"
-        ]
+        ],
+        bdd_scenarios={}
     )
 }
