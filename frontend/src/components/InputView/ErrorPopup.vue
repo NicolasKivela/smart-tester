@@ -1,11 +1,12 @@
 <script setup lang="ts">
+
 defineProps<{
-  visible: boolean;
-  message: string;
+  visible: boolean
+  message: string
 }>();
 
 // Call for parent in case of an event
-defineEmits(["close"]);
+defineEmits(['close'])
 </script>
 
 <template>
