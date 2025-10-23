@@ -60,7 +60,7 @@ async def navigate_site(start_url: str, task: str, max_depth=2):
             await asyncio.sleep(2)
             await handle_cookies(page)
 
-            locators = agent.execute(url, task)
+            locators = await agent.execute(url, task)
             if not locators:
                 print("⚠️ Ei relevantteja lokaattoreita tälle sivulle.")
                 return
