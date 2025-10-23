@@ -21,16 +21,19 @@ class LocatorRetrievalAgent:
             with open(self.output_file, "w", encoding="utf-8") as f:
                 json.dump({"locators": []}, f, indent=2, ensure_ascii=False)
 
-    def execute(self, url: str, task: str) -> list:
-        scraped = scrape_interactive_elements(url)
+    async def execute(self, url: str, task: str) -> list:
+        scraped_elements = await scrape_interactive_elements(url)
         print(f"🧠 Analysoidaan {url} tehtävällä: {task}")
+
+        # Muotoillaan kaavittu data selkeämmin kehotteeseen
+        html_snippets = "\n".join(scraped_elements)
 
         prompt = f"""
         You are a senior Test Automation Engineer using Playwright.
 
         Your task is: "{task}" on page: {url}
 
-        I have scraped all interactive elements. 
+        I have scraped all interactive elements and here is the raw HTML for them.
         Please identify **all potentially useful locators** for this task, including:
         - main menu buttons
         - category links
@@ -50,7 +53,7 @@ class LocatorRetrievalAgent:
         }}
 
         Here are all scraped elements:
-        {scraped}
+        {html_snippets}
         """
 
         response = client.models.generate_content(
