@@ -37,3 +37,17 @@ REQUIREMENTS = {
         bdd_scenarios={}
     )
 }
+class db_requirements():
+    def get_req_by_id(id):
+        try:
+            return REQUIREMENTS[id]    
+        except:
+            print(f"Requirement by {id} cannot be found")
+            return
+    def save_bdd_scenarios(id,bdd_scenarios):
+        try:
+            REQUIREMENTS[id].bdd_scenarios = bdd_scenarios
+            return "bdd_scenarios updated succesfully"
+        except:
+            print("error when updating requirements data")
+            return

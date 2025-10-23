@@ -7,7 +7,7 @@ and locators by calling LLM agent. Assembles all outputs to a single string
 
 import json
 
-from script_gen_agent import ScriptGenAgent
+from app.test_script_generator.script_gen_agent import ScriptGenAgent
 
 SECTION_MARKER_START_INDEX = 3
 
@@ -34,6 +34,7 @@ class ScriptGen:
         :param locators: target locators as JSON
         :return: result: robotframework test script as JSON object
         """
+        print("features here",features)
 
         for feature in features:
             response = self.__call_agent(feature, locators, login)
@@ -235,14 +236,18 @@ class ScriptGen:
         :param login: known valid login information as JSON
         :return: LLM response as string
         """
+        print(feature)
+        feature_desc=str(feature.summary)
+        scenarios=str(feature.bdd_scenarios)
+        print(feature_desc)
 
-        feature_desc = feature[0] + "\n"
-        test_case_list = feature[1]
+ #       feature_desc = feature[0] + "\n"
+#        test_case_list = feature[1]
 
-        scenarios = ""
+#        scenarios = ""
 
-        for test_case in test_case_list:
-            scenarios += test_case + "\n"
+        #for test_case in test_case_list:
+         #   scenarios += test_case + "\n"
 
         if self.__keywords_str == "":
             keywords = "No available keywords\n"
@@ -255,7 +260,7 @@ class ScriptGen:
             "\nLocators as JSON:\n\n" + json.dumps(locators) +
             "\nUsable keywords:\n\n" + keywords +
             "\nUsable variables: \n\n" + json.dumps(self.__variables) +
-            "\nLogin information as JSON:\n\n" + login
+            "\nLogin information as JSON:\n\n" + str(login)
         )
         agent_obj = ScriptGenAgent()
         return agent_obj.execute_task(LLM_input)
