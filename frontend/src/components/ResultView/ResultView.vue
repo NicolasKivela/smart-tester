@@ -6,19 +6,22 @@ import { ref } from 'vue'
 // Emits for loader functionality
 const emit = defineEmits(['start-loader', 'stop-loader'])
 
-defineProps({
+const props = defineProps({
   bddScenarios: {
     type: Array,
     required: true,
   },
+  featureId: {
+    type: Number,
+    required: true,
+  }
 })
-
-const testScripts = ref([])
+console.log("feature id in resultview", props.featureId)
+const testScripts = ref()
 
 const handleTests = (tests) => {
-  for (const key in tests) {
-    testScripts.value.push(tests[key].content)
-  }
+  console.log(tests)
+  testScripts.value = tests
 }
 
 // To pass loader events in BddView.vue to App.vue
@@ -35,6 +38,7 @@ const loaderStop = (message: string) =>{
   <div class="column">
     <BddView
       :bdd-scenarios="bddScenarios"
+      :feature-id="featureId"
       @update-tests="handleTests"
       @start-tests-loader="loaderStart"
       @stop-tests-loader="loaderStop"

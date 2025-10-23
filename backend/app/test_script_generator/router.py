@@ -9,7 +9,6 @@ async def create_test(feature_id: int):
     process = ScriptGen()
     
     feature_data = db_requirements.get_req_by_id(feature_id)
-    print(feature_data)
     if not feature_data:
         return f"Feature not found with id:{feature_id}"
     bdd_scenarios= feature_data.bdd_scenarios
@@ -22,7 +21,7 @@ async def create_test(feature_id: int):
     db_test_scripts.save_testscript(id, feature_id=feature_id,
                                     bdd_scenarios=bdd_scenarios,script_code=result
                                     )
-    return "Test scripts generated successfully"
+    return result
     
 @router.get("/test_scripts",tags=["test_scripts"])
 async def fetch_test(test_item_id: int):

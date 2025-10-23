@@ -29,7 +29,7 @@ async def generate_bdd_scenarios(item_id:int):
     for bdd in generated_bdds:
         print(bdd)
         BDD_SCENARIOS[bdd.id]= bdd.model_dump()
-        db_bdd_scenarios.save_bdd_scenarios(item_id,BDD_SCENARIOS[bdd.id])
+        db_bdd_scenarios.add_bdd_scenarios(item_id,BDD_SCENARIOS[bdd.id])
     return {"message": "BDDs generated succesfully", "generated_scenarios": generated_bdds}
 
 

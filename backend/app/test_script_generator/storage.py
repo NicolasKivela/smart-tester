@@ -18,13 +18,11 @@ class db_test_scripts():
     def get_keywords():
         return
     def save_testscript(id, feature_id, bdd_scenarios,script_code):
-        print(script_code)
-        print(type(script_code))
         try:
             script_code = json.loads(script_code)
             bdd_ids = []
-            for bdd in bdd_ids:
-                bdd_ids.append(bdd.id)
+            for bdd in bdd_scenarios:
+                bdd_ids.append(bdd.get("id"))
             TEST_SCRIPTS[id] = test_script(id=id,feature_id=feature_id,
                                        bdd_ids=bdd_ids, script_code=script_code["test_script"]
                                        )

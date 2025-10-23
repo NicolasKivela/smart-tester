@@ -6,7 +6,7 @@ import ResultView from '@/components/ResultView/ResultView.vue'
 import LoaderView from './components/LoaderView/LoaderView.vue'
 
 const bddScenarios = ref([])
-
+const chosenFeature = ref(Number)
 // Loader states
 const isLoading = ref(false)
 const loadingMessage = ref('')
@@ -14,7 +14,10 @@ const loadingMessage = ref('')
 const handleBddScenarios = (scenarios) => {
   bddScenarios.value = scenarios
 }
-
+const handleFeatures = (feature_id) => {
+  chosenFeature.value = feature_id
+  console.log("THIS IS THE CHOSEN FEATURE ID",chosenFeature.value)
+}
 // Loader start/stop functions
 const startLoader = (message: string) => {
   loadingMessage.value = message
@@ -31,11 +34,13 @@ const stopLoader = () => {
   <div class="app">
     <InputView 
       @bdd-scenarios-updated="handleBddScenarios"
+      @chosen-feature-updated="handleFeatures"
       @start-loader="startLoader"
       @stop-loader="stopLoader"
     />
     <ResultView 
       :bdd-scenarios="bddScenarios"
+      :feature-id="chosenFeature"
       @start-loader="startLoader"
       @stop-loader="stopLoader"
     />

@@ -1,17 +1,18 @@
 <script setup lang="ts">
 import BddCard from '@/components/ResultView/BddCard.vue'
 import { watch, ref } from 'vue'
-import type { BddScenario } from './types'
+import type { BddScenario, Feature } from './types'
 import { postBddIds } from '@/services/resultsService.ts'
 
 const props = defineProps<{
   bddScenarios: BddScenario[]
+  featureId: Number
 }>()
 
 const emit = defineEmits(['updateTests', 'start-tests-loader', 'stop-tests-loader'])
 
 const mutatedBddScenarios = ref<BddScenario[]>(props.bddScenarios)
-
+const feature = ref<Number>(props.featureId)
 // TODO: remove unnecessary timeouts once actual logic is implemented
 const generateTests = async () => {
   // Start loader
@@ -20,13 +21,13 @@ const generateTests = async () => {
   // Timeout for demoing the loader while no actual processing is done
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  let testScripts = []
-  for (const scenario of mutatedBddScenarios.value) {
-    const result = await postBddIds(scenario.id)
-    testScripts = result
-  }
+  
+  console.log("chosen featuer id",props.featureId)
+  const result = await postBddIds(props.featureId)
+  
 
-  emit('updateTests', testScripts)
+  console.log("test scripts",result)
+  emit('updateTests',result)
 
   // Stop loader
   emit('stop-tests-loader')
