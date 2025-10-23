@@ -1,71 +1,58 @@
 import os
-import json
 from app.requirement_handling.file_handler import extract_text
 from app.requirement_handling.topic_detection import detect_topics
 from app.requirement_handling.topic_summary import summarize_topic
 from app.requirement_handling.requirement_extractor import extract_requirements
-from app.requirement_handling.save_file import save_to_file
 
-
-OUTPUT_DIR = "app/requirement_handling/output"
-
+# Global storage dict for all features
+REQUIREMENTS_DICT = {}
 
 def process_document(file_path):
-    # Ensure output directory exists
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-
-    # Extract filename and text
-    filename = os.path.basename(file_path)
+    # Read file bytes
     with open(file_path, "rb") as f:
         file_bytes = f.read()
 
+    # Extract text from PDF
+    filename = os.path.basename(file_path)
     text = extract_text(file_bytes, filename)
 
-    # PASS 1: Detect Topics
+    # Step 1: Detect topics/features
     topics = detect_topics(text)
     if not topics:
         print("No topics detected.")
         return
 
     print("\nDetected Topics:")
-    for i, t in enumerate(topics, 1):
-        print(f"  {i}. {t}")
+    for i, topic in enumerate(topics, 1):
+        print(f"  {i}. {topic}")
 
-    # PASS 2: Summarize Each Topic
-    summaries = {}
+    id = 0
+
+    # Step 2: Summarize topic + extract all requirements in ONE call per topic
     for topic in topics:
+        
+        print(f"\nProcessing topic: {topic}")
         summary = summarize_topic(text, topic)
-        summaries[topic] = summary
-        save_to_file(OUTPUT_DIR, f"{topic}_summary.txt", summary)
-
-    print("\nSummaries saved in 'output/' folder.")
-
-    # User selects topics for detailed extraction
-    selected = input("Enter topic numbers for detailed requirement extraction (comma or 'all'): ")
-    if selected.lower().strip() == "all":
-        selected_topics = topics
-    else:
-        selected_topics = [topics[int(i.strip()) - 1] for i in selected.split(",")]
-
-    # PASS 3: Extract Requirements
-    for topic in selected_topics:
         requirements = extract_requirements(text, topic)
-        save_to_file(OUTPUT_DIR, f"{topic}_requirements.json", requirements)
-        print(f"{topic} requirements saved.")
 
-    print("\nAll processing done! Check 'output/' folder for results.")
+        # Save to global dict
+        REQUIREMENTS_DICT[id] = {
+            "feature": topic, 
+            "summary": summary,
+            "requirements": requirements
+        }
+        id += 1
+        
 
 
+    print("\n=== REQUIREMENTS OUTPUT ===")
+    for topic, data in REQUIREMENTS_DICT.items():
+        print(f"\nFeature: {topic}")
+        print(f"Summary: {data['summary']}")
+        print(f"Requirements: {data['requirements']}")
+
+    print(REQUIREMENTS_DICT)
 
 if __name__ == "__main__":
-    FILE_PATH = "app/requirement_handling/vaatimukset.pdf"  # Replace with your PDF file path
+    FILE_PATH = "app/requirement_handling/vaatimukset.pdf"  # Replace with your PDF
     process_document(FILE_PATH)
-
-    """
-    text = extract_text(FILE_PATH)
-    print("Extracting text...")
-    print("===== Extracted Text =====")
-    print(text)
-    """
-
-

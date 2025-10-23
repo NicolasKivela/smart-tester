@@ -27,12 +27,6 @@ class RequirementsProcessor:
             self.topics = [topics_text.strip()]
         return self.topics
     
-    """
-    def save_input(self):
-        with open("temp_input.txt", "wb") as f:
-            f.write(self.text)
-    """
-
     def summarize(self):
         for topic in self.topics:
             summary = self.agent.execute_task(f"Summarize the document for topic '{topic}':\n{self.text}")
@@ -45,7 +39,6 @@ class RequirementsProcessor:
             raw_reqs = self.agent.execute_task(
                 f"Extract detailed requirements for topic '{topic}':\n{self.text}"
             )
-
             # Convert string output into list of clean lines
             if isinstance(raw_reqs, str):
                 req_list = [line.strip("-*• ") for line in raw_reqs.split("\n") if line.strip()]
@@ -69,7 +62,7 @@ class RequirementsProcessor:
             processed = Processed_Req(
                 id=i,
                 feature=topic,
-                summary=self.summaries.get(topic, ""),
+                summary=re.sub(r'^\*\*Topic:.*?\*\*\s*', '', self.summaries.get(topic, ""), flags=re.MULTILINE),
                 requirements=requirements.get(topic, []),
             )
             REQUIREMENTS[i] = processed.model_dump()

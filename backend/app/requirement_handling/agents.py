@@ -15,11 +15,8 @@ class RequirementAgent(BaseAgent):
 
     def _get_tool_functions(self):
         return {}
-    
-
 
     # Custom Agent Methods
-
 
     def detect_topics(self, text: str):
         prompt = f"""
