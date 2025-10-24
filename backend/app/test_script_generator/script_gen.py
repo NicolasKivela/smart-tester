@@ -37,7 +37,6 @@ class ScriptGen:
 
         for feature in features:
             response = self.__call_agent(feature, locators, login)
-            print(response)
             self.__collect_keywords(response)
             self.__collect_variables(response)
             self.__scripts.append(response)
