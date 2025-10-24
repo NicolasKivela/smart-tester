@@ -1,8 +1,58 @@
 <script setup lang="ts">
-const props = defineProps<{
-  scripts:  string
-}>()
-console.log("Scripts in codeview", props.scripts)
+import { ref, watch, onMounted } from 'vue'
+import hljs from 'highlight.js/lib/core'
+import 'highlight.js/styles/github-dark.css'
+
+// TODO: switch to actual robotframework import once the import issue is possibly resolved ?
+// import hljsDefineRobot from "highlightjs-robot"
+// hljsDefineRobot(hljs)
+import python from 'highlight.js/lib/languages/python'
+
+hljs.registerLanguage('robotframework', python)
+
+const props = defineProps<{ scripts: string }>()
+const codeRef = ref<HTMLElement | null>(null)
+
+// Try parsing the JSON
+const parseJSON = (original: string) => {
+  if (!original) return ""
+  try {
+    const parsed = JSON.parse(original)
+    if (parsed.test_script) return parsed.test_script
+  } catch {
+    
+  }
+  return original
+}
+
+// Render & highlight the generated code
+const highlightCode = () => {
+  if (!codeRef.value) return
+
+  // Parse the JSON
+  let code = parseJSON(props.scripts)
+
+  // Convert all literal "\n" into real line breaks
+  code = code.replace(/\\n/g, "\n")
+
+  // 
+  code = code.replace(/\\n/g, "\n")
+
+  // Insert code into <code> block
+  codeRef.value.textContent = code
+
+  // Delete any previous highlights
+  delete (codeRef.value as any).dataset.highlighted
+
+  // Highlight the code
+  hljs.highlightElement(codeRef.value)
+}
+
+// Watch props.scripts for changes
+onMounted(highlightCode)
+watch(() => props.scripts, highlightCode)
+
+// Copy full script to clipboard
 const copyToClipboard = () => {
   navigator.clipboard
     .writeText(props.scripts.toString())
@@ -19,13 +69,12 @@ const copyToClipboard = () => {
   <div class="code-view">
     <div class="column">
       <h3 class="title">Generated Code</h3>
-      <!--<button class="secondary">Download .zip</button>-->
       <button class="secondary" @click="copyToClipboard">Copy</button>
       <button class="primary">Reset Session</button>
     </div>
-    <div class="code-block">
-      <p v-for="(script, index) of scripts" :key="index">{{ script }}</p>
-    </div>
+    <pre class="code-block">
+      <code ref="codeRef" class="robotframework"></code>
+    </pre>
   </div>
 </template>
 
@@ -38,26 +87,29 @@ const copyToClipboard = () => {
   display: flex;
   flex-direction: column;
 }
+
 .code-block {
   background-color: black;
   color: white;
-  height: 400px;
-  border-radius: 4px;
-  padding-left: 1rem;
-  padding-right: 1rem;
   flex: 1;
+  border-radius: 4px;
+  padding: 1rem;
   overflow-y: auto;
+  white-space: pre-wrap;
 }
+
 .column {
   display: flex;
   gap: 1rem;
 }
+
 .title {
   flex: 6;
   justify-self: start;
   align-self: center;
   margin-top: 0.5rem;
 }
+
 button {
   flex: 2;
 }
