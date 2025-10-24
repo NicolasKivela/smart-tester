@@ -10,14 +10,25 @@ from backend.app.common.base_agent import BaseAgent
 
 class ScriptGenAgent(BaseAgent):
 
+    def __init__(
+            self,
+            model: str = "gemini/gemini-2.5-flash",
+            temperature: float = 0.1,
+            max_tokens: int = 16384,
+            timeout: int = 300,
+            max_tool_calls: int = 5
+    ):
+        super().__init__(model, temperature, max_tokens, timeout, max_tool_calls)
+
     def _get_system_message(self):
         return (
             "Your job is to write test test scripts for web applications using robotframework. "
             "Write atleast one test case per scenario. "
             "Generate the test scripts based on the given BDD-scenarios"
             "You are also given login information that can be used if needed. "
-            "You are given a list of locators. Only use the once that you are given and do not use any placeholders. "
-            "You can use previously generated keywords and variables that you are given, or generate new ones if needed. "
+            "You are given a list of locators. to use. If a needed locator is not provided, use |@| as placeholder. "
+            "Do not generate any locator that you aren't specifically given. "
+            "You can use previously generated keywords that you are given, or generate new ones if needed. "
             "You can use selenium library but no other external libraries. "
             "Use 'Open browser to front page' and 'Close browser' keywords as test setup and test teardown. "
             "Do not make other setup or teardown keywords. "

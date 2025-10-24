@@ -37,6 +37,7 @@ class ScriptGen:
 
         for feature in features:
             response = self.__call_agent(feature, locators, login)
+            print(response)
             self.__collect_keywords(response)
             self.__collect_variables(response)
             self.__scripts.append(response)
@@ -55,10 +56,8 @@ class ScriptGen:
             "   Wait Until Page Contains Element    ${ACCEPT_COOKIES_BUTTON}    timeout=10s\n"
             "   Click Element    ${ACCEPT_COOKIES_BUTTON}\n"
             "   Wait Until Element Is Not Visible    ${ACCEPT_COOKIES_BUTTON}    timeout=5s\n\n"
-            "Close Browser\n"
-            "   Close All Browsers\n\n"
         )
-        self.__keywords = {"Open browser to front page\n", "Close Browser\n"}
+        self.__keywords = {"Open browser to front page\n"}
 
     def __collect_keywords(self, response):
         """
@@ -227,6 +226,7 @@ class ScriptGen:
         # convert to JSON
         return json.dumps({"test_script": result})
 
+
     def __call_agent(self, feature, locators, login):
         """
         Assembles input to a single string and calls LLM-agent
@@ -252,9 +252,8 @@ class ScriptGen:
         LLM_input = (
             "Feature to be tested:\n\n" + feature_desc +
             "\nBDD scenarios:\n\n" + scenarios +
-            "\nLocators as JSON:\n\n" + json.dumps(locators) +
+            "\nLocators as JSON:\n\n" + locators +
             "\nUsable keywords:\n\n" + keywords +
-            "\nUsable variables: \n\n" + json.dumps(self.__variables) +
             "\nLogin information as JSON:\n\n" + login
         )
         agent_obj = ScriptGenAgent()
