@@ -240,7 +240,7 @@ class ScriptGen:
         LLM_input = (
             "Feature to be tested:\n\n" + feature_desc +
             "\nBDD scenarios:\n\n" + scenarios +
-            "\nLocators as JSON:\n\n" + locators +
+            "\nLocators as JSON:\n\n" + json.dumps(locators) +
             "\nUsable keywords:\n\n" + self.__keywords_str +
             "\nLogin information as JSON:\n\n" + str(login)
         )
