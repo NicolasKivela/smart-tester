@@ -1,8 +1,7 @@
-from .storage import REQUIREMENTS
 from .agents import RequirementAgent
 from .save_file import save_to_file
 from .schemas import Processed_Req
-from .storage import REQUIREMENTS
+from .storage import REQUIREMENTS,db_requirements 
 import re
 
 class RequirementsProcessor:
@@ -57,19 +56,7 @@ class RequirementsProcessor:
         self.summarize()
         # Detailed requirements
         requirements = self.get_requirements()
-
-        # Combine all data into Processed_Req objects
-        for i, topic in enumerate(self.topics, start=1):
-            processed = Processed_Req(
-                id=i,
-                feature=topic,
-                summary=re.sub(r'^\*\*Topic:.*?\*\*\s*', '', self.summaries.get(topic, ""), flags=re.MULTILINE),
-                requirements=requirements.get(topic, []),
-            )
-            REQUIREMENTS[i] = processed.model_dump()
-
-
-
+        db_requirements.create_processed_req(requirements, self.summaries, self.topics)
         reqs = self.get_requirements()
 def get_requirements(req_id):
     return REQUIREMENTS[req_id]

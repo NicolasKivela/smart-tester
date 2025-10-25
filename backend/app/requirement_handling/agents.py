@@ -11,10 +11,10 @@ class RequirementAgent(BaseAgent):
         )
 
     def _get_tools(self):
-        return []
+        return None 
 
     def _get_tool_functions(self):
-        return {}
+        return None
 
     # Custom Agent Methods
 

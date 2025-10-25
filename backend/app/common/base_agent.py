@@ -29,6 +29,7 @@ class BaseAgent(ABC):
         self.max_tokens = max_tokens
         self.timeout = timeout
         self.max_tool_calls = max_tool_calls
+        self.api_call_counter = 0
 
     @abstractmethod
     def _get_system_message(self) -> str:
@@ -192,7 +193,6 @@ class BaseAgent(ABC):
             {"role": "user", "content": user_message}
         ]
         
-        counter = 0
         for _ in range(self.max_tool_calls):
             
             # Get the list of tools from the specific agent implementation.
@@ -213,8 +213,8 @@ class BaseAgent(ABC):
             try:
                 # Use dictionary unpacking to pass the conditional arguments.
                 response = litellm.completion(**completion_kwargs)
-                counter+=1
-                print("AMOUNT OF API CALLS:",counter)
+                self.api_call_counter+=1
+                print("AMOUNT OF API CALLS:",self.api_call_counter)
             except Exception as e:
                 return f"Error: Failed to get a response from the model. Details: {e}"
             

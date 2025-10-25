@@ -1,4 +1,5 @@
 # temporary storage
+import re
 from app.requirement_handling.schemas import Processed_Req
 REQ_TOPICS = []
 REQUIREMENTS = {
@@ -87,6 +88,7 @@ REQUIREMENTS = {
         bdd_scenarios=[]
     )
 }
+REQUIREMENTS={}
 class db_requirements():
     def get_req_by_id(id):
         try:
@@ -101,3 +103,23 @@ class db_requirements():
         except:
             print("error when updating requirements data")
             return
+    def create_processed_req(processed_reqs, summaries, topics):
+        try:
+          print(processed_reqs)
+          print(topics)
+          print(summaries)
+          # Combine all data into Processed_Req objects
+          for i, topic in enumerate(topics, start=1):
+              processed = Processed_Req(
+                  id=i,
+                  feature=topic,
+                  summary=re.sub(r'^\*\*Topic:.*?\*\*\s*', '', summaries.get(topic, ""), flags=re.MULTILINE),
+                  requirements=processed_reqs.get(topic, []),
+              )
+              print(i)
+              print(topic)
+              REQUIREMENTS[i] = processed.model_dump()
+        except Exception as e:
+            print(e)
+            print("Error creating new requirements to database")
+            
