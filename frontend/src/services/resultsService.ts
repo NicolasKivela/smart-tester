@@ -21,10 +21,10 @@ const postBddScenarios = async (scenarios) => {
   }
 }
 
-const postBddIds = async (id: number) => {
+const postBddIds = async (id: Number) => {
   try {
     const response = await axios.post(`${API_URL}/test_scripts/generate`, null, {
-      params: { bdd_item_id: id },
+      params: { feature_id: id },
     })
 
     return response.data

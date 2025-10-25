@@ -1,8 +1,8 @@
 <script setup lang="ts">
 const props = defineProps<{
-  scripts: object
+  scripts:  string
 }>()
-
+console.log("Scripts in codeview", props.scripts)
 const copyToClipboard = () => {
   navigator.clipboard
     .writeText(props.scripts.toString())

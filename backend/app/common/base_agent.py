@@ -18,10 +18,10 @@ class BaseAgent(ABC):
     """
     def __init__(
         self,
-        model: str = "gemini/gemini-2.5-flash", # specify model gemini/gemini-2.5-flash, ollama/llama3:8b for example
+        model: str = "gemini/gemini-2.5-flash-lite", # specify model gemini/gemini-2.5-flash, ollama/llama3:8b for example
         temperature: float = 0.1,
-        max_tokens: int = 4096,
-        timeout: int = 300,
+        max_tokens: int = 10000,
+        timeout: int = 3000,
         max_tool_calls: int = 5
     ):
         self.model = model
@@ -192,8 +192,9 @@ class BaseAgent(ABC):
             {"role": "user", "content": user_message}
         ]
         
+        counter = 0
         for _ in range(self.max_tool_calls):
-
+            
             # Get the list of tools from the specific agent implementation.
             tools = self._get_tools()
             # Prepare the arguments for the litellm.completion call.
@@ -212,6 +213,8 @@ class BaseAgent(ABC):
             try:
                 # Use dictionary unpacking to pass the conditional arguments.
                 response = litellm.completion(**completion_kwargs)
+                counter+=1
+                print("AMOUNT OF API CALLS:",counter)
             except Exception as e:
                 return f"Error: Failed to get a response from the model. Details: {e}"
             
@@ -230,5 +233,4 @@ class BaseAgent(ABC):
                 tool_outputs.append(tool_result)
             
             messages.extend(tool_outputs)
-            
         return "Error: Agent could not complete the task within the maximum number of tool calls."
