@@ -1,6 +1,7 @@
-from bdd_generation_agent import BddGenerationAgent
+from .bdd_generation_agent import BddGenerationAgent
+import asyncio
 
-def main():
+async def main():
 
 
     print("Initializing BDD Agent")
@@ -40,11 +41,11 @@ def main():
     print(f"User Prompt: \"{feature_1_requirements_for_hsl}\"")
     print("-" * 20)
 
-    final_response = agent.execute_task(feature_1_requirements_for_hsl)
+    final_response = await agent.execute_task(feature_1_requirements_for_hsl)
 
     print("\n--- BDD Agent's Final Response ---")
     print(final_response)
     print("-" * 28)
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
