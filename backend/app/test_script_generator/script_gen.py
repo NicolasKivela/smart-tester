@@ -30,7 +30,7 @@ class ScriptGen:
         """
         Top level public method - returns robotframework test scripts from
         BDD-scenarios and locators by calling LLM agent
-        :param features: BDD scenarios as: list[tuple(string, list[string])]
+        :param features: Feature data as: list[Processed_req])]
         :param locators: target locators as JSON
         :return: result: robotframework test script as JSON object
         """
@@ -160,7 +160,6 @@ class ScriptGen:
         settings_ordered = []
         tests = ""
 
-        print(self.__scripts)
         for script in self.__scripts:
             lines = script.splitlines(True)
             phase = "U"
@@ -231,21 +230,13 @@ class ScriptGen:
     def __call_agent(self, feature, locators, login):
         """
         Assembles input to a single string and calls LLM-agent
-        :param feature: BDD scenarios for a specific feature as tuple(string, List[string])
+        :param feature: Feature as Processed_Req
         :param locators: All known locators as JSON
         :param login: known valid login information as JSON
         :return: LLM response as string
         """
         feature_desc=str(feature.summary)
         scenarios=str(feature.bdd_scenarios)
-        print("scenarios",scenarios)       
- #       feature_desc = feature[0] + "\n"
-#        test_case_list = feature[1]
-
-#        scenarios = ""
-
-        #for test_case in test_case_list:
-         #   scenarios += test_case + "\n"
 
         if self.__keywords_str == "":
             keywords = "No available keywords\n"
