@@ -1,80 +1,81 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref } from 'vue'
 import ErrorPopup from '@/components/InputView/ErrorPopup.vue'
 import ProcessDataPopup from '@/components/InputView/ProcessDataPopup.vue'
 import { postRequirements, getTopics, postSelectedTopic } from '@/services/requirementService.ts'
 
-// Initialize inputs 
-const file = ref<File | null>(null);
-const url = ref("");
-const username = ref("");
-const password = ref("");
+// Emits for loader functionality and bdd scenario updates
+const emit = defineEmits(['start-loader', 'stop-loader', 'bddScenariosUpdated', 'chosen-feature-updated'])
+
+// Initialize inputs
+const file = ref<File | null>(null)
+const url = ref('')
+const username = ref('')
+const password = ref('')
 
 // Interface and storage for topics fetched from the backend
 interface Topic {
-  id: number;
-  name: string;
+  id: number
+  name: string
 }
-const topics = ref<Topic[]>([]);
+const topics = ref<Topic[]>([])
 
 // Key to force the file input to reset if inputs are resetted
-const fileInputKey = ref(0); 
+const fileInputKey = ref(0)
 
 // Shows error popup when true
-const showError = ref(false);
+const showError = ref(false)
 
 // Error message that is wanted to be displayed
 // Reusable for different errors
-const errorMessage = ref("");
+const errorMessage = ref('')
 
 // Popup visibility variable
-const showPopup = ref(false);
+const showPopup = ref(false)
 
 // Handle file input
 const handleFileUpload = (event: Event) => {
-  const target = event.target as HTMLInputElement;
+  const target = event.target as HTMLInputElement
 
   // Clear any previous error in file input
-  showError.value = false;
-  
+  showError.value = false
+
   // Ensure that a file was selected
   if (target.files?.[0]) {
-    const selectedFile = target.files[0];
-    const fileName = selectedFile.name;
+    const selectedFile = target.files[0]
+    const fileName = selectedFile.name
 
     // Check for .pdf or .txt
     if (fileName.endsWith('.pdf') || fileName.endsWith('.txt')) {
-        file.value = selectedFile;
+      file.value = selectedFile
     } else {
-        // Validation failed, show error popup
-        errorMessage.value = "Only PDF (.pdf) or Text (.txt) files are allowed!";
-        showError.value = true;
-        file.value = null;
+      // Validation failed, show error popup
+      errorMessage.value = 'Only PDF (.pdf) or Text (.txt) files are allowed!'
+      showError.value = true
+      file.value = null
 
-        // Force reset the input field to clear the filename display
-        fileInputKey.value++; 
+      // Force reset the input field to clear the filename display
+      fileInputKey.value++
     }
-  } 
-  else {
-    file.value = null;
+  } else {
+    file.value = null
   }
-};
+}
 
 // Show popup after clicking the "Process data button"
-// TODO: add a loader screen while the backend processes the req. file
+// TODO: remove unnecessary timeouts once actual logic is implemented
 const processdata = async () => {
-  showError.value = false; // Reset URL error always
+  showError.value = false // Reset URL error always
 
   try {
     // Try to validate URL
-    new URL(url.value);
-  } 
-  catch (error) {
+    new URL(url.value)
+  } catch (error) {
     // If invalid, show error and reset url field
-    errorMessage.value = "Please enter a valid URL!";
-    showError.value = true;
-    url.value = "";
-    return;
+    errorMessage.value = 'Please enter a valid URL!'
+    showError.value = true
+    url.value = ''
+    return
   }
 
   // Construct a json out of the text inputs
@@ -82,162 +83,167 @@ const processdata = async () => {
     url: url.value,
     username: username.value,
     password: password.value,
-  };
+  }
 
   // Just to validate what is passed to backend
-  console.log(file.value, jsonItem);
+  console.log(file.value, jsonItem)
+
+  // Start loader
+  emit('start-loader',"Processing requirements, please wait...");
+
+  // Timeout for demoing the loader while no actual processing is done
+  await new Promise((resolve) => setTimeout(resolve, 1000));
 
   try {
     // Post requirements to backend
-    await postRequirements(file.value!, jsonItem);
-
+    await postRequirements(file.value!, jsonItem)
   } catch (error) {
-    errorMessage.value = "Failed to POST requirements!";
-    showError.value = true;
-    return;  
+    emit('stop-loader')
+    errorMessage.value = 'Failed to POST requirements!'
+    showError.value = true
+    return
   }
-  
+
   try {
     // Get topics from backend
-    const getResponse = await getTopics();
+    const getResponse = await getTopics()
 
     // Assign topics
     topics.value = Object.values(getResponse).map((item: any) => ({
       id: item.id,
       name: item.feature,
-    }));
-  
+    }))
   } catch (error) {
-    errorMessage.value = "Failed to GET topics!";
-    showError.value = true;
-    return;
+    emit('stop-loader')
+    errorMessage.value = 'Failed to GET topics!'
+    showError.value = true
+    return
   }
 
+  // Stop the loader
+  emit('stop-loader')
+
   // If everything went successfully, proceed to show the popup
-  showPopup.value = true;
-};
+  showPopup.value = true
+}
 
 // Reset the inputs
 const resetInputs = () => {
-  file.value = null;
-  url.value = "";
-  username.value = "";
-  password.value = "";
-  fileInputKey.value++; 
-};
+  file.value = null
+  url.value = ''
+  username.value = ''
+  password.value = ''
+  fileInputKey.value++
+}
 
 // "Continue" button pressed in popup
 // Number "selected" is the topic's id selected in the "Process Data" - popup
 const handleContinue = async (selected: number) => {
-    showPopup.value = false;
+  showPopup.value = false
+  // Show the selected option in console for now
+  console.log('Selected topic ID:', selected)
+  
+  emit('chosen-feature-updated', selected)
+  emit('start-loader',"Generating BDD scenarios, please wait...");
 
-    // Show the selected option in console for now
-    console.log("Selected topic ID:", selected);
-
-    try {
+  try {
     // Post the selected topic's id to backend
-    const response = await postSelectedTopic(selected);
-    console.log(response);
-
+    const response = await postSelectedTopic(selected)
+    // Emit the generated scenarios to parent component
+    emit('bddScenariosUpdated', response.generated_scenarios)
+    emit('stop-loader')
   } catch (error) {
-    errorMessage.value = "Failed to POST the selected topic!";
-    showError.value = true;
-    return;  
+    emit('stop-loader')
+    errorMessage.value = 'Failed to POST the selected topic!'
+    showError.value = true
+    return
   }
-
 }
-
 </script>
 
 <template>
-  <!-- Inputview -->  
+  <!-- Inputview -->
   <div class="inputview" data-testid="inputview-component">
-    
     <!-- File input -->
     <div class="titles" data-testid="file-input-section">
       <span>Add requirements file <span class="required-input" title="Required">*</span></span>
-      <input 
-        type="file"
-        @change="handleFileUpload" 
-        :key="fileInputKey"
-        data-testid="file-input"/>
+      <input type="file" @change="handleFileUpload" :key="fileInputKey" data-testid="file-input" />
       <p class="input-description">PDF (.pdf) or Text (.txt) file accepted</p>
     </div>
 
     <!-- URL input -->
     <div class="titles" data-testid="url-input-section">
-      <span>URL <span class="required-input"  title="Required">*</span></span>
-      <input 
+      <span>URL <span class="required-input" title="Required">*</span></span>
+      <input
         type="text"
         v-model="url"
         placeholder="URL"
         class="url-input"
-        data-testid="url-input"/>
+        data-testid="url-input"
+      />
     </div>
 
     <!-- Username input -->
     <div class="titles" data-testid="username-input-section">
       <span>Username <small class="input-description">(optional)</small></span>
-      <input 
+      <input
         type="text"
         v-model="username"
         placeholder="Username"
         class="text-input"
-        data-testid="username-input"/>
+        data-testid="username-input"
+      />
     </div>
 
     <!-- Password input -->
     <div class="titles" data-testid="password-input-section">
       <span>Password <small class="input-description">(optional)</small></span>
-      <input 
+      <input
         type="password"
         v-model="password"
         placeholder="Password"
         class="text-input"
-        data-testid="password-input"/>
+        data-testid="password-input"
+      />
     </div>
 
     <!-- Buttons -->
     <div class="buttons" data-testid="buttons-section">
-      <button 
+      <button
         class="primary"
         @click="processdata"
         :disabled="!file || !url.trim()"
-        data-testid="process-data-btn">
+        data-testid="process-data-btn"
+      >
         Process data
       </button>
 
-      <button 
-        class="secondary"
-        @click="resetInputs"
-        data-testid="reset-inputs-btn">
+      <button class="secondary" @click="resetInputs" data-testid="reset-inputs-btn">
         Reset Inputs
       </button>
     </div>
   </div>
 
-    <!-- Reusable error popup -->
-    <ErrorPopup
+  <!-- Reusable error popup -->
+  <ErrorPopup
     :visible="showError"
     :message="errorMessage"
     @close="showError = false"
     data-testid="error-popup"
-    />
+  />
 
-    <!-- Process data popup -->
-    <ProcessDataPopup
+  <!-- Process data popup -->
+  <ProcessDataPopup
     :visible="showPopup"
     :options="topics"
     @close="showPopup = false"
     @continue="handleContinue"
     data-testid="processdata-popup"
-    />
-
+  />
 </template>
 
 <!-- Styles -->
 <style scoped>
-
 /* Input field properties */
 .inputview {
   display: flex;
@@ -254,11 +260,11 @@ const handleContinue = async (selected: number) => {
   align-items: baseline;
 }
 
-.url-input{
-    min-width: 250px;
-    padding: 8px;
-    border: 1px solid #bbb;
-    border-radius: 4px;
+.url-input {
+  min-width: 250px;
+  padding: 8px;
+  border: 1px solid #bbb;
+  border-radius: 4px;
 }
 
 .text-input {
@@ -280,14 +286,14 @@ const handleContinue = async (selected: number) => {
   margin-bottom: 4px;
 }
 
-.required-input{
+.required-input {
   color: #cc0000be;
 }
 
 .input-description {
-    font-size: 12px; 
-    color: #777; 
-    margin-top: 5px; 
+  font-size: 12px;
+  color: #777;
+  margin-top: 5px;
 }
 
 /* Button properties */
@@ -311,9 +317,9 @@ button.primary {
 }
 
 button.primary:disabled {
-    cursor: not-allowed !important;
-    background: #cccccc;
-    color: #666666;
+  cursor: not-allowed !important;
+  background: #cccccc;
+  color: #666666;
 }
 
 button.secondary {

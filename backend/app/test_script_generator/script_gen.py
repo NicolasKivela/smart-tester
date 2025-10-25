@@ -7,7 +7,7 @@ and locators by calling LLM agent. Assembles all outputs to a single string
 
 import json
 
-from script_gen_agent import ScriptGenAgent
+from app.test_script_generator.script_gen_agent import ScriptGenAgent
 
 SECTION_MARKER_START_INDEX = 3
 
@@ -30,7 +30,7 @@ class ScriptGen:
         """
         Top level public method - returns robotframework test scripts from
         BDD-scenarios and locators by calling LLM agent
-        :param features: BDD scenarios as: list[tuple(string, list[string])]
+        :param features: Feature data as: list[Processed_req])]
         :param locators: target locators as JSON
         :return: result: robotframework test script as JSON object
         """
@@ -229,31 +229,20 @@ class ScriptGen:
     def __call_agent(self, feature, locators, login):
         """
         Assembles input to a single string and calls LLM-agent
-        :param feature: BDD scenarios for a specific feature as tuple(string, List[string])
+        :param feature: Feature as Processed_Req
         :param locators: All known locators as JSON
         :param login: known valid login information as JSON
         :return: LLM response as string
         """
-
-        feature_desc = feature[0] + "\n"
-        test_case_list = feature[1]
-
-        scenarios = ""
-
-        for test_case in test_case_list:
-            scenarios += test_case + "\n"
-
-        if self.__keywords_str == "":
-            keywords = "No available keywords\n"
-        else:
-            keywords = self.__keywords_str
+        feature_desc = str(feature.summary)
+        scenarios = str(feature.bdd_scenarios)
 
         LLM_input = (
             "Feature to be tested:\n\n" + feature_desc +
             "\nBDD scenarios:\n\n" + scenarios +
             "\nLocators as JSON:\n\n" + locators +
-            "\nUsable keywords:\n\n" + keywords +
-            "\nLogin information as JSON:\n\n" + login
+            "\nUsable keywords:\n\n" + self.__keywords_str +
+            "\nLogin information as JSON:\n\n" + str(login)
         )
         agent_obj = ScriptGenAgent()
         return agent_obj.execute_task(LLM_input)

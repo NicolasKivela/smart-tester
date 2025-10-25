@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-
-const generatedCode = ref('Generated code')
-
+const props = defineProps<{
+  scripts:  string
+}>()
+console.log("Scripts in codeview", props.scripts)
 const copyToClipboard = () => {
   navigator.clipboard
-    .writeText(generatedCode.value)
+    .writeText(props.scripts.toString())
     .then(() => {
       console.log('Code copied to clipboard')
     })
@@ -23,7 +23,9 @@ const copyToClipboard = () => {
       <button class="secondary" @click="copyToClipboard">Copy</button>
       <button class="primary">Reset Session</button>
     </div>
-    <div class="code-block">{{ generatedCode }}</div>
+    <div class="code-block">
+      <p v-for="(script, index) of scripts" :key="index">{{ script }}</p>
+    </div>
   </div>
 </template>
 
@@ -32,13 +34,19 @@ const copyToClipboard = () => {
   border: 2px solid #ccc;
   padding: 1rem;
   border-radius: 4px;
+  height: calc(100vh - 275px);
+  display: flex;
+  flex-direction: column;
 }
 .code-block {
   background-color: black;
   color: white;
   height: 400px;
   border-radius: 4px;
-  padding: 1rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  flex: 1;
+  overflow-y: auto;
 }
 .column {
   display: flex;

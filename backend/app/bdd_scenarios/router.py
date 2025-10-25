@@ -1,8 +1,9 @@
 from fastapi import APIRouter
 from .schemas import BDD_Scenario, Generate_BDD
 from app.requirement_handling.service import get_requirements
-from .storage import BDD_SCENARIOS
+from .storage import BDD_SCENARIOS, db_bdd_scenarios
 from .bdd_generation import generate_bdd_scenarios_logic 
+from app.requirement_handling.storage import REQUIREMENTS
 router = APIRouter()
 
 @router.get("/bdd_scenarios",tags=["bdd_scenarios"])
@@ -28,6 +29,7 @@ async def generate_bdd_scenarios(item_id:int):
     for bdd in generated_bdds:
         print(bdd)
         BDD_SCENARIOS[bdd.id]= bdd.model_dump()
+        db_bdd_scenarios.add_bdd_scenarios(item_id,BDD_SCENARIOS[bdd.id])
     return {"message": "BDDs generated succesfully", "generated_scenarios": generated_bdds}
 
 

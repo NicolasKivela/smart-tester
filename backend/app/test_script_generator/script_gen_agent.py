@@ -5,20 +5,14 @@ Implementation for abstract BaseAgent class:
 Gives the right context to LLM-agent for test script generation
 """
 
-from backend.app.common.base_agent import BaseAgent
+from app.common.base_agent import BaseAgent
 
 
 class ScriptGenAgent(BaseAgent):
 
-    def __init__(
-            self,
-            model: str = "gemini/gemini-2.5-flash",
-            temperature: float = 0.1,
-            max_tokens: int = 16384,
-            timeout: int = 300,
-            max_tool_calls: int = 5
-    ):
-        super().__init__(model, temperature, max_tokens, timeout, max_tool_calls)
+    def __init__(self):
+        # increased max tokens for script generation
+        super().__init__(max_tokens= 32768)
 
     def _get_system_message(self):
         return (
