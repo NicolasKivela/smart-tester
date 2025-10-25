@@ -6,3 +6,11 @@ export type BddScenario = {
   when: string[]
   then: string[]
 }
+
+export type Feature = {
+  id: number,
+  feature: string,
+  summary: string,
+  requirements: string[],
+  bdd_scenarios: BddScenario[]
+}
