@@ -1,190 +1,250 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref } from 'vue'
+import ErrorPopup from '@/components/InputView/ErrorPopup.vue'
+import ProcessDataPopup from '@/components/InputView/ProcessDataPopup.vue'
+import { postRequirements, getTopics, postSelectedTopic } from '@/services/requirementService.ts'
 
-// Initialize inputs 
-const file = ref<File | null>(null);
-const url = ref("");
-const username = ref("");
-const password = ref("");
+// Emits for loader functionality and bdd scenario updates
+const emit = defineEmits(['start-loader', 'stop-loader', 'bddScenariosUpdated'])
+
+// Initialize inputs
+const file = ref<File | null>(null)
+const url = ref('')
+const username = ref('')
+const password = ref('')
+
+// Interface and storage for topics fetched from the backend
+interface Topic {
+  id: number
+  name: string
+}
+const topics = ref<Topic[]>([])
 
 // Key to force the file input to reset if inputs are resetted
-const fileInputKey = ref(0); 
+const fileInputKey = ref(0)
 
-// Error state for file validation
-const fileError = ref(false);
+// Shows error popup when true
+const showError = ref(false)
 
-// Error state for URL validation
-const urlError = ref(false);
+// Error message that is wanted to be displayed
+// Reusable for different errors
+const errorMessage = ref('')
 
 // Popup visibility variable
-const showPopup = ref(false);
-
-// Selected option for implementing BDD:s
-const selectedOption = ref<string | null>(null);
-
-// Temporary list of the scenarios for demo effect
-// TODO: fetch the actual options of req. file from backend 
-const options = ["Login", "Checkout", "Add to cart"];
+const showPopup = ref(false)
 
 // Handle file input
 const handleFileUpload = (event: Event) => {
-  const target = event.target as HTMLInputElement;
+  const target = event.target as HTMLInputElement
 
   // Clear any previous error in file input
-  fileError.value = false;
-  
+  showError.value = false
+
   // Ensure that a file was selected
   if (target.files?.[0]) {
-    const selectedFile = target.files[0];
-    const fileName = selectedFile.name;
+    const selectedFile = target.files[0]
+    const fileName = selectedFile.name
 
     // Check for .pdf or .txt
     if (fileName.endsWith('.pdf') || fileName.endsWith('.txt')) {
-        file.value = selectedFile;
+      file.value = selectedFile
     } else {
-        // Validation failed, show error popup
-        fileError.value = true;
-        file.value = null;
+      // Validation failed, show error popup
+      errorMessage.value = 'Only PDF (.pdf) or Text (.txt) files are allowed!'
+      showError.value = true
+      file.value = null
 
-        // Force reset the input field to clear the filename display
-        fileInputKey.value++; 
+      // Force reset the input field to clear the filename display
+      fileInputKey.value++
     }
-  } 
-  else {
-    file.value = null;
+  } else {
+    file.value = null
   }
-};
+}
 
 // Show popup after clicking the "Process data button"
-// TODO: pass the inputs to the backend
-const processdata = () => {
-  urlError.value = false; // Reset URL error always
+// TODO: remove unnecessary timeouts once actual logic is implemented
+const processdata = async () => {
+  showError.value = false // Reset URL error always
 
   try {
     // Try to validate URL
-    new URL(url.value);
-    
-    // If successful, proceed to show the popup
-    selectedOption.value = null; // Reset options always when opening
-    showPopup.value = true;
-  } 
-  catch (e) {
-    // If invalid, show error
-    urlError.value = true;
-    showPopup.value = false;
-    url.value = "";
+    new URL(url.value)
+  } catch (error) {
+    // If invalid, show error and reset url field
+    errorMessage.value = 'Please enter a valid URL!'
+    showError.value = true
+    url.value = ''
+    return
   }
-};
+
+  // Construct a json out of the text inputs
+  const jsonItem = {
+    url: url.value,
+    username: username.value,
+    password: password.value,
+  }
+
+  // Just to validate what is passed to backend
+  console.log(file.value, jsonItem)
+
+  // Start loader
+  emit('start-loader',"Processing requirements, please wait...");
+
+  // Timeout for demoing the loader while no actual processing is done
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  try {
+    // Post requirements to backend
+    await postRequirements(file.value!, jsonItem)
+  } catch (error) {
+    emit('stop-loader')
+    errorMessage.value = 'Failed to POST requirements!'
+    showError.value = true
+    return
+  }
+
+  try {
+    // Get topics from backend
+    const getResponse = await getTopics()
+
+    // Assign topics
+    topics.value = Object.values(getResponse).map((item: any) => ({
+      id: item.id,
+      name: item.feature,
+    }))
+  } catch (error) {
+    emit('stop-loader')
+    errorMessage.value = 'Failed to GET topics!'
+    showError.value = true
+    return
+  }
+
+  // Stop the loader
+  emit('stop-loader')
+
+  // If everything went successfully, proceed to show the popup
+  showPopup.value = true
+}
 
 // Reset the inputs
 const resetInputs = () => {
-  file.value = null;
-  url.value = "";
-  username.value = "";
-  password.value = "";
-  fileInputKey.value++; 
-};
-
-// "Continue" button pressed in popup, only closes the popup for now
-// TODO: pass the selected option to backend
-const handleContinue = () => {
-    showPopup.value = false;
+  file.value = null
+  url.value = ''
+  username.value = ''
+  password.value = ''
+  fileInputKey.value++
 }
 
+// "Continue" button pressed in popup
+// Number "selected" is the topic's id selected in the "Process Data" - popup
+const handleContinue = async (selected: number) => {
+  showPopup.value = false
+
+  // Show the selected option in console for now
+  console.log('Selected topic ID:', selected)
+
+  emit('start-loader',"Generating BDD scenarios, please wait...");
+
+  try {
+    // Post the selected topic's id to backend
+    const response = await postSelectedTopic(selected)
+
+    // Emit the generated scenarios to parent component
+    emit('bddScenariosUpdated', response.generated_scenarios)
+    emit('stop-loader')
+  } catch (error) {
+    emit('stop-loader')
+    errorMessage.value = 'Failed to POST the selected topic!'
+    showError.value = true
+    return
+  }
+}
 </script>
 
 <template>
-  <!-- Inputview -->  
-  <div class="inputview">
-    
+  <!-- Inputview -->
+  <div class="inputview" data-testid="inputview-component">
     <!-- File input -->
-    <div class="titles">
-      <span>Add requirements file <span class="required-input">*</span></span>
-      <input type="file" @change="handleFileUpload" :key="fileInputKey"/>
+    <div class="titles" data-testid="file-input-section">
+      <span>Add requirements file <span class="required-input" title="Required">*</span></span>
+      <input type="file" @change="handleFileUpload" :key="fileInputKey" data-testid="file-input" />
       <p class="input-description">PDF (.pdf) or Text (.txt) file accepted</p>
     </div>
 
     <!-- URL input -->
-    <div class="titles">
-      <span>URL <span class="required-input">*</span></span>
-      <input type="text" v-model="url" placeholder="URL" class="url-input"/>
+    <div class="titles" data-testid="url-input-section">
+      <span>URL <span class="required-input" title="Required">*</span></span>
+      <input
+        type="text"
+        v-model="url"
+        placeholder="URL"
+        class="url-input"
+        data-testid="url-input"
+      />
     </div>
 
     <!-- Username input -->
-    <div class="titles">
+    <div class="titles" data-testid="username-input-section">
       <span>Username <small class="input-description">(optional)</small></span>
-      <input type="text" v-model="username" placeholder="Username" class="text-input"/>
+      <input
+        type="text"
+        v-model="username"
+        placeholder="Username"
+        class="text-input"
+        data-testid="username-input"
+      />
     </div>
 
     <!-- Password input -->
-    <div class="titles">
+    <div class="titles" data-testid="password-input-section">
       <span>Password <small class="input-description">(optional)</small></span>
-      <input type="password" v-model="password" placeholder="Password" class="text-input"/>
+      <input
+        type="password"
+        v-model="password"
+        placeholder="Password"
+        class="text-input"
+        data-testid="password-input"
+      />
     </div>
 
     <!-- Buttons -->
-    <div class="buttons">
-      <button class="primary" @click="processdata" :disabled="!file || !url.trim()">Process data</button>
-      <button class="secondary" @click="resetInputs">Reset Inputs</button>
+    <div class="buttons" data-testid="buttons-section">
+      <button
+        class="primary"
+        @click="processdata"
+        :disabled="!file || !url.trim()"
+        data-testid="process-data-btn"
+      >
+        Process data
+      </button>
+
+      <button class="secondary" @click="resetInputs" data-testid="reset-inputs-btn">
+        Reset Inputs
+      </button>
     </div>
   </div>
 
-  <!-- FileError popup -->
-  <div v-if="fileError" class="popup-overlay">
-    <div class="popup">
-      <!-- Close button (X) in top right -->
-      <button class="close-btn" @click="fileError = false">&times;</button>
-
-      <!-- Error instruction text -->
-      <p class="instruction-text error-instruction">Only PDF (.pdf) or Text (.txt) files are allowed!</p>
-
-    </div>
-  </div>
-
-  <!-- UrlError popup -->
-  <div v-if="urlError" class="popup-overlay">
-    <div class="popup">
-      <!-- Close button (X) in top right -->
-      <button class="close-btn" @click="urlError = false">&times;</button>
-
-      <!-- Error instruction text -->
-      <p class="instruction-text error-instruction">Please enter a valid URL!</p>
-
-    </div>
-  </div>
+  <!-- Reusable error popup -->
+  <ErrorPopup
+    :visible="showError"
+    :message="errorMessage"
+    @close="showError = false"
+    data-testid="error-popup"
+  />
 
   <!-- Process data popup -->
-  <div v-if="showPopup" class="popup-overlay">
-    <div class="popup">
-
-      <!-- Close button (X) in top right -->
-      <button class="close-btn" @click="showPopup = false">&times;</button>
-      
-      <h2>Requirements have been processed</h2>
-        <!-- Instruction text -->
-        <p class="instruction-text">Choose the feature you want to continue making BDD scenarios and tests for.</p>
-
-      <!-- Radio Buttons -->
-      <div class="radio-group">
-        <label v-for="option in options" :key="option" class="radio-label">
-          <input type="radio" :value="option" v-model="selectedOption"/>
-          {{ option }}
-        </label>
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="popup-buttons">
-        <button class="secondary cancel-btn" @click="showPopup = false">Cancel</button>
-        <button class="primary continue-btn" @click="handleContinue" :disabled="!selectedOption" >Continue</button>
-      </div>
-
-    </div>
-  </div>
+  <ProcessDataPopup
+    :visible="showPopup"
+    :options="topics"
+    @close="showPopup = false"
+    @continue="handleContinue"
+    data-testid="processdata-popup"
+  />
 </template>
 
 <!-- Styles -->
 <style scoped>
-
 /* Input field properties */
 .inputview {
   display: flex;
@@ -201,11 +261,11 @@ const handleContinue = () => {
   align-items: baseline;
 }
 
-.url-input{
-    min-width: 250px;
-    padding: 8px;
-    border: 1px solid #bbb;
-    border-radius: 4px;
+.url-input {
+  min-width: 250px;
+  padding: 8px;
+  border: 1px solid #bbb;
+  border-radius: 4px;
 }
 
 .text-input {
@@ -227,14 +287,14 @@ const handleContinue = () => {
   margin-bottom: 4px;
 }
 
-.required-input{
+.required-input {
   color: #cc0000be;
 }
 
 .input-description {
-    font-size: 12px; 
-    color: #777; 
-    margin-top: 5px; 
+  font-size: 12px;
+  color: #777;
+  margin-top: 5px;
 }
 
 /* Button properties */
@@ -258,120 +318,13 @@ button.primary {
 }
 
 button.primary:disabled {
-    cursor: not-allowed !important;
-    background: #cccccc;
-    color: #666666;
+  cursor: not-allowed !important;
+  background: #cccccc;
+  color: #666666;
 }
 
 button.secondary {
   background: #218a9138;
   color: black;
-}
-
-/* Popup Styles */
-.popup-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.popup {
-  font-family: 'Inter', sans-serif;
-  background: #fff;
-  padding: 30px;
-  border-radius: 8px;
-  width: 100%;
-  max-width: 450px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-  position: relative;
-  text-align: left;
-}
-
-.popup h2 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-top: 0;
-  margin-bottom: 10px;
-  line-height: 1.2;
-}
-
-.instruction-text {
-  font-size: 1rem;
-  color: #555;
-  margin-bottom: 20px;
-}
-
-/* Red color for error messages */
-.error-instruction {
-    color: #cc0000be; 
-    font-weight: 600; 
-}
-
-/* Close 'X' Button Style */
-.close-btn {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  line-height: 1;
-  color: #999;
-  padding: 5px 10px;
-  cursor: pointer;
-}
-
-.close-btn:hover {
-  color: #333;
-}
-
-/* Radio Button Group Styling */
-.radio-group {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 30px;
-}
-
-.radio-label {
-  display: flex;
-  align-items: center;
-  font-size: 1rem;
-  cursor: pointer;
-}
-
-.radio-label input[type="radio"] {
-  /* Default radio button appearance */
-  margin-right: 10px;
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-}
-
-/* Popup Action Buttons */
-.popup-buttons {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  padding-top: 15px;
-  border-top: 1px solid #eee;
-  margin-left: -30px;
-  margin-right: -30px;
-  margin-bottom: -30px;
-  padding-right: 30px;
-  padding-bottom: 30px;
-  background: #f7f7f7;
-  border-radius: 0 0 8px 8px;
-}
-
-.popup-buttons button {
-  padding: 10px 20px;
 }
 </style>

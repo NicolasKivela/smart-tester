@@ -13,7 +13,6 @@ class Processed_Req(BaseModel):
     feature: str
     summary: str 
     requirements: list[str]
-
 class Req_Topics(BaseModel):
     # topics: list
     topics: list[str]
