@@ -2,6 +2,8 @@ import litellm
 import json
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Callable
+import asyncio
+import inspect
 
 class BaseAgent(ABC):
     """
@@ -146,7 +148,7 @@ class BaseAgent(ABC):
         """        
         pass
 
-    def _execute_tool_call(self, tool_call) -> Dict[str, Any]:
+    async def _aexecute_tool_call(self, tool_call) -> Dict[str, Any]:
         function_name = tool_call.function.name
         
         try:
@@ -171,7 +173,10 @@ class BaseAgent(ABC):
         
         function_to_call = available_tools[function_name]
         try:
-            result = function_to_call(**function_args)
+            if inspect.iscoroutinefunction(function_to_call):
+                result = await function_to_call(**function_args)
+            else:
+                result = function_to_call(**function_args)
             return {
                 "tool_call_id": tool_call.id,
                 "role": "tool",
@@ -186,7 +191,7 @@ class BaseAgent(ABC):
                 "content": f"Error while executing tool '{function_name}': {e}",
             }
 
-    def execute_task(self, user_message: str) -> str:
+    async def execute_task(self, user_message: str) -> str:
         messages = [
             {"role": "system", "content": self._get_system_message()},
             {"role": "user", "content": user_message}
@@ -211,7 +216,7 @@ class BaseAgent(ABC):
 
             try:
                 # Use dictionary unpacking to pass the conditional arguments.
-                response = litellm.completion(**completion_kwargs)
+                response = await litellm.acompletion(**completion_kwargs)
             except Exception as e:
                 return f"Error: Failed to get a response from the model. Details: {e}"
             
@@ -224,10 +229,9 @@ class BaseAgent(ABC):
             if not response_message.tool_calls:
                 return response_message.content or "Task finished, but no final text content was provided."
 
-            tool_outputs = []
-            for tool_call in response_message.tool_calls:
-                tool_result = self._execute_tool_call(tool_call)
-                tool_outputs.append(tool_result)
+            tool_outputs = await asyncio.gather(
+                *(self._aexecute_tool_call(tool_call) for tool_call in response_message.tool_calls)
+            )
             
             messages.extend(tool_outputs)
             

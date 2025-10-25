@@ -1,6 +1,6 @@
 
 from playwright.async_api import async_playwright
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup
 
 async def scrape_interactive_elements(url: str) -> list[str]:
     
