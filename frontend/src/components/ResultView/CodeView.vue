@@ -2,26 +2,22 @@
 import { ref, watch, onMounted } from 'vue'
 import hljs from 'highlight.js/lib/core'
 import 'highlight.js/styles/github-dark.css'
+import hljsDefineRobot from 'highlightjs-robot'
 
-// TODO: switch to actual robotframework import once the import issue is possibly resolved ?
-// import hljsDefineRobot from "highlightjs-robot"
-// hljsDefineRobot(hljs)
-import python from 'highlight.js/lib/languages/python'
+hljsDefineRobot(hljs)
 
-hljs.registerLanguage('robotframework', python)
+hljs.highlightAll()
 
 const props = defineProps<{ scripts: string }>()
 const codeRef = ref<HTMLElement | null>(null)
 
 // Try parsing the JSON
 const parseJSON = (original: string) => {
-  if (!original) return ""
+  if (!original) return ''
   try {
     const parsed = JSON.parse(original)
     if (parsed.test_script) return parsed.test_script
-  } catch {
-    
-  }
+  } catch {}
   return original
 }
 
@@ -33,14 +29,10 @@ const highlightCode = () => {
   let code = parseJSON(props.scripts)
 
   // Convert all literal "\n" into real line breaks
-  code = code.replace(/\\n/g, "\n")
-
-  // 
-  code = code.replace(/\\n/g, "\n")
+  code = code.replace(/\\n/g, '\n')
 
   // Insert code into <code> block
   codeRef.value.textContent = code
-
   // Delete any previous highlights
   delete (codeRef.value as any).dataset.highlighted
 
@@ -73,7 +65,7 @@ const copyToClipboard = () => {
       <button class="primary">Reset Session</button>
     </div>
     <pre class="code-block">
-      <code ref="codeRef" class="robotframework"></code>
+      <code ref="codeRef" class="language-robot"></code>
     </pre>
   </div>
 </template>
@@ -90,10 +82,8 @@ const copyToClipboard = () => {
 
 .code-block {
   background-color: black;
-  color: white;
   flex: 1;
   border-radius: 4px;
-  padding: 1rem;
   overflow-y: auto;
   white-space: pre-wrap;
 }
