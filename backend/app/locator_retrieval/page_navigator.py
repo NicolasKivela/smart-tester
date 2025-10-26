@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 from playwright.async_api import async_playwright, Page
 from bs4 import BeautifulSoup
 
@@ -6,10 +7,10 @@ class PageNavigator:
     """
     A class to encapsulate Playwright browser interactions.
     """
-    def __init__(self, headless: bool = False):
+    def __init__(self, headless: bool = True):
         self.playwright = None
         self.browser = None
-        self.page = None
+        self.page: Page | None = None
         self.headless = headless
 
     async def start(self):
@@ -23,6 +24,87 @@ class PageNavigator:
         self.page = await context.new_page()
         print("Browser started.")
 
+    async def goto(self, url: str):
+        """Navigates the page to a specified URL."""
+        if not self.page:
+            raise Exception("Page is not initialized. Call start() first.")
+        print(f"Navigating to {url}...")
+        await self.page.goto(url, timeout=60000, wait_until="networkidle")
+
+    async def accept_cookies(self):
+        """Finds and clicks the cookie acceptance button."""
+        if not self.page:
+            raise Exception("Page is not initialized.")
+            
+        # As requested, a placeholder for the locator.
+        cookie_locator = self.page.get_by_role("button", name="Hyväksy kaikki")
+        
+        print("Checking for and clicking cookie consent button...")
+        await self.page.wait_for_timeout(2000)
+        try:
+            await cookie_locator.click(timeout=5000)
+            print("Cookie consent button clicked.")
+            await self.page.wait_for_load_state("networkidle", timeout=5000)
+        except Exception as e:
+                timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                screenshot_path = f"backend/app/locator_retrieval/failure_{timestamp}.png"
+                await self.page.screenshot(path=screenshot_path)
+                print(f"Click action failed for selector in cookie consent'{cookie_locator}'. Screenshot saved to {screenshot_path}. Reason: {e}")
+
+    async def execute_action(self, action_details: dict):
+        """
+        Parses and executes a single action (e.g., 'click') from an agent.
+        """
+        if not self.page:
+            raise Exception("Page is not initialized.")
+
+        action_type = action_details.get('action')
+
+        if action_type == "click":
+            selector = action_details.get('css') or action_details.get('xpath')
+            if not selector:
+                print("Action was 'click' but no selector was provided.")
+                return
+
+            try:
+                print(f"Executing action: '{action_type}' by clicking selector: {selector}")
+                await self.page.locator(selector).first.click(timeout=10000)
+                print("Click successful.")
+                await self.page.wait_for_load_state("networkidle", timeout=10000)
+            except Exception as e:
+                timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                screenshot_path = f"backend/app/locator_retrieval/failure_{timestamp}.png"
+                await self.page.screenshot(path=screenshot_path)
+                print(f"Click action failed for selector '{selector}'. Screenshot saved to {screenshot_path}. Reason: {e}")
+                raise e
+        # Can add more actions like 'fill' here in the future
+        else:
+            print(f"Action was '{action_type}', not 'click'. Skipping execution.")
+
+    async def get_page_content_for_agent(self, task: str) -> str:
+        """
+        Scrapes the page and formats the content as a prompt for the LocatorRetrievalAgent.
+        """
+        if not self.page:
+            raise Exception("Page is not initialized.")
+
+        print("Scraping current page for interactive elements...")
+        try:
+            await self.page.wait_for_load_state("networkidle", timeout=10000)
+        except Exception as e:
+            print(f"Page did not reach network idle state, continuing anyway. Reason: {e}")
+
+        html = await self.page.content()
+        soup = BeautifulSoup(html, 'html.parser')
+
+        selectors = ['input', 'button', 'a', 'select', 'textarea', 'label', 'submit']
+        elements = soup.find_all(selectors)
+        
+        interactive_elements = [str(el) for el in elements]
+        locators_string = ", ".join(interactive_elements)
+        
+        return f"URL: {self.page.url}, Locators: {locators_string}, Task: {str(task)}"
+
     async def stop(self):
         """Stops the browser and the Playwright instance."""
         print("Stopping browser...")
@@ -31,91 +113,3 @@ class PageNavigator:
         if self.playwright:
             await self.playwright.stop()
         print("Browser stopped.")
-
-    async def navigate(self, url: str) -> str:
-        """Navigates the page to a specified URL."""
-        print(f"Navigating to {url}...")
-        try:
-            await self.page.goto(url, timeout=60000, wait_until="domcontentloaded")
-            await self._handle_cookies()
-            return f"Successfully navigated to {url}. Current URL is {self.page.url}."
-        except Exception as e:
-            return f"Failed to navigate to {url}. Error: {e}"
-
-    async def click(self, selector: str, description: str) -> str:
-        """Clicks an element on the page matching the given CSS selector."""
-        print(f"Attempting to click: {description} (Selector: {selector})")
-        try:
-            await self.page.locator(selector).first.click(timeout=10000)
-            await self.page.wait_for_load_state('domcontentloaded', timeout=10000)
-            return f"Clicked element '{description}' with selector '{selector}'. Current URL is {self.page.url}."
-        except Exception as e:
-            return f"Failed to click element with selector '{selector}'. Error: {e}"
-
-    async def fill(self, selector: str, text: str, description: str) -> str:
-        """Fills an input field with the given text."""
-        print(f"Attempting to fill: {description} (Selector: {selector})")
-        try:
-            await self.page.locator(selector).first.fill(text, timeout=5000)
-            return f"Filled input '{description}' with selector '{selector}'."
-        except Exception as e:
-            return f"Failed to fill element with selector '{selector}'. Error: {e}"
-
-    async def get_page_content(self) -> str:
-        """
-        Returns a string containing the current URL and a simplified view of the
-        interactive elements on the page (links, buttons, inputs).
-        """
-        try:
-            await self.page.wait_for_load_state('domcontentloaded', timeout=10000)
-            content = f"Current URL: {self.page.url}\n\n"
-            
-            html = await self.page.content()
-            soup = BeautifulSoup(html, 'html.parser')
-
-            elements = []
-            for el in soup.find_all(['a', 'button', 'input', 'textarea', 'select']):
-                text = ' '.join(el.stripped_strings)
-                # Create a CSS selector for the element
-                selector = el.name
-                if el.has_attr('id'):
-                    selector = f"#{el['id']}"
-                elif el.has_attr('data-testid'):
-                    selector = f"[{el.name}[data-testid='{el['data-testid']}']"
-                elif text:
-                    # This is a simplification, but can work for many cases
-                    selector = f"{el.name}:has-text('{text}')"
-
-                element_info = f"- Element: <{el.name}>, Text: '{text}', Selector suggestion: '{selector}'"
-                elements.append(element_info)
-            
-            content += "Interactive elements on page:\n"
-            if elements:
-                content += "\n".join(elements)
-            else:
-                content += "No interactive elements found."
-                
-            return content
-        except Exception as e:
-            return f"Failed to get page content. Error: {e}"
-
-    async def _handle_cookies(self):
-        """Attempts to accept or dismiss cookie banners."""
-        selectors = [
-            "button:has-text('Accept all')",
-            "button:has-text('Accept')",
-            "button:has-text('Hyväksy kaikki')",
-            "button:has-text('Hyväksy')",
-            "#onetrust-accept-btn-handler",
-        ]
-        for selector in selectors:
-            try:
-                locator = self.page.locator(selector)
-                if await locator.count() > 0:
-                    await locator.first.click(timeout=1000)
-                    print(f"Cookie banner handled with selector: {selector}")
-                    await self.page.wait_for_load_state('domcontentloaded', timeout=5000)
-                    return
-            except Exception:
-                continue
-        print("No cookie banner found or it was not clickable.")
