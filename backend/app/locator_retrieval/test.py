@@ -15,6 +15,7 @@ async def main():
     # Initialize agents
     navigator_agent = NavigatorAgent()
     locator_agent = LocatorRetrievalAgent()
+    task_agent = BDDTaskAgent()
     
     # Initialize the navigator
     navigator = PageNavigator()

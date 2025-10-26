@@ -7,28 +7,32 @@ class PageNavigator:
     """
     A class to encapsulate Playwright browser interactions.
     """
-    def __init__(self, headless: bool = True):
+    def __init__(self, headless: bool = True, silent: bool = False):
         self.playwright = None
         self.browser = None
         self.page: Page | None = None
         self.headless = headless
+        self.silent = silent
 
     async def start(self):
         """Starts the Playwright instance and launches a browser."""
-        print("Starting browser...")
+        if not self.silent:
+            print("Starting browser...")
         self.playwright = await async_playwright().start()
         self.browser = await self.playwright.chromium.launch(headless=self.headless)
         context = await self.browser.new_context(
             user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         )
         self.page = await context.new_page()
-        print("Browser started.")
+        if not self.silent:
+            print("Browser started.")
 
     async def goto(self, url: str):
         """Navigates the page to a specified URL."""
         if not self.page:
             raise Exception("Page is not initialized. Call start() first.")
-        print(f"Navigating to {url}...")
+        if not self.silent:
+            print(f"Navigating to {url}...")
         await self.page.goto(url, timeout=60000, wait_until="networkidle")
 
     async def accept_cookies(self):
@@ -39,17 +43,20 @@ class PageNavigator:
         # As requested, a placeholder for the locator.
         cookie_locator = self.page.get_by_role("button", name="Hyväksy kaikki")
         
-        print("Checking for and clicking cookie consent button...")
+        if not self.silent:
+            print("Checking for and clicking cookie consent button...")
         await self.page.wait_for_timeout(2000)
         try:
             await cookie_locator.click(timeout=5000)
-            print("Cookie consent button clicked.")
+            if not self.silent:
+                print("Cookie consent button clicked.")
             await self.page.wait_for_load_state("networkidle", timeout=5000)
         except Exception as e:
                 timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
                 screenshot_path = f"failure_{timestamp}.png"
                 await self.page.screenshot(path=screenshot_path)
-                print(f"Click action failed for selector in cookie consent'{cookie_locator}'. Screenshot saved to {screenshot_path}. Reason: {e}")
+                if not self.silent:
+                    print(f"Click action failed for selector in cookie consent'{cookie_locator}'. Screenshot saved to {screenshot_path}. Reason: {e}")
 
     async def execute_action(self, action_details: dict):
         """
@@ -63,23 +70,28 @@ class PageNavigator:
         if action_type == "click":
             selector = action_details.get('css') or action_details.get('xpath')
             if not selector:
-                print("Action was 'click' but no selector was provided.")
+                if not self.silent:
+                    print("Action was 'click' but no selector was provided.")
                 return
 
             try:
-                print(f"Executing action: '{action_type}' by clicking selector: {selector}")
+                if not self.silent:
+                    print(f"Executing action: '{action_type}' by clicking selector: {selector}")
                 await self.page.locator(selector).first.click(timeout=10000)
-                print("Click successful.")
+                if not self.silent:
+                    print("Click successful.")
                 await self.page.wait_for_load_state("networkidle", timeout=10000)
             except Exception as e:
                 timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
                 screenshot_path = f"failure_{timestamp}.png"
                 await self.page.screenshot(path=screenshot_path)
-                print(f"Click action failed for selector '{selector}'. Screenshot saved to {screenshot_path}. Reason: {e}")
+                if not self.silent:
+                    print(f"Click action failed for selector '{selector}'. Screenshot saved to {screenshot_path}. Reason: {e}")
                 raise e
         # Can add more actions like 'fill' here in the future
         else:
-            print(f"Action was '{action_type}', not 'click'. Skipping execution.")
+            if not self.silent:
+                print(f"Action was '{action_type}', not 'click'. Skipping execution.")
 
     async def get_page_content_for_agent(self, task: str) -> str:
         """
@@ -88,11 +100,13 @@ class PageNavigator:
         if not self.page:
             raise Exception("Page is not initialized.")
 
-        print("Scraping current page for interactive elements...")
+        if not self.silent:
+            print("Scraping current page for interactive elements...")
         try:
             await self.page.wait_for_load_state("networkidle", timeout=10000)
         except Exception as e:
-            print(f"Page did not reach network idle state, continuing anyway. Reason: {e}")
+            if not self.silent:
+                print(f"Page did not reach network idle state, continuing anyway. Reason: {e}")
 
         html = await self.page.content()
         soup = BeautifulSoup(html, 'html.parser')
@@ -107,9 +121,11 @@ class PageNavigator:
 
     async def stop(self):
         """Stops the browser and the Playwright instance."""
-        print("Stopping browser...")
+        if not self.silent:
+            print("Stopping browser...")
         if self.browser:
             await self.browser.close()
         if self.playwright:
             await self.playwright.stop()
-        print("Browser stopped.")
+        if not self.silent:
+            print("Browser stopped.")
