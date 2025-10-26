@@ -1,4 +1,3 @@
-from .scraper import scrape_interactive_elements
 from app.common.base_agent import BaseAgent
 
 
