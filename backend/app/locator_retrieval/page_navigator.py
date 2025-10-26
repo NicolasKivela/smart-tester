@@ -47,7 +47,7 @@ class PageNavigator:
             await self.page.wait_for_load_state("networkidle", timeout=5000)
         except Exception as e:
                 timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-                screenshot_path = f"backend/app/locator_retrieval/failure_{timestamp}.png"
+                screenshot_path = f"failure_{timestamp}.png"
                 await self.page.screenshot(path=screenshot_path)
                 print(f"Click action failed for selector in cookie consent'{cookie_locator}'. Screenshot saved to {screenshot_path}. Reason: {e}")
 
@@ -73,7 +73,7 @@ class PageNavigator:
                 await self.page.wait_for_load_state("networkidle", timeout=10000)
             except Exception as e:
                 timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-                screenshot_path = f"backend/app/locator_retrieval/failure_{timestamp}.png"
+                screenshot_path = f"failure_{timestamp}.png"
                 await self.page.screenshot(path=screenshot_path)
                 print(f"Click action failed for selector '{selector}'. Screenshot saved to {screenshot_path}. Reason: {e}")
                 raise e

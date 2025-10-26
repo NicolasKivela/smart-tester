@@ -44,4 +44,4 @@ Thumbs.db
 /backend/app/requirement_handling/output/
 
 # Ignore Playwright failure screenshots
-backend/app/locator_retrieval/*.png
+backend/*.png
