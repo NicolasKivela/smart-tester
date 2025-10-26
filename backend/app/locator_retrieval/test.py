@@ -15,9 +15,9 @@ async def main():
 
     input_for_task_agent =  "URL: https://www.hsl.fi/ Scenario: Browsing Different Ticket Types Given the user navigates to the Tickets and Prices section When the page loads Then the user should see distinct categories for different ticket types (e.g., Single Tickets, Day Tickets, Season Tickets) And clicking on a ticket type should provide a description of its validity and use. Scenario: Checking Prices by Travel Zone Given the user is viewing the pricing details for a specific ticket type (e.g., Season Ticket) When the user selects different travel zones (e.g., Zone AB, Zone BC, Zone D) Then the displayed price should update correctly for the selected zone combination And the user should be able to clearly identify the cost for their journey zone. Scenario: Finding Ticket Purchase Instructions Given the user is in the Tickets and Prices section When the user looks for information on where to buy tickets Then the page should list various purchase channels (e.g., HSL App, Ticket Machines, Service Points) And each channel should have clear, step-by-step instructions or links detailing the purchase process."
 
-    task = "Get relevant locators from the Customer service page by navigating to the customer service page"
+    task = "Get relevant locators from the Ticekts and prices page by navigating to the tickets and prices page"
 
-    #Here starts the new script
+    #Here starts the new script. Open the browser to the page.
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
         page = await browser.new_page()
@@ -27,6 +27,7 @@ async def main():
             'Accept-Language': 'en-US,en;q=0.9',
         })
 
+        # THis part could be wrapped to a scraping function
         await page.goto(URL, timeout=60000, wait_until="networkidle")
 
         html = await page.content()
@@ -44,20 +45,22 @@ async def main():
         # 2. Use an f-string to format the output exactly as requested
         locator_input = f"Locators: {locators_string}, Task: {str(task)}"
 
-        #Init agents
+        #Init agents 
         navigator_agent = NavigatorAgent()
         locator_agent = LocatorRetrievalAgent()
 
+        # Get relevant locators from the scraped content using the agent
         relevant_locators = await locator_agent.execute_task(locator_input)
         print(f"Printing relevant locators for debugging purposes {relevant_locators} and appending them to the list")
         all_relevant_locators.append(relevant_locators)
 
-
+        # Use navigator agent with the found locators and task to decide the next action
         navigator_input = f"Task: {task}, Relevant locators: {relevant_locators}"
         print(navigator_input)
         next_task = await navigator_agent.execute_task(navigator_input)
         print(f"Next task would be: {next_task}")
 
+        # Parse the output to find the action and use playwright tools to execute that action
         # 1. Find the start of the JSON (the first '{')
         start_index = next_task.find('{')
 
@@ -120,7 +123,10 @@ async def main():
         else:
             print("Error: Could not find '{' or '}' in the input string.")
 
-
+# TODO: Make this to a loop
+# TODO: Add memory so that agents could now which part of the task already done
+# TODO: Add 'finish' to the actions, when it is decided that the task list is done
+# TODO: Collect all locators in to one list during each iteration.
 
 if __name__ == "__main__":
     # You'll need to have Playwright installed: pip install playwright
