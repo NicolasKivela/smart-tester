@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import BddCard from '@/components/ResultView/BddCard.vue'
-import { watch, ref } from 'vue'
+import { watch, ref, computed } from 'vue'
 import type { BddScenario, Feature } from './types'
 import { postBddIds } from '@/services/resultsService.ts'
 
@@ -13,6 +13,12 @@ const emit = defineEmits(['updateTests', 'start-tests-loader', 'stop-tests-loade
 
 const mutatedBddScenarios = ref<BddScenario[]>(props.bddScenarios)
 const feature = ref<Number>(props.featureId)
+
+// Function to check if the "Generate tests" -button should be activated
+const disabledButton = computed(() => {
+  return !props.featureId || props.bddScenarios.length === 0
+})
+
 // TODO: remove unnecessary timeouts once actual logic is implemented
 const generateTests = async () => {
   // Start loader
@@ -56,7 +62,7 @@ watch(
   <div class="bdd-view">
     <div class="column">
       <h3 class="title">BDD Scenarios</h3>
-      <button class="primary" @click="generateTests">Generate Tests</button>
+      <button class="primary" @click="generateTests" :disabled="disabledButton">Generate Tests</button>
     </div>
     <div class="scrollable-section">
       <ul
@@ -106,5 +112,10 @@ button {
 .add-button {
   display: flex;
   align-items: center;
+}
+button.primary:disabled {
+  cursor: not-allowed !important;
+  background: #cccccc;
+  color: #666666;
 }
 </style>
