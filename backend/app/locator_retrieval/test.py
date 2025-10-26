@@ -1,143 +1,176 @@
-from .task_agent import BDDTaskAgent
+import asyncio
+import json
+from playwright.async_api import async_playwright, Page
+from bs4 import BeautifulSoup
+
+# These imports are based on the user's provided file.
+# This script assumes these agent modules exist in the same directory.
 from .locator_agent import LocatorRetrievalAgent
 from .navigator_agent import NavigatorAgent
-import asyncio
-from playwright.async_api import async_playwright
-from bs4 import BeautifulSoup
-import json
 
+async def scrape_page_for_input(page: Page, task: str) -> str:
+    """
+    Scrapes the current page, extracts interactive elements, and formats them
+    as input for the LocatorRetrievalAgent.
+    """
+    print("Scraping current page for interactive elements...")
+    try:
+        await page.wait_for_load_state("networkidle", timeout=10000)
+    except Exception as e:
+        print(f"Page did not reach network idle state, continuing anyway. Reason: {e}")
+
+    html = await page.content()
+    soup = BeautifulSoup(html, 'html.parser')
+
+    selectors = ['input', 'button', 'a', 'select', 'textarea', 'label', 'submit']
+    elements = soup.find_all(selectors)
+    
+    interactive_elements = [str(el) for el in elements]
+    locators_string = ", ".join(interactive_elements)
+    
+    # Format the string for the agent
+    return f"URL: {page.url}, Locators: {locators_string}, Task: {str(task)}"
+
+async def execute_action(page: Page, action_details: dict):
+    """
+    Executes a single action (e.g., 'click') provided by the NavigatorAgent.
+    """
+    action_type = action_details.get('action')
+    description = action_details.get('description', 'No description')
+    
+    if action_type == "click":
+        # The navigator agent should provide a single, robust selector.
+        selector = action_details.get('css') or action_details.get('xpath')
+        
+        if not selector:
+            print("Action was 'click' but no 'css' or 'xpath' selector was provided.")
+            return
+
+        try:
+            print(f"Executing action: '{description}' by clicking selector: {selector}")
+            await page.locator(selector).first.click(timeout=10000)
+            print("Click successful.")
+            # Wait for the page to settle after the click
+            await page.wait_for_load_state("networkidle", timeout=10000)
+        except Exception as e:
+            print(f"Click action failed for selector '{selector}'. Reason: {e}")
+            # Re-raise the exception to stop the loop on a critical failure
+            raise e
+    else:
+        print(f"Action was '{action_type}', not 'click'. Skipping execution.")
 
 async def main():
-
     URL = "https://www.hsl.fi/"
+    task = "First, navigate to the 'Responsibility' page. Then get locators related for opening the responsibility report"
 
-    #Holds all the found locators
-    all_relevant_locators = []
-    #Holds all the actions done
+    all_found_locators = []
     action_history = []
 
-    input_for_task_agent =  "URL: https://www.hsl.fi/ Scenario: Browsing Different Ticket Types Given the user navigates to the Tickets and Prices section When the page loads Then the user should see distinct categories for different ticket types (e.g., Single Tickets, Day Tickets, Season Tickets) And clicking on a ticket type should provide a description of its validity and use. Scenario: Checking Prices by Travel Zone Given the user is viewing the pricing details for a specific ticket type (e.g., Season Ticket) When the user selects different travel zones (e.g., Zone AB, Zone BC, Zone D) Then the displayed price should update correctly for the selected zone combination And the user should be able to clearly identify the cost for their journey zone. Scenario: Finding Ticket Purchase Instructions Given the user is in the Tickets and Prices section When the user looks for information on where to buy tickets Then the page should list various purchase channels (e.g., HSL App, Ticket Machines, Service Points) And each channel should have clear, step-by-step instructions or links detailing the purchase process."
 
-    #Current task
-    task = "Get relevant locators from the Ticekts and prices page by navigating to the tickets and prices page"
+    # Initialize agents
+    navigator_agent = NavigatorAgent()
+    locator_agent = LocatorRetrievalAgent()
 
-    #Here starts the new script. Open the browser to the page.
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
-        page = await browser.new_page()
-
-        await page.set_extra_http_headers({
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-            'Accept-Language': 'en-US,en;q=0.9',
-        })
-
-        # THis part could be wrapped to a scraping function
+        context = await browser.new_context(
+            user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36'
+        )
+        page = await context.new_page()
         await page.goto(URL, timeout=60000, wait_until="networkidle")
 
-        html = await page.content()
-
-        soup = BeautifulSoup(html, 'html.parser')
-
-        selectors = ['input', 'button', 'a', 'select', 'textarea', 'label', 'submit']
-        elements = soup.find_all(selectors)
-
-        # This line is fine from your original code
-        interactive_elements = [str(el) for el in elements]
-        # --- Fix ---
-        # 1. Join the list of elements into a single, comma-separated string
-        locators_string = ", ".join(interactive_elements)
-        # 2. Use an f-string to format the output exactly as requested
-        locator_input = f"Locators: {locators_string}, Task: {str(task)}"
-
-        #Init agents 
-        navigator_agent = NavigatorAgent()
-        locator_agent = LocatorRetrievalAgent()
-
-        # Get relevant locators from the scraped content using the agent
-        relevant_locators = await locator_agent.execute_task(locator_input)
-        print(f"Printing relevant locators for debugging purposes {relevant_locators} and appending them to the list")
-
-        #Adding found locators to sessions all locators
-        all_relevant_locators.append(relevant_locators)
-
-        # Use navigator agent with the found locators and task to decide the next action
-        navigator_input = f"Task: {task}, Relevant locators: {relevant_locators}"
-        print(navigator_input)
-        next_task = await navigator_agent.execute_task(navigator_input)
-        print(f"Next task would be: {next_task}")
-
-        #Adding the task to the history
-        action_history.append(next_task)
-
-        # Parse the output to find the action and use playwright tools to execute that action
-        # 1. Find the start of the JSON (the first '{')
-        start_index = next_task.find('{')
-
-        # 2. Find the end of the JSON (the last '}')
-        end_index = next_task.rfind('}')
-
-        # 3. Extract *only* the JSON part
-        if start_index != -1 and end_index != -1:
-            json_part = next_task[start_index : end_index + 1]
+        # Main loop to perform the navigation task
+        for i in range(10): # Set a max of 10 iterations to prevent infinite loops
+            print(f"\n--- Iteration {i+1} ---")
+            print(f"Current URL: {page.url}") # Print current URL at the start of the iteration
             
-            # 4. Now, parse ONLY the extracted part
-            try:
-                data = json.loads(json_part)
-                
-                # --- Your original logic continues from here ---
-                
-                action_list = data.get('actions', [])
-                
-                if action_list:
-                    action_details = action_list[0]
-                    action_type = action_details.get('action')
-                    css_locator = action_details.get('css')
-                    xpath_locator = action_details.get('xpath')
+            # 1. Scrape page to find locators relevant to the current sub-task
+            locator_input = await scrape_page_for_input(page, task)
 
-                    if action_type == "click":
-                        if not css_locator and not xpath_locator:
-                            print("Action was 'click' but no 'css' or 'xpath' selector was provided.")
-                        else:
-                            try:
-                                if css_locator:
-                                    print(f"Action is 'click'. Trying CSS selector: {css_locator}")
-                                    await page.locator(css_locator).first.click(timeout=5000)
-                                    print("CSS click successful.")
-                                else:
-                                    raise ValueError("No CSS selector provided, trying XPath.")
-                            
-                            except Exception as e:
-                                print(f"CSS click failed or was skipped. Reason: {e}")
-                                if xpath_locator:
-                                    print(f"Trying XPath fallback: {xpath_locator}")
-                                    try:
-                                        await page.locator(xpath_locator).first.click()
-                                        print("XPath click successful.")
-                                    except Exception as e2:
-                                        print(f"XPath click also failed: {e2}")
-                                        raise e2
-                                else:
-                                    print("CSS click failed and no XPath fallback was provided.")
-                                    raise e
+            #print(f"Interactive elements found: {locator_input}")
+            
+            print("Asking LocatorAgent to find relevant locators...")
+            relevant_locators_json_str = await locator_agent.execute_task(locator_input)
+
+            #print(f"relevant locators found from the current page: {relevant_locators_json_str}")
+            
+            newly_found_locators = {}
+            try:
+                start_index = relevant_locators_json_str.find('{')
+                end_index = relevant_locators_json_str.rfind('}')
+                if start_index != -1 and end_index != -1:
+                    json_part = relevant_locators_json_str[start_index : end_index + 1]
+                    newly_found_locators = json.loads(json_part)
                     
-                    else:
-                        print(f"Action was '{action_type}', not 'click'. Skipping.")
-                        
+                    if newly_found_locators.get("locators"):
+                        all_found_locators.extend(newly_found_locators["locators"])
+                        print(f"Found {len(newly_found_locators['locators'])} new locators.")
                 else:
-                    print("No actions found in the JSON.")
+                    print("No JSON object found in LocatorAgent response.")
+            except json.JSONDecodeError:
+                print(f"Could not decode JSON from LocatorAgent response: {relevant_locators_json_str}")
+
+            # 2. Decide the next action using NavigatorAgent (which now has memory)
+            navigator_prompt = f'''
+            Overall Task: {task}
+
+            Action History (what has been done so far):
+            {json.dumps(action_history, indent=2)}
+
+            Locators found on the CURRENT page:
+            {json.dumps(newly_found_locators, indent=2)}
+
+            Based on the task, history, and current page locators, what is the single next action to perform?
+            Provide a robust CSS or XPath selector.
+            If the task is complete, respond with action 'finish'.
+            Your response must be a single JSON object with a list of 'actions'.
+            Example for click: {{"actions": [{{"action": "click", "css": "a[href='/tickets']", "description": "Navigate to tickets page."}}]}}
+            Example for finish: {{"actions": [{{"action": "finish", "reason": "The ticket price has been found."}}]}}
+            '''
+            
+            print(f"Asking NavigatorAgent to decide the next action... with {navigator_prompt}")
+            next_action_str = await navigator_agent.execute_task(navigator_prompt)
+
+            # 3. Parse and execute the action from the NavigatorAgent
+            try:
+                start_index = next_action_str.find('{')
+                end_index = next_action_str.rfind('}')
+                if start_index == -1 or end_index == -1:
+                    print(f"Error: Could not find a valid JSON object in NavigatorAgent response: {next_action_str}")
+                    break
+
+                json_part = next_action_str[start_index : end_index + 1]
+                action_data = json.loads(json_part)
+                
+                action_list = action_data.get('actions', [])
+                if not action_list:
+                    print("NavigatorAgent returned no actions. Ending task.")
+                    break
+
+                action_details = action_list[0]
+                action_history.append(action_details)
+
+                if action_details.get("action") == "finish":
+                    print(f"Task finished. Reason: {action_details.get('reason')}")
+                    break
+
+                await execute_action(page, action_details)
 
             except json.JSONDecodeError:
-                print(f"Error: Could not decode the *extracted* JSON part.")
-                print(f"Extracted part was: {json_part}")
-        else:
-            print("Error: Could not find '{' or '}' in the input string.")
+                print(f"Error: Could not decode JSON from NavigatorAgent response: {next_action_str}")
+                break
+            except Exception as e:
+                print(f"An error occurred during action execution: {e}")
+                break
 
-# TODO: Make this to a loop
-# TODO: Add memory so that agents could now which part of the task already done
-# TODO: Add 'finish' to the actions, when it is decided that the task list is done
-# TODO: Collect all locators in to one list during each iteration.
+        print("\n--- Task Execution Finished ---")
+
+
+
+        print("\nFinal Action History:")
+        print(json.dumps(action_history, indent=2))
+        print(f"\nTotal Locators Found: {len(all_found_locators)}")
+        print(json.dumps(all_found_locators, indent=2)) # Uncomment to see all locators
 
 if __name__ == "__main__":
-    # You'll need to have Playwright installed: pip install playwright
-    # And install the browsers: playwright install
     asyncio.run(main())
