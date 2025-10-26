@@ -1,4 +1,5 @@
 from app.common.base_agent import BaseAgent
+from app.requirement_handling.schemas import Extracted_Reqs
 import json, re
 
 class RequirementAgent(BaseAgent):
@@ -21,15 +22,21 @@ class RequirementAgent(BaseAgent):
     def detect_topics(self, text: str):
         prompt = f"""
         You are an assistant that analyzes requirement documents.
-        From the text below, identify all the main topics or sections.
-        Topics can include features like Login, Checkout, Shopping Cart, Payment, etc.
+        From the text below, identify all the main features as topics.
+        Features are for example: Login, Checkout, Shopping Cart, Payment, etc.
 
         Return the result as a JSON list of topic names only.
-
-        Text:
-        {text[:8000]}
+        {{[
+            feature_title1,
+            feature_title2,
+            etc.
+        ]}}
+        Requirement document to analyze: 
+        {text}
         """
+
         content = self.execute_task(prompt)
+        print("Raw content from topics",content)
         try:
             return json.loads(content)
         except:
@@ -43,12 +50,21 @@ class RequirementAgent(BaseAgent):
         related to the topic "{topic}".
         Each requirement should be a single clear sentence.
 
-        Return output as a JSON list.
+        Return output as a JSON list
+        {{
+            "topic":[requirements here]
+        }}
 
         Text:
         {text[:12000]}
         """
-        return self.execute_task(prompt)
+        content = self.execute_task(prompt, response_format=Extracted_Reqs)
+        try:
+            json_content = json.loads(content)
+            return json_content.get("topic_reqs")
+        except Exception as e:
+            print(e)
+            return 
     
 
     def summarize_topic(self, text: str, topic: str):

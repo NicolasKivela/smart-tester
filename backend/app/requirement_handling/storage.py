@@ -105,19 +105,15 @@ class db_requirements():
             return
     def create_processed_req(processed_reqs, summaries, topics):
         try:
-          print(processed_reqs)
-          print(topics)
-          print(summaries)
           # Combine all data into Processed_Req objects
-          for i, topic in enumerate(topics, start=1):
+          for i, (key, value) in enumerate(processed_reqs.items(),start=1):
               processed = Processed_Req(
                   id=i,
-                  feature=topic,
-                  summary=re.sub(r'^\*\*Topic:.*?\*\*\s*', '', summaries.get(topic, ""), flags=re.MULTILINE),
-                  requirements=processed_reqs.get(topic, []),
+                  feature=key,
+                  summary=re.sub(r'^\*\*Topic:.*?\*\*\s*', '', summaries.get(key, ""), flags=re.MULTILINE),
+                  requirements=value,
+                  bdd_scenarios=[]
               )
-              print(i)
-              print(topic)
               REQUIREMENTS[i] = processed.model_dump()
         except Exception as e:
             print(e)

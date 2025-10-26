@@ -187,7 +187,7 @@ class BaseAgent(ABC):
                 "content": f"Error while executing tool '{function_name}': {e}",
             }
 
-    def execute_task(self, user_message: str) -> str:
+    def execute_task(self, user_message: str, response_format=None) -> str:
         messages = [
             {"role": "system", "content": self._get_system_message()},
             {"role": "user", "content": user_message}
@@ -203,7 +203,8 @@ class BaseAgent(ABC):
                 "messages": messages,
                 "temperature": self.temperature,
                 "max_tokens": self.max_tokens,
-                "timeout": self.timeout
+                "timeout": self.timeout,
+                "response_format": response_format #Output format as a parameter from sub agents
             }
             # Only add tool-related parameters if the agent actually has tools.
             if tools:
