@@ -3,6 +3,7 @@ import json
 from .page_navigator import PageNavigator # Import the refactored navigator
 from .locator_agent import LocatorRetrievalAgent
 from .navigator_agent import NavigatorAgent
+from .task_agent import BDDTaskAgent
 
 async def main():
     URL = "https://www.hsl.fi/"
