@@ -114,7 +114,7 @@ class db_requirements():
                   requirements=value,
                   bdd_scenarios=[]
               )
-              REQUIREMENTS[i] = processed.model_dump()
+              REQUIREMENTS[i] = processed
         except Exception as e:
             print(e)
             print("Error creating new requirements to database")
