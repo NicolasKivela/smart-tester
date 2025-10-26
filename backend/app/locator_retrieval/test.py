@@ -11,10 +11,14 @@ async def main():
 
     URL = "https://www.hsl.fi/"
 
+    #Holds all the found locators
     all_relevant_locators = []
+    #Holds all the actions done
+    action_history = []
 
     input_for_task_agent =  "URL: https://www.hsl.fi/ Scenario: Browsing Different Ticket Types Given the user navigates to the Tickets and Prices section When the page loads Then the user should see distinct categories for different ticket types (e.g., Single Tickets, Day Tickets, Season Tickets) And clicking on a ticket type should provide a description of its validity and use. Scenario: Checking Prices by Travel Zone Given the user is viewing the pricing details for a specific ticket type (e.g., Season Ticket) When the user selects different travel zones (e.g., Zone AB, Zone BC, Zone D) Then the displayed price should update correctly for the selected zone combination And the user should be able to clearly identify the cost for their journey zone. Scenario: Finding Ticket Purchase Instructions Given the user is in the Tickets and Prices section When the user looks for information on where to buy tickets Then the page should list various purchase channels (e.g., HSL App, Ticket Machines, Service Points) And each channel should have clear, step-by-step instructions or links detailing the purchase process."
 
+    #Current task
     task = "Get relevant locators from the Ticekts and prices page by navigating to the tickets and prices page"
 
     #Here starts the new script. Open the browser to the page.
@@ -52,6 +56,8 @@ async def main():
         # Get relevant locators from the scraped content using the agent
         relevant_locators = await locator_agent.execute_task(locator_input)
         print(f"Printing relevant locators for debugging purposes {relevant_locators} and appending them to the list")
+
+        #Adding found locators to sessions all locators
         all_relevant_locators.append(relevant_locators)
 
         # Use navigator agent with the found locators and task to decide the next action
@@ -59,6 +65,9 @@ async def main():
         print(navigator_input)
         next_task = await navigator_agent.execute_task(navigator_input)
         print(f"Next task would be: {next_task}")
+
+        #Adding the task to the history
+        action_history.append(next_task)
 
         # Parse the output to find the action and use playwright tools to execute that action
         # 1. Find the start of the JSON (the first '{')
