@@ -55,10 +55,8 @@ class ScriptGen:
             "   Wait Until Page Contains Element    ${ACCEPT_COOKIES_BUTTON}    timeout=10s\n"
             "   Click Element    ${ACCEPT_COOKIES_BUTTON}\n"
             "   Wait Until Element Is Not Visible    ${ACCEPT_COOKIES_BUTTON}    timeout=5s\n\n"
-            "Close Browser\n"
-            "   Close All Browsers\n\n"
         )
-        self.__keywords = {"Open browser to front page\n", "Close Browser\n"}
+        self.__keywords = {"Open browser to front page\n"}
 
     def __collect_keywords(self, response):
         """
@@ -227,6 +225,7 @@ class ScriptGen:
         # convert to JSON
         return json.dumps({"test_script": result})
 
+
     def __call_agent(self, feature, locators, login):
         """
         Assembles input to a single string and calls LLM-agent
@@ -235,20 +234,14 @@ class ScriptGen:
         :param login: known valid login information as JSON
         :return: LLM response as string
         """
-        feature_desc=str(feature.summary)
-        scenarios=str(feature.bdd_scenarios)
-
-        if self.__keywords_str == "":
-            keywords = "No available keywords\n"
-        else:
-            keywords = self.__keywords_str
+        feature_desc = str(feature.summary)
+        scenarios = str(feature.bdd_scenarios)
 
         LLM_input = (
             "Feature to be tested:\n\n" + feature_desc +
             "\nBDD scenarios:\n\n" + scenarios +
             "\nLocators as JSON:\n\n" + json.dumps(locators) +
-            "\nUsable keywords:\n\n" + keywords +
-            "\nUsable variables: \n\n" + json.dumps(self.__variables) +
+            "\nUsable keywords:\n\n" + self.__keywords_str +
             "\nLogin information as JSON:\n\n" + str(login)
         )
         agent_obj = ScriptGenAgent()
