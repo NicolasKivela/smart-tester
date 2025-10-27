@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .bdd_scenarios.router import router as bdd_router
 from .test_script_generator.router import router as test_script_gen
 from .requirement_handling.router import router as req_processing
+
 app = FastAPI()
 
 # Add CORS middleware

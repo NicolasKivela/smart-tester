@@ -17,3 +17,5 @@ class Processed_Req(BaseModel):
 class Req_Topics(BaseModel):
     # topics: list
     topics: list[str]
+class Extracted_Reqs(BaseModel):
+    topic_reqs: list [str]
