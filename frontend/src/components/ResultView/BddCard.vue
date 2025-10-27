@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import type { BddScenario } from './types'
+import EditBdd from '@/components/ResultView/EditBdd.vue'
+import { updateBddScenario, deleteBddScenario } from '@/services/resultsService.ts'
 
 const props = defineProps({
   modelValue: {
@@ -10,9 +12,8 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['updateScenario', 'delete'])
-
+const allowEdit = ref(false)
 const bddScenario = ref(props.modelValue)
-const bddScenarioString = ref()
 
 watch(
   () => props.modelValue,
@@ -21,9 +22,16 @@ watch(
   },
 )
 
-const saveEdited = () => {
-  editable.value = false
-  emit('updateScenario', bddScenario.value)
+const saveEdited = (editedScenario) => {
+  allowEdit.value = false
+
+  updateBddScenario(editedScenario).then((response) => {
+    if (response === 'success') {
+      emit('updateScenario', editedScenario)
+    } else {
+      console.error('Failed to update BDD scenario: ', response)
+    }
+  })
 }
 
 const editable = ref(false)
@@ -33,6 +41,15 @@ const editable = ref(false)
 //     bddScenario.value.when.length +
 //     bddScenario.value.then.length,
 // )
+const handleDelete = async () => {
+  deleteBddScenario(bddScenario.value.id).then((response) => {
+    if (response === 'success') {
+      emit('delete', bddScenario.value)
+    } else {
+      console.error('Failed to delete BDD scenario: ', response)
+    }
+  })
+}
 </script>
 
 <template>
@@ -65,18 +82,24 @@ const editable = ref(false)
         </div> -->
       </div>
     </div>
-    <!-- <div class="actions">
-      <button v-if="!editable" class="round-button edit-button" @click="editable = true">
+    <div class="actions">
+      <button v-if="!allowEdit" class="round-button edit-button" @click="allowEdit = true">
         <span class="material-icons" style="font-size: 20px">edit</span>
       </button>
       <button v-else class="round-button save-button" @click="saveEdited">
         <span class="material-icons" style="font-size: 20px">check</span>
       </button>
-      <button class="round-button delete-button" @click="emit('delete')">
+      <button class="round-button delete-button" @click="handleDelete">
         <span class="material-icons" style="font-size: 20px">close</span>
       </button>
-    </div> -->
+    </div>
   </div>
+  <EditBdd
+    :visible="allowEdit"
+    :scenario="bddScenario"
+    @close="allowEdit = false"
+    @save="saveEdited"
+  />
 </template>
 
 <style scoped>

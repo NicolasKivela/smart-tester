@@ -22,6 +22,34 @@ const postBddScenarios = async (scenarios) => {
   }
 }
 
+const updateBddScenario = async (scenario) => {
+  try {
+    const response = await axios.put(`${API_URL}/bdd_scenarios/${scenario.id}`, scenario)
+
+    if (response.status === 200) {
+      return 'success'
+    } else {
+      return response
+    }
+  } catch (e) {
+    throw e
+  }
+}
+
+const deleteBddScenario = async (id: number) => {
+  try {
+    const response = await axios.delete(`${API_URL}/bdd_scenarios/${id}`)
+
+    if (response.status === 200) {
+      return 'success'
+    } else {
+      return response
+    }
+  } catch (e) {
+    throw e
+  }
+}
+
 const createTests = async (id: number) => {
   try {
     const response = await axios.post(`${API_URL}/test_scripts/generate?feature_id=` + id)
@@ -32,4 +60,4 @@ const createTests = async (id: number) => {
   }
 }
 
-export { getBddScenarios, postBddScenarios, createTests }
+export { getBddScenarios, postBddScenarios, createTests, updateBddScenario, deleteBddScenario }
