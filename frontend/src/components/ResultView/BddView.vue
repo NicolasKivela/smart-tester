@@ -19,19 +19,13 @@ const disabledButton = computed(() => {
   return !props.featureId || props.bddScenarios.length === 0
 })
 
-// TODO: remove unnecessary timeouts once actual logic is implemented
 const generateTests = async () => {
   // Start loader
   emit('start-tests-loader', 'Generating tests, please wait...')
-
-  // Timeout for demoing the loader while no actual processing is done
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
   
   console.log("chosen featuer id",props.featureId)
   const result = await postBddIds(props.featureId)
   
-
   console.log("test scripts",result)
   emit('updateTests',result)
 
