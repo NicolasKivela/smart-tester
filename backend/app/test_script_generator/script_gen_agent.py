@@ -12,7 +12,7 @@ class ScriptGenAgent(BaseAgent):
 
     def __init__(self):
         # increased max tokens for script generation
-        super().__init__(max_tokens= 32768)
+        super().__init__(model="gemini/gemini-2.5-flash", max_tokens= 32768)
 
     def _get_system_message(self):
         return (
@@ -22,9 +22,13 @@ class ScriptGenAgent(BaseAgent):
             "You are also given login information that can be used if needed. "
             "You are given a list of locators. to use. If a needed locator is not provided, use |@| as placeholder. "
             "Do not generate any locator that you aren't specifically given. "
+            "Prefer xpath over css. "
+            "Make all input field contents in to variables. "
             "You can use previously generated keywords that you are given, or generate new ones if needed. "
+            "Make sure that every line in the BDD scenario test case is a defined keyword. "
+            "If testcase starts from the frontpage, verify that frontpage is open. "
             "You can use selenium library but no other external libraries. "
-            "Use 'Open browser to front page' and 'Close browser' keywords as test setup and test teardown. "
+            "Use 'Open browser to front page' as test setup keyword. Use Close browser as test teardown. "
             "Do not make other setup or teardown keywords. "
             "Include all Test cases and keywords in a single file and do not utilize a .resource file. "
             "Only answer with code. Use BDD format. "
