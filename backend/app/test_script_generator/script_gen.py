@@ -24,7 +24,10 @@ class ScriptGen:
         self.__keywords_str = ""  # used to store in order
         self.__variables = {}
         self.__scripts = []
-        self.__variable_offset = 0
+
+        self.__variable_offset = 0      # used to align variable values in final output
+        self.__id_storage = set()       # used to store IDs to prevent duplicate API calls
+        self.__no_new_scripts = True    # is set to false if API call is made
 
         self.__init_keywords()
 
@@ -33,13 +36,22 @@ class ScriptGen:
         """
         Top level public method - returns robotframework test scripts from
         BDD-scenarios and locators by calling LLM agent
-        :param features: Feature data as: list[Processed_req])]
+        :param features: Feature data as: list[Processed_req]
         :param locators: target locators as JSON
         :return: result: robotframework test script as JSON object
         """
 
+        self.__no_new_scripts = True
+
         for feature in features:
+            # does not run feature with duplicate ID
+            if feature.id in self.__id_storage:
+                continue
+
+            # save id to prevent future duplicate and run
+            self.__id_storage.add(feature.id)
             response = self.__call_agent(feature, locators, login)
+            self.__no_new_scripts = False
             self.__collect_keywords(response)
             self.__collect_variables(response)
             self.__scripts.append(response)
@@ -48,7 +60,7 @@ class ScriptGen:
 
     def __init_keywords(self):
         """
-        Initializes setup and teardown keywords to internal attributes
+        Initializes hard-coded setup keyword to internal attributes
         """
 
         self.__keywords_str = (
@@ -231,8 +243,11 @@ class ScriptGen:
         self.__init_keywords()
         self.__variable_offset = 0
 
-        # convert to JSON
-        return json.dumps({"test_script": result})
+        if self.__no_new_scripts:
+            return None
+        else:
+            # convert to JSON
+            return json.dumps({"test_script": result})
 
 
     def __call_agent(self, feature, locators, login):
