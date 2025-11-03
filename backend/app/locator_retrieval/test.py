@@ -7,7 +7,7 @@ from .task_agent import BDDTaskAgent
 
 async def main():
     URL = "https://www.hsl.fi/"
-    task = "First, navigate to the 'Responsibility' page. Then get locators related for opening the responsibility report from the responsibility page."
+    task = "First, navigate to the searchbar page. Then get fill it and click the first option in the list."
 
     all_found_locators = []
     action_history = []
@@ -74,6 +74,7 @@ async def main():
             If the task is complete, respond with action 'finish'.
             Your response must be a single JSON object with a list of 'actions'.
             Example for click: {{"actions": [{{"action": "click", "css": "a[href='/tickets']", "description": "Navigate to tickets page."}}]}}
+            Example for fill: {{"actions": [{{"action": "fill", "css": "a[href='/tickets']", "description": "Fill the username field."}}]}}
             Example for finish: {{"actions": [{{"action": "finish", "reason": "The ticket price has been found."}}]}}
             '''
             
