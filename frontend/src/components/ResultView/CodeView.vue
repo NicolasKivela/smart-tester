@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, nextTick } from 'vue'
 import hljs from 'highlight.js/lib/core'
 import 'highlight.js/styles/github-dark.css'
 import hljsDefineRobot from 'highlightjs-robot'
 
 hljsDefineRobot(hljs)
-
-hljs.highlightAll()
 
 const props = defineProps<{ scripts: string }>()
 const codeRef = ref<HTMLElement | null>(null)
@@ -22,7 +20,7 @@ const parseJSON = (original: string) => {
 }
 
 // Render & highlight the generated code
-const highlightCode = () => {
+const highlightCode = async () => {
   if (!codeRef.value) return
 
   // Parse the JSON
@@ -33,11 +31,20 @@ const highlightCode = () => {
 
   // Insert code into <code> block
   codeRef.value.textContent = code
+  
   // Delete any previous highlights
   delete (codeRef.value as any).dataset.highlighted
 
   // Highlight the code
-  hljs.highlightElement(codeRef.value)
+  hljs.highlightAll()
+
+  // Highlight 'xpath...]' sections
+  await nextTick()
+    const html = codeRef.value.innerHTML
+    codeRef.value.innerHTML = html.replace(
+    /(xpath\s*=\s*[^\]]*\])/gi,
+    '<span class="xpath-highlight">$1</span>'
+    )
 }
 
 // Watch props.scripts for changes
@@ -102,5 +109,10 @@ const copyToClipboard = () => {
 
 button {
   flex: 2;
+}
+
+.code-block :deep(.xpath-highlight) {
+  color: #EE82EE;
+  font-weight: bold;
 }
 </style>
