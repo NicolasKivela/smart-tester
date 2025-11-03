@@ -1,14 +1,18 @@
 import asyncio
 import json
 from .page_navigator import PageNavigator
-from .locator_agent import LocatorRetrievalAgent
-from .navigator_agent import NavigatorAgent
-from .task_agent import BDDTaskAgent
-
+from app.locator_retrieval.agents import BDDTaskAgent,LocatorRetrievalAgent,NavigatorAgent
+from app.requirement_handling.storage import REQUIREMENTS
 class LocatorRetrieving:
     """
     A class to retrieve web element locators based on BDD scenarios.
     """
+    async def scraper_process(self,feature_id):
+        requirements = REQUIREMENTS[feature_id]
+        scenarios = requirements.bdd_scenarios
+        url = requirements.url
+        
+        self.locator_retrieving_service()
     async def locator_retrieving_service(self, scenarios: list[str], url: str, user_credentials: dict = None):
         """
         Retrieves locators for web elements based on BDD scenarios by navigating a web page.
