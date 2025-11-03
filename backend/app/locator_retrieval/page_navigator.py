@@ -89,9 +89,33 @@ class PageNavigator:
                     print(f"Click action failed for selector '{selector}'. Screenshot saved to {screenshot_path}. Reason: {e}")
                 raise e
         # Can add more actions like 'fill' here in the future
+        elif action_type == "fill":
+            selector = action_details.get('css') or action_details.get('xpath')
+            username = "tickets and prices"
+
+            if not selector or username is None:
+                if not self.silent:
+                    print("Action was 'fill' but selector or value was missing.")
+                return
+            try:
+                if not self.silent:
+                    print(f"Executing action: '{action_type}' by filling selector: {selector} with value: '{username}'")
+                await self.page.locator(selector).first.fill(username, timeout=10000)
+                if not self.silent:
+                    print(f"Filled '{selector}' successfully with '{username}'.")
+            except Exception as e:
+                timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                screenshot_path = f"failure_{timestamp}.png"
+                await self.page.screenshot(path=screenshot_path)
+                if not self.silent:
+                    print(f"Fill action failed for selector '{selector}'. Screenshot saved to {screenshot_path}. Reason: {e}")
+                raise e        
+
+
+
         else:
             if not self.silent:
-                print(f"Action was '{action_type}', not 'click'. Skipping execution.")
+                print(f"Action was '{action_type}', not 'click' or 'fill'. Skipping execution.")
 
     async def get_page_content_for_agent(self, task: str) -> str:
         """
