@@ -8,15 +8,6 @@ on:
 
 jobs:
 
-  build:
-
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v4
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
-  
   test_backend:
     name: Test Backend
     runs-on: ubuntu-latest
@@ -26,10 +17,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-        
+
       - name: Build backend Docker Image
         uses: docker/build-push-action@v5
         with:
@@ -39,7 +30,7 @@ jobs:
           load: true
           cache-from: type=gha, scope=backend
           cache-to: type=gha, scope=backend, mode=max
-          
+
       - name: Run tests
         run: |
             docker run --rm \
@@ -55,7 +46,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
