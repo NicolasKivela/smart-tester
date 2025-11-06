@@ -229,12 +229,12 @@ class ScriptGen:
             result += settings_line
 
         self.__variable_offset += MIN_VARIABLE_SPACE
-        result += "\n*** Variables ***\n"
+        result += "*** Variables ***\n"
         for variable in self.__variables.keys():
             result += variable + (self.__variable_offset - len(variable)) * " " + self.__variables[variable] + "\n"
 
         result += "\n*** Test Cases ***\n" + tests
-        result += "\n*** Keywords ***\n" + self.__keywords_str
+        result += "*** Keywords ***\n" + self.__keywords_str
 
         # clear internal attributes
 
