@@ -1,19 +1,21 @@
 import time
 from .agents import RequirementAgent
 from .save_file import save_to_file
-from .schemas import Processed_Req
+from .schemas import Processed_Req, Credentials
 from .storage import REQUIREMENTS,db_requirements 
 import re
 
 class RequirementsProcessor:
     agent = RequirementAgent()
 
-    def __init__(self, json_input, text, req_file):
+    def __init__(self, json_input, text, req_file, url, password = None, username= None):
         self.json_input = json_input
         self.req_file = req_file
         self.text = text
         self.topics = []
         self.summaries = {}
+        self.url = url
+        self.credentials = Credentials(password=password, username=username)
 
     def process_req_document(self):
         """Ask the model for topics, then extract them cleanly."""
@@ -48,6 +50,8 @@ class RequirementsProcessor:
         return results
 
     def run_pipeline(self):
+        #Save url and credentials
+        db_requirements.save_url_data(self.url, self.credentials)
         self.process_req_document()
         # Summaries
         self.summarize()

@@ -4,7 +4,7 @@ class Credentials(BaseModel):
     username: str
     password: str
 
-class Req_Process(BaseModel):
+class UrlCredentials(BaseModel):
     url: HttpUrl
     credentials: Credentials
 

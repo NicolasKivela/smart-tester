@@ -1,6 +1,5 @@
 import json
 from fastapi import APIRouter, UploadFile, Form, File
-from .schemas import Req_Process, Req_Topics
 from .storage import REQ_TOPICS, REQUIREMENTS
 from .agents import RequirementAgent
 from .service import RequirementsProcessor

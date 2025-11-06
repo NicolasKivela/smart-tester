@@ -2,18 +2,28 @@ import asyncio
 import json
 from .page_navigator import PageNavigator
 from app.locator_retrieval.agents import BDDTaskAgent,LocatorRetrievalAgent,NavigatorAgent
-from app.requirement_handling.storage import REQUIREMENTS
+from app.requirement_handling.storage import REQUIREMENTS, URL_DATA
+from app.requirement_handling.schemas import UrlCredentials
+from app.locator_retrieval.storage import LOCATORS
 class LocatorRetrieving:
     """
     A class to retrieve web element locators based on BDD scenarios.
     """
-    async def scraper_process(self,feature_id):
-        requirements = REQUIREMENTS[feature_id]
-        scenarios = requirements.bdd_scenarios
-        url = requirements.url
-        
-        self.locator_retrieving_service()
-    async def locator_retrieving_service(self, scenarios: list[str], url: str, user_credentials: dict = None):
+    def __init__(self, feature_id):
+        self.feature_id = feature_id
+    async def scraper_process(self):
+        try:
+            requirements = REQUIREMENTS[self.feature_id]
+            url_data = URL_DATA
+            scenarios = requirements.bdd_scenarios
+            
+            locators = asyncio.create_task(self.locator_retrieving_service(scenarios,url_data))
+            return "Locator process started",locators
+        except Exception as e:
+            print(f"Unexpected {e=}, {type(e)=}")
+            
+            return f"Error starting scraper process: {e.args}"
+    async def locator_retrieving_service(self, scenarios: list[dict], url_data: UrlCredentials):
         """
         Retrieves locators for web elements based on BDD scenarios by navigating a web page.
 
@@ -25,8 +35,12 @@ class LocatorRetrieving:
         Returns:
             list: A list of dictionaries, where each dictionary represents a found locator.
         """
+        url = str(url_data.url)
+        print(url)
+        print(type(url))
         task_agent = BDDTaskAgent()
-        scenarios_str = "\n".join(scenarios)
+        scenarios_str = scenarios
+        #scenarios_str = "\n".join(scenarios)
         task_prompt = f"URL: {url}\n\nBDD Scenarios:\n{scenarios_str}"
         task = await task_agent.execute_task(task_prompt)
 
@@ -110,5 +124,6 @@ class LocatorRetrieving:
         finally:
             if navigator:
                 await navigator.stop()
-        
-        return all_found_locators
+        LOCATORS.append(all_found_locators)
+        print(LOCATORS)
+        return LOCATORS

@@ -1,7 +1,8 @@
 # temporary storage
 import re
-from app.requirement_handling.schemas import Processed_Req
+from app.requirement_handling.schemas import Processed_Req, UrlCredentials, Credentials
 REQ_TOPICS = []
+URL_DATA = UrlCredentials(url="https://www.hsl.fi/", credentials=Credentials(username="",password=""))
 REQUIREMENTS = {
     1: Processed_Req(
         id=1,
@@ -88,7 +89,7 @@ REQUIREMENTS = {
         bdd_scenarios=[]
     )
 }
-REQUIREMENTS={}
+#REQUIREMENTS={}
 class db_requirements():
     def get_req_by_id(id):
         try:
@@ -118,4 +119,10 @@ class db_requirements():
         except Exception as e:
             print(e)
             print("Error creating new requirements to database")
+    def save_url_data(url,credentials):
+      try:
+          URL_DATA = UrlCredentials(url,credentials)
+      except Exception as e:
+          print("Error saving url and credentials", e)
+
             
