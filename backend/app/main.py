@@ -4,8 +4,14 @@ from .bdd_scenarios.router import router as bdd_router
 from .test_script_generator.router import router as test_script_gen
 from .requirement_handling.router import router as req_processing
 from .locator_retrieval.router import router as locator_processing
+from app.common.database import init_db
 app = FastAPI()
 
+#Call database init function
+@app.on_event("startup")
+def on_startup():
+    init_db()
+    
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,

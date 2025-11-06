@@ -1,10 +1,10 @@
 import asyncio
 from app.bdd_scenarios.bdd_generation_agent import BddGenerationAgent
-from app.bdd_scenarios.schemas import Generate_BDD, BDD_Scenario
+from app.common.models.bdd_model import BDDScenario
 from app.bdd_scenarios.storage import BDD_SCENARIOS
-from app.requirement_handling.schemas import Processed_Req
+from app.common.models.req_model import Processed_Req
 
-def parse_gherkin(gherkin_text: str, feature: str) -> list[BDD_Scenario]:
+def parse_gherkin(gherkin_text: str, feature: str) -> list[BDDScenario]:
     """
     Parses Gherkin text and converts it into a list of BDD_Scenario objects.
     """
@@ -36,7 +36,7 @@ def parse_gherkin(gherkin_text: str, feature: str) -> list[BDD_Scenario]:
 
         new_id = len(BDD_SCENARIOS) + len(scenarios) + 1
         scenarios.append(
-            BDD_Scenario(
+            BDDScenario(
                 id=new_id,
                 feature=feature,
                 scenario=scenario_title,
@@ -47,7 +47,7 @@ def parse_gherkin(gherkin_text: str, feature: str) -> list[BDD_Scenario]:
         )
     return scenarios
 
-async def generate_bdd_scenarios_logic(item: Processed_Req) -> list[BDD_Scenario]:
+async def generate_bdd_scenarios_logic(item: Processed_Req) -> list[BDDScenario]:
     """
     Uses BddGenerationAgent to generate BDD scenarios and returns them as a list of BDD_Scenario objects.
     """
