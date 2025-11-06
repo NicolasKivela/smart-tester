@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 from .page_navigator import PageNavigator # Import the refactored navigator
 from .locator_agent import LocatorRetrievalAgent
 from .navigator_agent import NavigatorAgent
@@ -7,7 +8,14 @@ from .task_agent import BDDTaskAgent
 
 async def main():
     URL = "https://www.hsl.fi/"
-    task = "First, navigate to the searchbar page. Then get fill it and click the first option in the list."
+    task = """1. Navigate to the HSL.fi homepage.
+            2. Click the "in English" link.
+            3. Click the user current location field 
+            4. Enter "Helsinki Central Railway Station" into the Use current location field.
+            5. Click the correct option it from the dropdown menu which opened
+            6. Enter "Espoo" into the enter destination field.
+            7. click the correct option in the dropdown menu
+           """
 
     all_found_locators = []
     action_history = []
@@ -18,7 +26,8 @@ async def main():
     task_agent = BDDTaskAgent()
     
     # Initialize the navigator
-    navigator = PageNavigator()
+    video_path = os.path.join(os.path.dirname(__file__), 'videos')
+    navigator = PageNavigator(video_path=video_path)
 
     try:
         await navigator.start()
