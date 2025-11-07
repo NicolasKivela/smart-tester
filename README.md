@@ -46,12 +46,12 @@ The service should now be running locally.
 ---
 
 # Running test scripts
-The output of this program is robotframework test scripts. (for more infirmation go to https://robotframework.org/ or https://github.com/robotframework/robotframework) In order to run them the text needs to be copied to .robot file and ran.
+The output of this program is robotframework test scripts. Robot framefork is a python based framework for test automation. For more information go to: https://robotframework.org/robotframework/latest/RobotFrameworkUserGuide.html and https://robotframework.org/. In order to run them the output text of the program needs to be copied in to .robot file and ran.
 
 ## Requirements for running:
 - Python 3.8 (or newer)
 - Google Chrome - you can also use a diffferent browser by changing the ${BROWSER} variable's value to something else from the script so really any web browser is fine
-- Robotframework and selenim library python backages
+- Robotframework and selenim library python backages (more detailed instructions: https://robotframework.org/robotframework/latest/RobotFrameworkUserGuide.html#installation-instructions)
 
 ### Installing packages with pip
 
@@ -62,6 +62,9 @@ Run following commands:
     pip install robotframework
     pip install robotframework-seleniumlibrary
 
+You might also want to install these packages just to your python virtual environment instead of your global python installation. This ensures that other installations for other projects doesn't break your project (and vise versa).
+For more information go to: https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment
+
 ## Run scripts
 
 - Copy the output text in to a .robot file (or in to a .txt and then change it to .robot file) This can be done with any code editor.
@@ -69,7 +72,7 @@ Run following commands:
 
 like this:
 
-    robot <path>/<filname>.robot    
+    robot <path>/<filename>.robot    
 
 for example, if your file is testrun.robot and the file in the current working directory, run:
 
