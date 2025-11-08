@@ -8,14 +8,7 @@ from .task_agent import BDDTaskAgent
 
 async def main():
     URL = "https://www.hsl.fi/"
-    task = """1. Navigate to the HSL.fi homepage.
-            2. Click the "in English" link.
-            3. Click the user current location field 
-            4. Enter "Helsinki Central Railway Station" into the Use current location field.
-            5. Click the correct option it from the dropdown menu which opened
-            6. Enter "Espoo" into the enter destination field.
-            7. click the correct option in the dropdown menu
-           """
+    
 
     all_found_locators = []
     action_history = []
@@ -25,6 +18,31 @@ async def main():
     locator_agent = LocatorRetrievalAgent()
     task_agent = BDDTaskAgent()
     
+    # Path to scenarios.json
+    scenarios_json_path = os.path.join(os.path.dirname(__file__), 'json_files', 'scenarios.json')
+
+    # Load scenarios from the JSON file
+    scenarios = []
+    try:
+        with open(scenarios_json_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            scenarios = data.get("scenarios", []) # Assuming scenarios are under a "scenarios" key
+    except FileNotFoundError:
+        print(f"Error: scenarios.json not found at {scenarios_json_path}")
+        return
+    except json.JSONDecodeError:
+        print(f"Error: Could not decode JSON from {scenarios_json_path}")
+        return
+
+    if not scenarios:
+        print("No scenarios found in scenarios.json. Exiting.")
+        return
+
+    scenarios_str = "\n".join(scenarios)
+    task_prompt = f"URL: {URL}\n\nBDD Scenarios:\n{scenarios_str}"
+    task = await task_agent.execute_task(task_prompt)
+    print(task)
+
     # Initialize the navigator
     video_path = os.path.join(os.path.dirname(__file__), 'videos')
     navigator = PageNavigator(video_path=video_path)
@@ -55,18 +73,24 @@ async def main():
             
             newly_found_locators = {}
             try:
-                start_index = relevant_locators_json_str.find('{')
-                end_index = relevant_locators_json_str.rfind('}')
-                if start_index != -1 and end_index != -1:
-                    json_part = relevant_locators_json_str[start_index : end_index + 1]
-                    newly_found_locators = json.loads(json_part)
-                    if newly_found_locators.get("locators"):
-                        all_found_locators.extend(newly_found_locators["locators"])
-                        print(f"Found {len(newly_found_locators['locators'])} new locators.")
-                else:
-                    print("No JSON object found in LocatorAgent response.")
-            except json.JSONDecodeError:
+                # Extract JSON from markdown code block if present
+                if '```json' in relevant_locators_json_str:
+                    json_part = relevant_locators_json_str.split('```json\n', 1)[1].rsplit('\n```', 1)[0]
+                else: # Fallback to original logic
+                    start_index = relevant_locators_json_str.find('{')
+                    end_index = relevant_locators_json_str.rfind('}')
+                    if start_index != -1 and end_index != -1:
+                        json_part = relevant_locators_json_str[start_index : end_index + 1]
+                    else:
+                        json_part = relevant_locators_json_str # Assume the whole string is JSON
+
+                newly_found_locators = json.loads(json_part)
+                if newly_found_locators.get("locators"):
+                    all_found_locators.extend(newly_found_locators["locators"])
+                    print(f"Found {len(newly_found_locators['locators'])} new locators.")
+            except (json.JSONDecodeError, IndexError):
                 print(f"Could not decode JSON from LocatorAgent response: {relevant_locators_json_str}")
+                newly_found_locators = {} # Ensure it's a dict for the next step
 
             # 2. Decide next action with NavigatorAgent
             navigator_prompt = f'''
@@ -79,11 +103,12 @@ async def main():
             {json.dumps(newly_found_locators, indent=2)}
 
             Based on the task, history, and current page locators, what is the single next action to perform?
-            Provide a robust CSS or XPath selector.
+            **You MUST use one of the locators provided in "Locators found on the CURRENT page" for your action.**
+            Provide a robust CSS or XPath selector from the provided locators.
             If the task is complete, respond with action 'finish'.
             Your response must be a single JSON object with a list of 'actions'.
             Example for click: {{"actions": [{{"action": "click", "css": "a[href='/tickets']", "description": "Navigate to tickets page."}}]}}
-            Example for fill: {{"actions": [{{"action": "fill", "css": "a[href='/tickets']", "description": "Fill the username field."}}]}}
+            Example for fill: {{"actions": [{{"action": "fill", "css": "input#username", "xpath": "//input[@id='username']", "possible text": "myuser", "description": "Fill the username field."}}]}}
             Example for finish: {{"actions": [{{"action": "finish", "reason": "The ticket price has been found."}}]}}
             '''
             

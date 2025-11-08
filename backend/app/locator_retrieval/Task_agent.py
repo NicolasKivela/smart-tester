@@ -12,7 +12,9 @@ class BDDTaskAgent(BaseAgent):
     Your job is to plan a single efficient route through the website that satisfies ALL BDD scenarios 
     with the minimum number of steps. Clearly define the last step of the plan. Based on the last part the task list can be stated as finished
 
-    Purpose of the plan is to make route to get all relevant locators for the bdd scenarios using the plan. In the plan there sould be only one task per line. 
+    Purpose of the plan is to make route to get all relevant locators for the bdd scenarios using the plan. In the plan there sould be only one task per line.
+    Give only one action per line evrething to do in one step must be unambiguous.  
+    After fill check if there is dropdown menu with the same fill to click.
     
     Plan must be numerated steps for example:
     1. 

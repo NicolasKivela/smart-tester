@@ -4,6 +4,28 @@ import os
 from playwright.async_api import async_playwright, Page
 from bs4 import BeautifulSoup
 
+
+def _find_interactive_elements(tag):
+    """
+    A helper function for BeautifulSoup to find common interactive elements.
+    It searches for specific tags or tags with a 'role' attribute that indicates interactivity.
+    """
+    interactive_tags = ['input', 'button', 'a', 'select', 'textarea', 'label', 'submit', 'listbox']
+    interactive_roles = [
+        'button', 'checkbox', 'listbox', 'option', 'menuitem', 'radio', 'tab', 'textbox', 'link'
+    ]
+    
+    # Check by tag name
+    if tag.name in interactive_tags:
+        return True
+    
+    # Check by role attribute
+    if tag.has_attr('role') and tag['role'] in interactive_roles:
+        return True
+        
+    return False
+
+
 class PageNavigator:
     """
     A class to encapsulate Playwright browser interactions.
@@ -147,10 +169,13 @@ class PageNavigator:
         html = await self.page.content()
         soup = BeautifulSoup(html, 'html.parser')
 
-        selectors = ['input', 'button', 'a', 'select', 'textarea', 'label', 'submit', 'listbox',]
-        elements = soup.find_all(selectors)
+        elements = soup.find_all(_find_interactive_elements)
         
-        interactive_elements = [str(el) for el in elements]
+        interactive_elements = []
+        for el in elements:
+            el.clear()  # Remove children to keep the prompt concise
+            interactive_elements.append(str(el))
+
         locators_string = ", ".join(interactive_elements)
         
         return f"URL: {self.page.url}, Locators: {locators_string}, Task: {str(task)}"
