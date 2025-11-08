@@ -7,9 +7,13 @@ import LoaderView from './components/LoaderView/LoaderView.vue'
 
 const bddScenarios = ref([])
 const chosenFeature = ref(Number)
+
 // Loader states
 const isLoading = ref(false)
 const loadingMessage = ref('')
+
+// Reset key for codeview
+const resetKey = ref(0)
 
 const handleBddScenarios = (scenarios) => {
   bddScenarios.value = scenarios
@@ -27,6 +31,10 @@ const startLoader = (message: string) => {
 const stopLoader = () => {
   isLoading.value = false
 }
+
+const resetCodeBlock = () => {
+  resetKey.value++;
+}
 </script>
 
 <template>
@@ -37,10 +45,12 @@ const stopLoader = () => {
       @chosen-feature-updated="handleFeatures"
       @start-loader="startLoader"
       @stop-loader="stopLoader"
+      @reset-code-block="resetCodeBlock"
     />
     <ResultView 
       :bdd-scenarios="bddScenarios"
       :feature-id="chosenFeature"
+      :reset-value="resetKey"
       @start-loader="startLoader"
       @stop-loader="stopLoader"
     />

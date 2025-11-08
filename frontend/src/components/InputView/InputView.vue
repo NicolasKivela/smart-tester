@@ -5,7 +5,7 @@ import ProcessDataPopup from '@/components/InputView/ProcessDataPopup.vue'
 import { postRequirements, getTopics, postSelectedTopic } from '@/services/requirementService.ts'
 
 // Emits for loader functionality and bdd scenario updates
-const emit = defineEmits(['start-loader', 'stop-loader', 'bddScenariosUpdated', 'chosen-feature-updated'])
+const emit = defineEmits(['start-loader', 'stop-loader', 'bddScenariosUpdated', 'chosen-feature-updated', 'reset-code-block'])
 
 // Initialize inputs
 const file = ref<File | null>(null)
@@ -151,7 +151,8 @@ const handleContinue = async (selected: number) => {
   
   emit('chosen-feature-updated', selected)
   emit('start-loader',"Generating BDD scenarios, please wait...");
-
+  emit('reset-code-block')
+  
   try {
     // Post the selected topic's id to backend
     const response = await postSelectedTopic(selected)

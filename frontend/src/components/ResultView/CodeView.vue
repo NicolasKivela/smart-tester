@@ -6,7 +6,7 @@ import hljsDefineRobot from 'highlightjs-robot'
 
 hljsDefineRobot(hljs)
 
-const props = defineProps<{ scripts: string }>()
+const props = defineProps<{ scripts: string, resetValue: number  }>()
 const codeRef = ref<HTMLElement | null>(null)
 
 // Try parsing the JSON
@@ -47,14 +47,42 @@ const highlightCode = async () => {
     )
 }
 
+// Reset the codeblock if a new feature is selected
+const resetCodeBlock = () => {
+  if (!codeRef.value) return
+  
+  // Delete any previous highlights
+  delete (codeRef.value as any).dataset.highlighted
+
+  // Clear the current code content
+  codeRef.value.textContent = ''
+}
+
+// Reset the whole session, refreshes the page
+const resetSession = () => {
+  window.location.reload()
+}
+
 // Watch props.scripts for changes
 onMounted(highlightCode)
 watch(() => props.scripts, highlightCode)
 
+// Watch props.resetValue for reset
+watch(() => props.resetValue, () => {
+  resetCodeBlock()
+})
+
 // Copy full script to clipboard
 const copyToClipboard = () => {
+
+  // Parse the JSON
+  let code = parseJSON(props.scripts)
+
+  // Convert all literal "\n" into real line breaks
+  code = code.replace(/\\n/g, '\n')
+
   navigator.clipboard
-    .writeText(props.scripts.toString())
+    .writeText(code)
     .then(() => {
       console.log('Code copied to clipboard')
     })
@@ -69,7 +97,7 @@ const copyToClipboard = () => {
     <div class="column">
       <h3 class="title">Generated Code</h3>
       <button class="secondary" @click="copyToClipboard">Copy</button>
-      <button class="primary">Reset Session</button>
+      <button class="primary" @click="resetSession">Reset Session</button>
     </div>
     <pre class="code-block">
       <code ref="codeRef" class="language-robot"></code>
