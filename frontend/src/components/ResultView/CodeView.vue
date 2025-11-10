@@ -116,7 +116,7 @@ const copyToClipboard = () => {
 }
 
 .code-block {
-  background-color: black;
+  background-color: #0d1117;
   flex: 1;
   border-radius: 4px;
   overflow-y: auto;
