@@ -1,6 +1,6 @@
 {
   "url": "https://www.hsl.fi",
   "scenarios": [
-"Scenario: User successfully logs into My HSL Given the user is on the HSL.fi homepage When the user clicks the Login button And the login page is displayed And the user enters a valid email and password And the user clicks the Log in button Then the user should be redirected to the My HSL dashboard And the user's name or account information should be visible"
+    "Scenario: User checks ticket prices for an AB zone Given the user is on the HSL.fi homepage When the user navigates to the Tickets and fares section And the user selects the ABC as zone And the user selects Opiskelija as customer group And the user presses the show prices button Then the system should display the available ticket types And the correct prices for each ticket type should be visible"
   ]
 }

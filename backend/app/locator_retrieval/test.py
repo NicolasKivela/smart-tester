@@ -40,8 +40,15 @@ async def main():
 
     scenarios_str = "\n".join(scenarios)
     task_prompt = f"URL: {URL}\n\nBDD Scenarios:\n{scenarios_str}"
-    task = await task_agent.execute_task(task_prompt)
-    print(task)
+    #task = await task_agent.execute_task(task_prompt)
+    #print(task)
+    task = """1. Go to URL https://www.hsl.fi/
+2. Click on the "Tickets and fares" navigation link
+3. Click on the "Zone" dropdown menu
+4. Click on the "ABC" option in the "Zone" dropdown menu
+5. Click on the "Customer group" dropdown menu
+6. Click on the "Opiskelija" option in the "Customer group" dropdown menu
+7. Click on the "Show prices" button"""
 
     # Initialize the navigator
     video_path = os.path.join(os.path.dirname(__file__), 'videos')
@@ -70,27 +77,23 @@ async def main():
             
             print("Asking LocatorAgent to find relevant locators...")
             relevant_locators_json_str = await locator_agent.execute_task(locator_input)
+           
             
             newly_found_locators = {}
             try:
-                # Extract JSON from markdown code block if present
-                if '```json' in relevant_locators_json_str:
-                    json_part = relevant_locators_json_str.split('```json\n', 1)[1].rsplit('\n```', 1)[0]
-                else: # Fallback to original logic
-                    start_index = relevant_locators_json_str.find('{')
-                    end_index = relevant_locators_json_str.rfind('}')
-                    if start_index != -1 and end_index != -1:
-                        json_part = relevant_locators_json_str[start_index : end_index + 1]
-                    else:
-                        json_part = relevant_locators_json_str # Assume the whole string is JSON
-
-                newly_found_locators = json.loads(json_part)
-                if newly_found_locators.get("locators"):
-                    all_found_locators.extend(newly_found_locators["locators"])
-                    print(f"Found {len(newly_found_locators['locators'])} new locators.")
-            except (json.JSONDecodeError, IndexError):
+                start_index = relevant_locators_json_str.find('{')
+                end_index = relevant_locators_json_str.rfind('}')
+                if start_index != -1 and end_index != -1:
+                    json_part = relevant_locators_json_str[start_index : end_index + 1]
+                    newly_found_locators = json.loads(json_part)
+                    if newly_found_locators.get("locators"):
+                        all_found_locators.extend(newly_found_locators["locators"])
+                        print(f"Found {len(newly_found_locators['locators'])} new locators.")
+                else:
+                    print("No JSON object found in LocatorAgent response.")
+            except json.JSONDecodeError:
                 print(f"Could not decode JSON from LocatorAgent response: {relevant_locators_json_str}")
-                newly_found_locators = {} # Ensure it's a dict for the next step
+                
 
             # 2. Decide next action with NavigatorAgent
             navigator_prompt = f'''
