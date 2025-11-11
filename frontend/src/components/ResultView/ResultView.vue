@@ -14,7 +14,8 @@ const props = defineProps({
   featureId: {
     type: Number,
     required: true,
-  }
+  },
+  resetValue: Number
 })
 console.log("feature id in resultview", props.featureId)
 const testScripts = ref()
@@ -43,7 +44,10 @@ const loaderStop = (message: string) =>{
       @start-tests-loader="loaderStart"
       @stop-tests-loader="loaderStop"
     />
-    <CodeView :scripts="testScripts" />
+    <CodeView 
+      :scripts="testScripts"
+      :reset-value="resetValue"
+    />
   </div>
 </template>
 
