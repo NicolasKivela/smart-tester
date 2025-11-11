@@ -38,8 +38,8 @@ async def create_bdd_scenario(item: BDDScenario, session: Session = Depends(get_
 
 @router.post("/bdd_scenarios/generate/{id}", tags=["bdd_scenarios"])
 async def generate_bdd_scenarios(id: int, session: Session = Depends(get_session)):
-    requirement_item = get_requirements(id)
-    generated_bdds = await generate_bdd_scenarios_logic(requirement_item)
+    
+    generated_bdds = await generate_bdd_scenarios_logic(id)
 
     for bdd in generated_bdds:
         db_bdd = BDDScenario(**bdd.model_dump())

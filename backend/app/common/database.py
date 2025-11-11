@@ -5,7 +5,7 @@ DATABASE_URL = "sqlite:///app/database.db"
 engine = create_engine(DATABASE_URL, echo=True)  
 
 def init_db():
-    from app.common.models.req_model import Processed_Req
+    from app.common.models.req_model import Feature, RequirementDocument,Requirement
     from app.common.models.bdd_model import BDDScenario
     SQLModel.metadata.create_all(engine)
 

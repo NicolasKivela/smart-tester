@@ -2,7 +2,7 @@
 from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional, TYPE_CHECKING
 if TYPE_CHECKING:
-    from app.common.models.req_model import Processed_Req
+    from app.common.models.req_model import Feature
 
 
 class BDDScenario(SQLModel, table=True):
@@ -10,6 +10,6 @@ class BDDScenario(SQLModel, table=True):
     scenario: str
     content: str
 
-    requirement_id: Optional[int] = Field(default=None, foreign_key="processed_req.id")
+    feature_id: Optional[int] = Field(default=None, foreign_key="feature.id")
 
-    requirement: Optional["Processed_Req"] = Relationship(back_populates="bdd_scenarios")
+    feature: Optional["Feature"] = Relationship(back_populates="bdd_scenarios")

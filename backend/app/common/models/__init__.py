@@ -1,4 +1,4 @@
-from .req_model import Processed_Req
+from .req_model import Requirement
 from .bdd_model import BDDScenario
 
-__all__ = ["BDDScenario", "Processed_Req"]
+__all__ = ["BDDScenario", "Requirement"]
