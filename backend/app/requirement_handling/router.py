@@ -13,7 +13,7 @@ router = APIRouter()
 
 #Get requirement file features
 @router.get("/requirements", tags=["requirements"])
-async def fetch_requirement_topics(session: Session = Depends(get_session)):
+async def fetch_requirement_topics():
     all_feature_data = db_requirements.get_all_feature_data()
     feature_names = []
     for feature in all_feature_data:
