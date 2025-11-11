@@ -33,11 +33,10 @@ def parse_gherkin(gherkin_text: str, feature: str, item_id) -> list[BDDScenario]
                 then.append(line.replace("Then ", "").strip())
             elif line.startswith("And") and current_section is not None:
                 current_section.append(line.replace("And ", "").strip())
-
-            db_bdd_scenarios.add_bdd_scenarios(item_id,BDDScenario(
-                scenario=scenario_title,
-                content=gherkin_text
-            ))
+        db_bdd_scenarios.add_bdd_scenarios(item_id,BDDScenario(
+            scenario=scenario_title,
+            content=block
+        ))
     return scenarios
 
 async def generate_bdd_scenarios_logic(item_id: int) -> list[BDDScenario]:

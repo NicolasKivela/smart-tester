@@ -9,7 +9,7 @@ class BDDScenario(SQLModel, table=True):
     content: str
 
     feature_id: Optional[int] = Field(default=None, foreign_key="feature.id")
-
+    locator_element_id: Optional[int] = Field(default=None, foreign_key="locator_element.id") 
     feature: Optional["Feature"] = Relationship(back_populates="bdd_scenarios")
     locator_element: Optional["LocatorElements"] = Relationship(back_populates="bdd_scenarios")
     

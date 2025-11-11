@@ -2,9 +2,11 @@ import asyncio
 import json
 from .page_navigator import PageNavigator
 from app.locator_retrieval.agents import BDDTaskAgent,LocatorRetrievalAgent,NavigatorAgent
-from app.requirement_handling.storage import REQUIREMENTS, URL_DATA
+from app.requirement_handling.storage import REQUIREMENTS, URL_DATA, db_requirements
+from app.bdd_scenarios.storage import db_bdd_scenarios
 from app.requirement_handling.schemas import UrlCredentials
 from app.locator_retrieval.storage import LOCATORS
+
 class LocatorRetrieving:
     """
     A class to retrieve web element locators based on BDD scenarios.
@@ -13,16 +15,14 @@ class LocatorRetrieving:
         self.feature_id = feature_id
     async def scraper_process(self):
         try:
-            requirements = REQUIREMENTS[self.feature_id]
             url_data = URL_DATA
-            scenarios = requirements.bdd_scenarios
-            
+            #TODO: Fix why key error here
+            scenarios = db_bdd_scenarios.get_all_bdd_scenarios_by_feature(self.feature_id)
             locators = asyncio.create_task(self.locator_retrieving_service(scenarios,url_data))
-            return "Locator process started",locators
+            return {"status_code":200,"message":f"Locator process started,{locators}"}
         except Exception as e:
             print(f"Unexpected {e=}, {type(e)=}")
-            
-            return f"Error starting scraper process: {e.args}"
+            return {"status_code":400,"message":f"Error starting scraper process: {e.args}"}
     async def locator_retrieving_service(self, scenarios: list[dict], url_data: UrlCredentials):
         """
         Retrieves locators for web elements based on BDD scenarios by navigating a web page.
@@ -125,5 +125,4 @@ class LocatorRetrieving:
             if navigator:
                 await navigator.stop()
         LOCATORS.append(all_found_locators)
-        print(LOCATORS)
         return LOCATORS
