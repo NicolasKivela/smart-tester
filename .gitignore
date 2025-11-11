@@ -45,3 +45,6 @@ Thumbs.db
 
 # Ignore Playwright failure screenshots
 backend/*.png
+
+#database
+backend/**/*.db

@@ -1,10 +1,10 @@
 import asyncio
 from app.bdd_scenarios.bdd_generation_agent import BddGenerationAgent
 from app.common.models.bdd_model import BDDScenario
-from app.bdd_scenarios.storage import BDD_SCENARIOS
+from app.bdd_scenarios.storage import BDD_SCENARIOS, db_bdd_scenarios
 from app.requirement_handling.storage import db_requirements
 
-def parse_gherkin(gherkin_text: str, feature: str) -> list[BDDScenario]:
+def parse_gherkin(gherkin_text: str, feature: str, item_id) -> list[BDDScenario]:
     """
     Parses Gherkin text and converts it into a list of BDD_Scenario objects.
     """
@@ -34,17 +34,10 @@ def parse_gherkin(gherkin_text: str, feature: str) -> list[BDDScenario]:
             elif line.startswith("And") and current_section is not None:
                 current_section.append(line.replace("And ", "").strip())
 
-        new_id = len(BDD_SCENARIOS) + len(scenarios) + 1
-        scenarios.append(
-            BDDScenario(
-                id=new_id,
-                feature=feature,
+            db_bdd_scenarios.add_bdd_scenarios(item_id,BDDScenario(
                 scenario=scenario_title,
-                given=given,
-                when=when,
-                then=then
-            )
-        )
+                content=gherkin_text
+            ))
     return scenarios
 
 async def generate_bdd_scenarios_logic(item_id: int) -> list[BDDScenario]:
@@ -56,12 +49,12 @@ async def generate_bdd_scenarios_logic(item_id: int) -> list[BDDScenario]:
     agent = BddGenerationAgent()
     
     # Construct the user message for the agent
-    user_message = f"Feature: {feature_data.feature}\nRequirements:\n{feature_data.requirements}"
+    user_message = f"Feature: {feature_data.name}\nRequirements:\n{feature_data.requirements}"
     
     # Run the agent asynchronously
-    generated_text = await asyncio.to_thread(agent.execute_task, user_message)
-    
+    generated_text = await agent.execute_task(user_message)
+    print("GEnerated bdds here", generated_text)
     # Parse the generated Gherkin text
-    generated_scenarios = parse_gherkin(generated_text, feature_data.feature)
+    generated_scenarios = parse_gherkin(generated_text, feature_data, item_id)
     
     return generated_scenarios

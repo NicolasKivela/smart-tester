@@ -10,42 +10,32 @@ from app.requirement_handling.storage import REQUIREMENTS
 router = APIRouter()
 
 @router.get("/bdd_scenarios", tags=["bdd_scenarios"])
-async def read_bdd_scenarios(session: Session = Depends(get_session)):
-    bdds = session.exec(select(BDDScenario)).all()
+async def read_bdd_scenarios_by_feature(feature_id:int):
+    bdds = db_bdd_scenarios.get_all_bdd_scenarios_by_feature(feature_id=feature_id)
     return bdds
 
-@router.put("/bdd_scenarios/{id}", tags=["bdd_scenarios"])
-async def update_bdd_scenario(id: int, item: BDDScenario, session: Session = Depends(get_session)):
-    db_item = session.get(BDDScenario, id)
-    if not db_item:
-        raise HTTPException(status_code=404, detail=f"BDDScenario with id={id} not found")
+@router.delete("/bdd_scenarios", tags=["bdd_scenario"])
+async def delete_bdd_scenario_by_id(bdd_id: int):
+    response = db_bdd_scenarios.delete_bdd_scenario_by_id(bdd_id)
+    return response
 
-    for key, value in item.model_dump(exclude_unset=True).items():
-        setattr(db_item, key, value)
-
-    session.add(db_item)
-    session.commit()
-    session.refresh(db_item)
-    return {"message": "Item updated", "id": db_item.id}
+@router.put("/bdd_scenarios", tags=["bdd_scenarios"])
+async def update_bdd_scenario(id: int, item: BDDScenario):
+    
+    response = db_bdd_scenarios.update_bdd_scenario_by_id(id, item)
+    return response
 
 
 @router.post("/bdd_scenarios", tags=["bdd_scenarios"])
-async def create_bdd_scenario(item: BDDScenario, session: Session = Depends(get_session)):
-    session.add(item)
-    session.commit()
-    session.refresh(item)
-    return {"message": "Item created", "id": item.id}
+async def create_bdd_scenario(item: BDDScenario):
+    response = db_bdd_scenarios.add_bdd_scenarios(item.feature_id,item)
+    return response
 
 @router.post("/bdd_scenarios/generate/{id}", tags=["bdd_scenarios"])
 async def generate_bdd_scenarios(id: int, session: Session = Depends(get_session)):
     
     generated_bdds = await generate_bdd_scenarios_logic(id)
 
-    for bdd in generated_bdds:
-        db_bdd = BDDScenario(**bdd.model_dump())
-        session.add(db_bdd)
-
-    session.commit()
     return {"message": "BDDs generated successfully", "count": len(generated_bdds)}
 
 

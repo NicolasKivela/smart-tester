@@ -1,6 +1,7 @@
 # temporary storage
 import logging
 from sqlmodel import Session, select
+from sqlalchemy.orm import selectinload
 from app.common.database import engine
 from app.common.models.req_model import Requirement,RequirementDocument,Feature
 from app.common.models.bdd_model import BDDScenario
@@ -17,12 +18,18 @@ class db_requirements:
     def get_feature_data_by_id(id: int):
         if id in REQUIREMENTS:
             return REQUIREMENTS[id]
+
         with Session(engine) as session:
-            req = session.get(Feature, id)
-            if req:
-                REQUIREMENTS[id] = req
-            print(req)
-            return req
+            statement = (
+                select(Feature)
+                .options(selectinload(Feature.requirements))
+                .where(Feature.id == id)
+            )
+            feature = session.exec(statement).first()
+
+            if feature:
+                REQUIREMENTS[id] = feature
+            return feature
     @staticmethod
     def get_all_feature_data():
         with Session(engine) as session:
