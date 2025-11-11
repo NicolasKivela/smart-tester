@@ -6,6 +6,11 @@ from .locator_agent import LocatorRetrievalAgent
 from .navigator_agent import NavigatorAgent
 from .task_agent import BDDTaskAgent
 
+#TO DO:
+#1. Duplikaatti lokaattorien poisto
+#2. Käyttäjätunnus ja Salasana kulkemaan mukana
+
+
 async def main():
     URL = "https://www.hsl.fi/"
     
@@ -42,13 +47,12 @@ async def main():
     task_prompt = f"URL: {URL}\n\nBDD Scenarios:\n{scenarios_str}"
     #task = await task_agent.execute_task(task_prompt)
     #print(task)
-    task = """1. Go to URL https://www.hsl.fi/
-2. Click on the "Tickets and fares" navigation link
-3. Click on the "Zone" dropdown menu
-4. Click on the "ABC" option in the "Zone" dropdown menu
-5. Click on the "Customer group" dropdown menu
-6. Click on the "Opiskelija" option in the "Customer group" dropdown menu
-7. Click on the "Show prices" button"""
+    task = """1. Go to "https://www.hsl.fi"
+    2. Fill "Helsinki Central Railway Station" into the "From" field.
+    3. Click the suggestion from the list.
+    4. Click To field
+    5. Fill "Espoo" into the "To" field.
+    6. Click the suggestion from the list."""
 
     # Initialize the navigator
     video_path = os.path.join(os.path.dirname(__file__), 'videos')
@@ -106,8 +110,7 @@ async def main():
             {json.dumps(newly_found_locators, indent=2)}
 
             Based on the task, history, and current page locators, what is the single next action to perform?
-            **You MUST use one of the locators provided in "Locators found on the CURRENT page" for your action.**
-            Provide a robust CSS or XPath selector from the provided locators.
+            Provide a robust CSS or XPath selector.
             If the task is complete, respond with action 'finish'.
             Your response must be a single JSON object with a list of 'actions'.
             Example for click: {{"actions": [{{"action": "click", "css": "a[href='/tickets']", "description": "Navigate to tickets page."}}]}}

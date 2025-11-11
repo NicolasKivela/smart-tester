@@ -5,26 +5,6 @@ from playwright.async_api import async_playwright, Page
 from bs4 import BeautifulSoup
 
 
-def _find_interactive_elements(tag):
-    """
-    A helper function for BeautifulSoup to find common interactive elements.
-    It searches for specific tags or tags with a 'role' attribute that indicates interactivity.
-    """
-    interactive_tags = ['input', 'button', 'a', 'select', 'textarea', 'label', 'submit', 'listbox']
-    interactive_roles = [
-        'button', 'checkbox', 'listbox', 'option', 'menuitem', 'radio', 'tab', 'textbox', 'link'
-    ]
-    
-    # Check by tag name
-    if tag.name in interactive_tags:
-        return True
-    
-    # Check by role attribute
-    if tag.has_attr('role') and tag['role'] in interactive_roles:
-        return True
-        
-    return False
-
 
 class PageNavigator:
     """
@@ -114,7 +94,7 @@ class PageNavigator:
                 await self.page.locator(selector).first.click(timeout=10000)
                 if not self.silent:
                     print("Click successful.")
-                await self.page.wait_for_load_state("networkidle", timeout=10000)
+                await self.page.wait_for_load_state("networkidle", timeout=15000)
             except Exception as e:
                 timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
                 screenshot_path = f"failure_{timestamp}.png"
@@ -168,17 +148,13 @@ class PageNavigator:
 
         html = await self.page.content()
         soup = BeautifulSoup(html, 'html.parser')
-
-        elements = soup.find_all(_find_interactive_elements)
+        selectors = ['input', 'button', 'a', 'select', 'textarea', 'label', 'submit', 'listbox', 'li', 'ul',]
+        elements = soup.find_all(selectors)
+        interactive_elements = [str(el) for el in elements]
         
-        interactive_elements = []
-        for el in elements:
-            el.clear()  # Remove children to keep the prompt concise
-            interactive_elements.append(str(el))
-
-        locators_string = ", ".join(interactive_elements)
         
-        return f"URL: {self.page.url}, Locators: {locators_string}, Task: {str(task)}"
+        
+        return f"URL: {self.page.url}, Locators: {interactive_elements}, Task: {str(task)}"
 
     async def stop(self):
         """Stops the browser and the Playwright instance."""
