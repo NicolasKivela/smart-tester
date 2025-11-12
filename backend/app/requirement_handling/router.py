@@ -21,11 +21,11 @@ async def fetch_requirement_topics():
     return feature_names
 #Process requirements
 @router.post("/requirements",tags=["requirements"])
-async def process_requirements(form_item: str = Form(...), 
-                               file: UploadFile = File(...),
-                               session: Session = Depends(get_session)):
-    print(form_item)
-    credentials = UrlCredentials(**json.loads(form_item))
+async def process_requirements(json_item: str = Form(...), 
+                               file: UploadFile = File(...)):
+    print(json_item)
+    print(json.loads(json_item))
+    credentials = UrlCredentials(**json.loads(json_item))
     print(credentials)
     content = await file.read()
     text = extract_text(content,file.filename)

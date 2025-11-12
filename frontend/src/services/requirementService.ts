@@ -12,6 +12,7 @@ const postRequirements = async (file: File, jsonItem: object) => {
     
     // Post requirements to backend
     try {
+        console.log(formData)
         const response = await axios.post(API_URL + '/requirements', formData);
 
         console.log(response.data);
