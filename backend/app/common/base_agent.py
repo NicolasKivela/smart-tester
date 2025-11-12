@@ -2,6 +2,7 @@ import litellm
 import json
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Callable
+from app.common.logs.logger_config import logger
 
 class BaseAgent(ABC):
     """
@@ -212,11 +213,28 @@ class BaseAgent(ABC):
                 completion_kwargs["tool_choice"] = "auto"
 
             try:
-                # Use dictionary unpacking to pass the conditional arguments.
+                # Logging input
+                logger.info("LITELLM INPUT")
+                logger.info(json.dumps(completion_kwargs, indent=2, ensure_ascii=False))
+
                 response = litellm.completion(**completion_kwargs)
-                self.api_call_counter+=1
-                print("AMOUNT OF API CALLS:",self.api_call_counter)
+                self.api_call_counter += 1
+
+                # Logging output
+                logger.info("LITELLM RESPONSE")
+                try:
+                    # If response on LLMResponse-object is turned into JSON
+                    logger.info(json.dumps(response.dict(), indent=2, ensure_ascii=False))
+
+                except Exception:
+                    logger.info(str(response))
+
+                logger.info(f"API CALL COUNT: {self.api_call_counter}")
+
+
+
             except Exception as e:
+                logger.error(f"Error in LLM call: {e}")
                 return f"Error: Failed to get a response from the model. Details: {e}"
             
             if not response.choices or not response.choices[0].message:
