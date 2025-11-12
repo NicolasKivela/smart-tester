@@ -31,7 +31,7 @@ class ScriptGen:
 
         self.__init_keywords()
 
-    async def generate_script(self, features, locators, login, url):
+    async def generate_script(self, features, bdd_scenarios, locators, login, url):
         """
         Top level public method - returns robotframework test scripts from
         BDD-scenarios and locators by calling LLM agent
@@ -43,6 +43,7 @@ class ScriptGen:
         self.__no_new_scripts = True
 
         for feature in features:
+<<<<<<< HEAD
             # does not run feature with duplicate ID
             if feature.id in self.__id_storage:
                 continue
@@ -51,6 +52,9 @@ class ScriptGen:
             self.__id_storage.add(feature.id)
             response = await self.__call_agent(feature, locators, login)
             self.__no_new_scripts = False
+=======
+            response = await self.__call_agent(feature, bdd_scenarios, locators, login, url)
+>>>>>>> 437b25e (Feature: Whole backend flow works)
             self.__collect_keywords(response)
             self.__collect_variables(response)
             self.__scripts.append(response)
@@ -249,7 +253,7 @@ class ScriptGen:
             return json.dumps({"test_script": result})
 
 
-    def __call_agent(self, feature, locators, login, url):
+    def __call_agent(self, feature, bdd_scenarios, locators, login, url):
         """
         Assembles input to a single string and calls LLM-agent
         :param feature: Feature as Processed_Req
@@ -258,13 +262,14 @@ class ScriptGen:
         :return: LLM response as string
         """
         feature_desc = str(feature.summary)
-        scenarios = str(feature.bdd_scenarios)
+        scenarios = str(bdd_scenarios)
         str_url = str(url)
+        locators_str = str(locators)
         LLM_input = (
             "Feature to be tested:\n\n" + feature_desc +
             "\nURL tested web application:\n\n" + str_url +
             "\nBDD scenarios:\n\n" + scenarios +
-            "\nLocators as JSON:\n\n" + json.dumps(locators) +
+            "\nLocators as JSON:\n\n" + locators_str +
             "\nUsable keywords:\n\n" + self.__keywords_str +
             "\nLogin information as JSON:\n\n" + str(login)
         )

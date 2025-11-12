@@ -8,6 +8,7 @@ def init_db():
     from app.common.models.req_model import Feature, RequirementDocument,Requirement
     from app.common.models.bdd_model import BDDScenario
     from app.common.models.locator_model import LocatorElements
+    from app.common.models.test_script_model import TestScript
     SQLModel.metadata.create_all(engine)
 
 def get_session():

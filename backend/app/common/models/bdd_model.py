@@ -3,6 +3,7 @@ from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional, TYPE_CHECKING
 if TYPE_CHECKING:
     from app.common.models import Feature, LocatorElements
+    from app.common.models.test_script_model import TestScript
 class BDDScenario(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     scenario: str
@@ -12,4 +13,6 @@ class BDDScenario(SQLModel, table=True):
     locator_element_id: Optional[int] = Field(default=None, foreign_key="locator_element.id") 
     feature: Optional["Feature"] = Relationship(back_populates="bdd_scenarios")
     locator_element: Optional["LocatorElements"] = Relationship(back_populates="bdd_scenarios")
+    test_script_id: Optional[int] = Field(default=None, foreign_key="test_script.id")
+    test_script: Optional["TestScript"] = Relationship(back_populates="bdd_scenarios")
     

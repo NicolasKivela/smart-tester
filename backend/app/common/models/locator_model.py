@@ -5,6 +5,7 @@ from sqlmodel import SQLModel, Field, Relationship
 if TYPE_CHECKING:
     from app.common.models.req_model import Feature
     from app.common.models.bdd_model import BDDScenario
+    from app.common.models.test_script_model import TestScript
 
 
 class LocatorElements(SQLModel, table=True):
@@ -20,6 +21,8 @@ class LocatorElements(SQLModel, table=True):
     bdd_scenarios: List["BDDScenario"] = Relationship(
         back_populates="locator_element"
     )
+    test_script_id: Optional[int] = Field(default=None,foreign_key="test_script.id")
+    test_script: Optional["TestScript"] = Relationship(back_populates="locator_element")
 
 
 class LocatorItem(SQLModel, table=True):

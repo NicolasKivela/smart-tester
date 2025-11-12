@@ -45,6 +45,20 @@ class db_locator():
             return {"status_code":200, "message": "Locator element fetched succesfully", "body": locator_element}
         except:
             return {"status_code":400, "message": "Error when fetching locator element"}
+            
+    def get_locator_element_by_feature_id(feature_id):
+        try:
+            with Session(engine) as session:
+                statement = (
+                    select(LocatorElements)
+                    .where(LocatorElements.feature_id == feature_id)
+                )
+
+                locator_element = session.exec(statement).first()
+            return {"status_code":200, "message": "Locator element fetched succesfully", "body": locator_element}
+        except:
+            return {"status_code":400, "message": "Error when fetching locator element"}
+    
     def save_locator_item(locator_element_id,description,page_url,task,css,xpath):
         try:
             print("locator element id",locator_element_id)
