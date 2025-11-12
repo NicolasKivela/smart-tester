@@ -13,8 +13,7 @@ class LocatorElements(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     feature_id: Optional[int] = Field(default=None, foreign_key="feature.id")
 
-    navigator_tasks: Optional[str] = Field(default=None)
-    urls: Optional[str] = Field(default=None)
+    app_url: Optional[str] = Field(default=None)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     locator_items: List["LocatorItem"] = Relationship(back_populates="locator")
@@ -45,7 +44,8 @@ class LocatorSelector(SQLModel, table=True):
     locator_item_id: int = Field(foreign_key="locator_items.id")
 
     strategy: Optional[str] = Field(default=None)
-    value: Optional[str] = Field(default=None)
+    css:Optional[str] = Field(default=None)
+    xpath: Optional[str] = Field(default=None)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     locator_item: Optional["LocatorItem"] = Relationship(back_populates="selectors")
