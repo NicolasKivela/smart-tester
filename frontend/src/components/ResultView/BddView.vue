@@ -1,18 +1,17 @@
 <script setup lang="ts">
 import BddCard from '@/components/ResultView/BddCard.vue'
 import { watch, ref, computed } from 'vue'
-import type { BddScenario, Feature } from './types'
-import { postBddIds } from '@/services/resultsService.ts'
+import type { BddScenario } from './types'
+import { createTests } from '@/services/resultsService.ts'
 
 const props = defineProps<{
   bddScenarios: BddScenario[]
-  featureId: Number
+  featureId: number
 }>()
 
 const emit = defineEmits(['updateTests', 'start-tests-loader', 'stop-tests-loader'])
 
 const mutatedBddScenarios = ref<BddScenario[]>(props.bddScenarios)
-const feature = ref<Number>(props.featureId)
 
 // Function to check if the "Generate tests" -button should be activated
 const disabledButton = computed(() => {
@@ -22,12 +21,11 @@ const disabledButton = computed(() => {
 const generateTests = async () => {
   // Start loader
   emit('start-tests-loader', 'Generating tests, please wait...')
-  
-  console.log("chosen featuer id",props.featureId)
-  const result = await postBddIds(props.featureId)
-  
-  console.log("test scripts",result)
-  emit('updateTests',result)
+
+  const result = await createTests(props.featureId)
+
+  console.log('test scripts', result)
+  emit('updateTests', result)
 
   // Stop loader
   emit('stop-tests-loader')
@@ -47,7 +45,6 @@ watch(
   () => props.bddScenarios,
   (newValue) => {
     mutatedBddScenarios.value = newValue
-    console.log(mutatedBddScenarios.value)
   },
 )
 </script>
@@ -56,11 +53,13 @@ watch(
   <div class="bdd-view">
     <div class="column">
       <h3 class="title">BDD Scenarios</h3>
-      <button class="primary" @click="generateTests" :disabled="disabledButton">Generate Tests</button>
+      <button class="primary" @click="generateTests" :disabled="disabledButton">
+        Generate Tests
+      </button>
     </div>
     <div class="scrollable-section">
       <ul
-        v-for="(bddScenario, index) in bddScenarios"
+        v-for="(bddScenario, index) in mutatedBddScenarios"
         :key="index"
         style="list-style: none; padding-left: 0; margin-left: 0"
       >

@@ -35,10 +35,7 @@ class db_requirements:
             with Session(engine) as session:
                 features = session.exec(select(Feature)).all()
 
-                feature_names = []
-                for feature in features:
-                    feature_names.append(feature.name)
-            return feature_names
+            return features
         except Exception as e:
             return {"status_code": 400, "message": "Error fetching all feature data: {e}"}
     @staticmethod
@@ -66,7 +63,7 @@ class db_requirements:
                 session.refresh(doc)
                 logging.info("Requirement document saved succesfully")
                 return doc.id
-            
+
         except Exception as e:
             logging.exception("saving requirement document error")
 
@@ -93,7 +90,7 @@ class db_requirements:
         except Exception as e:
             logging.exception("Error when creating processed reqs:")
             return e
-            
+
 
     @staticmethod
     def save_url_data(url, credentials):
