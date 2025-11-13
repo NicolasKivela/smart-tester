@@ -5,8 +5,7 @@ from sqlalchemy.orm import selectinload
 from app.common.database import engine
 from app.common.models.req_model import Requirement,RequirementDocument,Feature
 from app.common.models.bdd_model import BDDScenario
-from app.requirement_handling.schemas import UrlCredentials, Credentials
-import re
+from app.requirement_handling.schemas import UrlCredentials
 
 # Optional: keep memory cache for speed / backward compatibility
 REQUIREMENTS: dict[int, Feature] = {}
@@ -32,9 +31,16 @@ class db_requirements:
             return feature
     @staticmethod
     def get_all_feature_data():
-        with Session(engine) as session:
-            features = session.exec(select(Feature)).all()
-        return features 
+        try:
+            with Session(engine) as session:
+                features = session.exec(select(Feature)).all()
+
+                feature_names = []
+                for feature in features:
+                    feature_names.append(feature.name)
+            return feature_names
+        except Exception as e:
+            return {"status_code": 400, "message": "Error fetching all feature data: {e}"}
     @staticmethod
     def add_bdd_scenarios(feature_id: int, bdd_scenario: dict):
         with Session(engine) as session:

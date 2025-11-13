@@ -1,6 +1,7 @@
 import asyncio
 from app.bdd_scenarios.bdd_generation_agent import BddGenerationAgent
 from app.common.models.bdd_model import BDDScenario
+from app.bdd_scenarios.schemas import BDD_Scenario
 from app.bdd_scenarios.storage import BDD_SCENARIOS, db_bdd_scenarios
 from app.requirement_handling.storage import db_requirements
 
@@ -33,11 +34,13 @@ def parse_gherkin(gherkin_text: str, feature: str, item_id) -> list[BDDScenario]
                 then.append(line.replace("Then ", "").strip())
             elif line.startswith("And") and current_section is not None:
                 current_section.append(line.replace("And ", "").strip())
-        db_bdd_scenarios.add_bdd_scenarios(item_id,BDDScenario(
+        response = db_bdd_scenarios.add_bdd_scenarios(item_id,BDD_Scenario(
             scenario=scenario_title,
             content=block
         ))
-    return scenarios
+        if response["status_code"] != 200:
+            return response
+    return response
 
 async def generate_bdd_scenarios_logic(item_id: int) -> list[BDDScenario]:
     """
@@ -52,8 +55,7 @@ async def generate_bdd_scenarios_logic(item_id: int) -> list[BDDScenario]:
     
     # Run the agent asynchronously
     generated_text = await agent.execute_task(user_message)
-    print("GEnerated bdds here", generated_text)
     # Parse the generated Gherkin text
-    generated_scenarios = parse_gherkin(generated_text, feature_data, item_id)
+    response = parse_gherkin(generated_text, feature_data, item_id)
     
-    return generated_scenarios
+    return response

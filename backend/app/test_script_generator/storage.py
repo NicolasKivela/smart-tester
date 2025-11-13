@@ -2,22 +2,8 @@ import json
 from sqlmodel import select
 from app.common.database import Session, engine
 from app.test_script_generator.schemas import test_script
-from app.bdd_scenarios.storage import db_bdd_scenarios
-from app.common.models import BDDScenario, LocatorElements,Feature
-from app.locator_retrieval.storage import db_locator
-from app.requirement_handling.storage import db_requirements
+from app.common.models import BDDScenario, LocatorElements
 from app.common.models.test_script_model import TestScript
-#temporary storage later BD
-TEST_SCRIPTS = {
-    1: test_script(
-        id=1,
-        feature_id=1,
-        bdd_ids=[1, 2, 3],
-        script_code="Code here",
-        keywords=["ekw", "ekek"]
-    )
-}
-
 
 class db_test_scripts():
     def save_keywords(id):

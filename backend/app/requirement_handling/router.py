@@ -1,11 +1,10 @@
 
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException,Form, UploadFile, File
-from sqlmodel import Session, select
 from app.common.database import get_session
-from .schemas import Credentials, UrlCredentials
+from .schemas import UrlCredentials
 import json
-from .storage import REQ_TOPICS, REQUIREMENTS, db_requirements
-from .agents import RequirementAgent
+from .storage import db_requirements
 from .service import RequirementsProcessor
 from .file_handler import extract_text
 
@@ -14,23 +13,21 @@ router = APIRouter()
 #Get requirement file features
 @router.get("/requirements", tags=["requirements"])
 async def fetch_requirement_topics():
-    all_feature_data = db_requirements.get_all_feature_data()
-    feature_names = []
-    for feature in all_feature_data:
-        feature_names.append(feature.name)
-    return feature_names
+    response = db_requirements.get_all_feature_data()
+    return response
 #Process requirements
 @router.post("/requirements",tags=["requirements"])
-async def process_requirements(json_item: str = Form(...), 
+async def process_requirements(url: str = Form(...),
+                                username: Optional[str] = Form(None),
+                                password: Optional[str] = Form(None), 
                                file: UploadFile = File(...)):
-    print(json_item)
-    print(json.loads(json_item))
-    credentials = UrlCredentials(**json.loads(json_item))
-    print(credentials)
+    credentials = UrlCredentials(
+        url=url,
+        username=username,
+        password=password
+    )
     content = await file.read()
     text = extract_text(content,file.filename)
     process=RequirementsProcessor(credentials, text, req_file=file.filename)
-    await process.run_pipeline()
-    return {
-        "message": "Requirements processed and saved",
-    }
+    response = await process.run_pipeline()
+    return response

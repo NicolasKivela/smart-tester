@@ -1,11 +1,8 @@
 import logging
 from sqlmodel import Session, select
-from sqlalchemy.orm import selectinload
 from app.common.database import engine
 from app.common.models import LocatorElements,BDDScenario
 from app.common.models.locator_model import LocatorItem,LocatorSelector
-from app.requirement_handling.storage import db_requirements
-from app.bdd_scenarios.storage import db_bdd_scenarios
 LOCATORS = {}
 #TODO: Add locator database CRUD logic here
 
@@ -79,14 +76,17 @@ class db_locator():
             return e
 
     def get_selectors_by_feature(feature_id: int):
-        with Session(engine) as session:
-            stmt = (
-                select(LocatorSelector)
-                .join(LocatorSelector.locator_item)        
-                .join(LocatorItem.locator)                     
-                .where(LocatorElements.feature_id == feature_id)
-            )
-            return session.exec(stmt).all()
+        try:
+            with Session(engine) as session:
+                stmt = (
+                    select(LocatorSelector)
+                    .join(LocatorSelector.locator_item)        
+                    .join(LocatorItem.locator)                     
+                    .where(LocatorElements.feature_id == feature_id)
+                )
+                return session.exec(stmt).all()
+        except Exception as e:
+            return {"status_code":400, "message": "Error fetching locator selectors"}
 
 
 

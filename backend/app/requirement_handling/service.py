@@ -1,8 +1,7 @@
 import time
 from .agents import RequirementAgent
-from .save_file import save_to_file
 from .schemas import Credentials,UrlCredentials
-from .storage import REQUIREMENTS,db_requirements 
+from .storage import db_requirements 
 import re
 
 class RequirementsProcessor:
@@ -49,15 +48,16 @@ class RequirementsProcessor:
         return results
 
     async def run_pipeline(self):
-        #Save url and credentials
-        db_requirements.save_url_data(self.url, self.credentials)
-        doc_id = db_requirements.save_requirement_document(self.req_file,self.text)
-        await self.process_req_document()
-        # Summaries
-        await self.summarize()
-        # Detailed requirements
-        requirements = await self.get_requirements()
-        db_requirements.create_processed_req(requirements, self.summaries, self.topics, doc_id)
-
-def get_requirements(req_id):
-    return REQUIREMENTS[req_id]
+        try:
+            #Save url and credentials
+            db_requirements.save_url_data(self.url, self.credentials)
+            doc_id = db_requirements.save_requirement_document(self.req_file,self.text)
+            await self.process_req_document()
+            # Summaries
+            await self.summarize()
+            # Detailed requirements
+            requirements = await self.get_requirements()
+            db_requirements.create_processed_req(requirements, self.summaries, self.topics, doc_id)
+            return {"status_code":200,"message":"Succesfully processed requirements"}
+        except Exception as e:
+            return {"status_code": 400, "Message":f"Error processing requirements: {e}"}

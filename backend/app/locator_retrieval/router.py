@@ -1,7 +1,7 @@
 import asyncio
 from fastapi import APIRouter
 from app.locator_retrieval.locator_retrieving import LocatorRetrieving
-from app.locator_retrieval.storage import LOCATORS, db_locator
+from app.locator_retrieval.storage import db_locator
 
 
 router = APIRouter()
@@ -12,7 +12,6 @@ async def start_scraper_process(feature_id:int):
     return response
 
 @router.get("/scraper/fetch_locators", tags=["locators"])
-async def get_all_locators(id):
-    response = db_locator.get_locator_element_by_id(id)
-    response = db_locator.get_selectors_by_feature(id)
+async def get_all_locators(feature_id: int):
+    response = db_locator.get_selectors_by_feature(feature_id)
     return response
