@@ -43,18 +43,14 @@ class ScriptGen:
         self.__no_new_scripts = True
 
         for feature in features:
-<<<<<<< HEAD
             # does not run feature with duplicate ID
             if feature.id in self.__id_storage:
                 continue
 
             # save id to prevent future duplicate and run
             self.__id_storage.add(feature.id)
-            response = await self.__call_agent(feature, locators, login)
+            response = await self.__call_agent(feature,bdd_scenarios,locators,login,url)
             self.__no_new_scripts = False
-=======
-            response = await self.__call_agent(feature, bdd_scenarios, locators, login, url)
->>>>>>> 437b25e (Feature: Whole backend flow works)
             self.__collect_keywords(response)
             self.__collect_variables(response)
             self.__scripts.append(response)

@@ -192,7 +192,7 @@ class BaseAgent(ABC):
                 "content": f"Error while executing tool '{function_name}': {e}",
             }
 
-    async def execute_task(self, user_message: str, response_format) -> str:
+    async def execute_task(self, user_message: str, response_format=None) -> str:
         messages = [
             {"role": "system", "content": self._get_system_message()},
             {"role": "user", "content": user_message}
