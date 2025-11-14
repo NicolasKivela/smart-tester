@@ -2,7 +2,7 @@ import logging
 from sqlmodel import Session, select
 from app.common.database import engine
 from app.common.models import LocatorElements,BDDScenario
-from app.common.models.locator_model import LocatorItem,LocatorSelector
+from app.common.models.locator_model import LocatorItem,LocatorSelector,Status
 LOCATORS = {}
 #TODO: Add locator database CRUD logic here
 
@@ -16,7 +16,7 @@ class db_locator():
                     .where(BDDScenario.feature_id ==feature_id)
                 )
                 scenarios = session.exec(statement).all()
-                new_locator_element = LocatorElements(feature_id=feature_id, app_url=app_url)
+                new_locator_element = LocatorElements(feature_id=feature_id, app_url=app_url,status=Status.ONGOING)
                 print(new_locator_element)
                 print(scenarios)
                 new_locator_element.bdd_scenarios = scenarios
@@ -29,7 +29,21 @@ class db_locator():
         except Exception as e:
             print(e)
             return {"status_code":400, "message": "Error when saving locator element"}
-
+    def update_locator_element_status(locator_element_id):
+        try:
+            with Session(engine) as session:
+                locator_element = session.get(LocatorElements,locator_element_id)
+                if locator_element is None:
+                    return {
+                        "status_code": 404,
+                        "message": f"LocatorElement with id {locator_element_id} not found",
+                    }
+                locator_element.status = Status.READY
+                session.commit()
+                return {"status_code":200, "message":"status succesfully updated"}
+        except Exception as e:
+            return {"status_code":400, "message":f"Error occured when updating status: {e}"}
+        
     def get_locator_element_by_id(locator_element_id):
         try:
             with Session(engine) as session:

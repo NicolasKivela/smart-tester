@@ -20,9 +20,9 @@ class BaseAgent(ABC):
     """
     def __init__(
         self,
-        model: str = "gemini/gemini-2.5-flash-lite", # specify model gemini/gemini-2.5-flash, ollama/llama3:8b for example
+        model: str = "gemini/gemini-2.5-flash", # specify model gemini/gemini-2.5-flash, ollama/llama3:8b for example
         temperature: float = 0.1,
-        max_tokens: int = 10000,
+        max_tokens: int = 1000000,
         timeout: int = 3000,
         max_tool_calls: int = 5
     ):
@@ -219,6 +219,9 @@ class BaseAgent(ABC):
             try:
                 # Use dictionary unpacking to pass the conditional arguments.
                 response = await litellm.acompletion(**completion_kwargs)
+                print(response)
+                self.api_call_counter += 1
+                print("API calls made",self.api_call_counter)
             except Exception as e:
                 return f"Error: Failed to get a response from the model. Details: {e}"
             

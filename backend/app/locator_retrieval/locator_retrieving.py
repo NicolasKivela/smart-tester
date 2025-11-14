@@ -19,6 +19,7 @@ class LocatorRetrieving:
             url_data = URL_DATA
             scenarios = db_bdd_scenarios.get_all_bdd_scenarios_by_feature(self.feature_id)
             locators = asyncio.create_task(self.locator_retrieving_service(scenarios,url_data))
+            #locators = self.locator_retrieving_service(scenarios,url_data)
             return {"status_code":200,"message":f"Locator process started,{locators}"}
         except Exception as e:
             print(f"Unexpected {e=}, {type(e)=}")
@@ -138,4 +139,5 @@ class LocatorRetrieving:
             if navigator:
                 await navigator.stop()
         LOCATORS.append(all_found_locators)
+        resp = db_locator.update_locator_element_status(locator_element_id)
         return LOCATORS
