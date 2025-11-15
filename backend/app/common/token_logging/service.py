@@ -1,11 +1,11 @@
 from datetime import datetime
-import requests
 from typing import Dict, Any
 
+SESSION_TOKEN_LOGGERS: dict[str, "TokenLoggerService"] = {}
+
 class TokenLoggerService:
-    def __init__(self, session_id: str, front_api_url: str | None = None):
+    def __init__(self, session_id: str):
         self.session_id = session_id
-        self.front_api_url = front_api_url
         self.api_calls: list[Dict[str, Any]] = []
         self.total_tokens = 0
 
@@ -23,23 +23,8 @@ class TokenLoggerService:
         return entry
 
     def get_summary(self):
-        """Return total token stats for this session."""
         return {
             "session_id": self.session_id,
             "total_tokens": self.total_tokens,
             "api_calls": self.api_calls,
         }
-
-    def send_to_frontend(self):
-        """Send session token stats to frontend endpoint."""
-        if not self.front_api_url:
-            return
-
-        try:
-            requests.post(
-                f"{self.front_api_url}/tokens",
-                json=self.get_summary(),
-                timeout=5
-            )
-        except Exception as e:
-            print(f"[TokenLogger] Failed to send data to frontend: {e}")

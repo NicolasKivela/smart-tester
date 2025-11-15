@@ -3,7 +3,7 @@ import json
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Callable
 from app.common.logs.logger_config import logger
-from app.common.token_logging.service import TokenLoggerService
+from app.common.token_logging.service import TokenLoggerService, SESSION_TOKEN_LOGGERS
 
 class BaseAgent(ABC):
     """
@@ -26,7 +26,6 @@ class BaseAgent(ABC):
         timeout: int = 3000,
         max_tool_calls: int = 5,
         session_id: str = "default-session",
-        front_api_url: str | None = None
     ):
         self.model = model
         self.temperature = temperature
@@ -35,8 +34,9 @@ class BaseAgent(ABC):
         self.max_tool_calls = max_tool_calls
         self.api_call_counter = 0
         
-        self.token_logger = TokenLoggerService(session_id, front_api_url)
+        self.token_logger = TokenLoggerService(session_id)
 
+        SESSION_TOKEN_LOGGERS[session_id] = self.token_logger
 
     @abstractmethod
     def _get_system_message(self) -> str:
@@ -254,8 +254,6 @@ class BaseAgent(ABC):
             messages.append(response_message)
 
             if not response_message.tool_calls:
-                # send total session tokens to frontend at end
-                self.token_logger.send_to_frontend()
                 return response_message.content or "Task finished, but no final text content was provided."
 
             tool_outputs = []
@@ -265,8 +263,6 @@ class BaseAgent(ABC):
             
             messages.extend(tool_outputs)
 
-        # send token summary after all retries
-        self.token_logger.send_to_frontend()
         return "Error: Agent could not complete the task within the maximum number of tool calls."
     
 
