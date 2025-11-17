@@ -42,8 +42,7 @@ class ScriptGen:
 
         self.__init_keywords()
 
-
-    def generate_script(self, features, locators, login):
+    async def generate_script(self, features, bdd_scenarios, locators, login, url):
         """
         Top level public method - returns robotframework test scripts from
         BDD-scenarios and locators by calling LLM agent
@@ -61,7 +60,7 @@ class ScriptGen:
 
             # save id to prevent future duplicate and run
             self.__id_storage.add(feature.id)
-            response = self.__call_agent(feature, locators, login)
+            response = await self.__call_agent(feature,bdd_scenarios,locators,login,url)
             self.__no_new_scripts = False
 
             # collect and validate keywords
@@ -394,7 +393,8 @@ class ScriptGen:
             # convert to JSON
             return json.dumps({"test_script": result})
 
-    def __call_agent(self, feature, locators, login):
+
+    def __call_agent(self, feature, bdd_scenarios, locators, login, url):
         """
         Assembles input to a single string and calls LLM-agent
         :param feature: Feature as Processed_Req
@@ -403,14 +403,17 @@ class ScriptGen:
         :return: LLM response as string
         """
         feature_desc = str(feature.summary)
-        scenarios = str(feature.bdd_scenarios)
-
+        scenarios = str(bdd_scenarios)
+        str_url = str(url)
+        locators_str = str(locators)
         LLM_input = (
             "Feature to be tested:\n\n" + feature_desc +
+            "\nURL tested web application:\n\n" + str_url +
             "\nBDD scenarios:\n\n" + scenarios +
-            "\nLocators as JSON:\n\n" + json.dumps(locators) +
+            "\nLocators as JSON:\n\n" + locators_str +
             "\nUsable keywords:\n\n" + self.__keywords_str +
             "\nLogin information as JSON:\n\n" + str(login)
         )
         agent_obj = ScriptGenAgent()
         return agent_obj.execute_task(LLM_input)
+        

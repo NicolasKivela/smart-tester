@@ -4,19 +4,28 @@ import MainHeader from '@/components/MainHeader.vue'
 import InputView from '@/components/InputView/InputView.vue'
 import ResultView from '@/components/ResultView/ResultView.vue'
 import LoaderView from './components/LoaderView/LoaderView.vue'
+import { getBddScenarios } from '@/services/resultsService.ts'
 
 const bddScenarios = ref([])
-const chosenFeature = ref(Number)
+const chosenFeature = ref(0)
+
 // Loader states
 const isLoading = ref(false)
 const loadingMessage = ref('')
 
-const handleBddScenarios = (scenarios) => {
-  bddScenarios.value = scenarios
+// Reset key for codeview
+const resetKey = ref(0)
+
+const handleBddScenarios = async () => {
+  const scenarios = await getBddScenarios(chosenFeature.value)
+  if (scenarios) {
+    bddScenarios.value = scenarios
+  }
 }
+
 const handleFeatures = (feature_id) => {
   chosenFeature.value = feature_id
-  console.log("THIS IS THE CHOSEN FEATURE ID",chosenFeature.value)
+  console.log('THIS IS THE CHOSEN FEATURE ID', chosenFeature.value)
 }
 // Loader start/stop functions
 const startLoader = (message: string) => {
@@ -27,20 +36,26 @@ const startLoader = (message: string) => {
 const stopLoader = () => {
   isLoading.value = false
 }
+
+const resetCodeBlock = () => {
+  resetKey.value++
+}
 </script>
 
 <template>
   <MainHeader />
   <div class="app">
-    <InputView 
+    <InputView
       @bdd-scenarios-updated="handleBddScenarios"
       @chosen-feature-updated="handleFeatures"
       @start-loader="startLoader"
       @stop-loader="stopLoader"
+      @reset-code-block="resetCodeBlock"
     />
-    <ResultView 
+    <ResultView
       :bdd-scenarios="bddScenarios"
       :feature-id="chosenFeature"
+      :reset-value="resetKey"
       @start-loader="startLoader"
       @stop-loader="stopLoader"
     />

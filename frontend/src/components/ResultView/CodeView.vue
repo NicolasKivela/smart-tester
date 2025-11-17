@@ -1,14 +1,12 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, nextTick } from 'vue'
 import hljs from 'highlight.js/lib/core'
 import 'highlight.js/styles/github-dark.css'
 import hljsDefineRobot from 'highlightjs-robot'
 
 hljsDefineRobot(hljs)
 
-hljs.highlightAll()
-
-const props = defineProps<{ scripts: string }>()
+const props = defineProps<{ scripts: string, resetValue: number  }>()
 const codeRef = ref<HTMLElement | null>(null)
 
 // Try parsing the JSON
@@ -22,7 +20,7 @@ const parseJSON = (original: string) => {
 }
 
 // Render & highlight the generated code
-const highlightCode = () => {
+const highlightCode = async () => {
   if (!codeRef.value) return
 
   // Parse the JSON
@@ -33,21 +31,58 @@ const highlightCode = () => {
 
   // Insert code into <code> block
   codeRef.value.textContent = code
+  
   // Delete any previous highlights
   delete (codeRef.value as any).dataset.highlighted
 
   // Highlight the code
-  hljs.highlightElement(codeRef.value)
+  hljs.highlightAll()
+
+  // Highlight 'xpath...]' sections
+  await nextTick()
+    const html = codeRef.value.innerHTML
+    codeRef.value.innerHTML = html.replace(
+    /(xpath\s*=\s*[^\]]*\])/gi,
+    '<span class="xpath-highlight">$1</span>'
+    )
+}
+
+// Reset the codeblock if a new feature is selected
+const resetCodeBlock = () => {
+  if (!codeRef.value) return
+  
+  // Delete any previous highlights
+  delete (codeRef.value as any).dataset.highlighted
+
+  // Clear the current code content
+  codeRef.value.textContent = ''
+}
+
+// Reset the whole session, refreshes the page
+const resetSession = () => {
+  window.location.reload()
 }
 
 // Watch props.scripts for changes
 onMounted(highlightCode)
 watch(() => props.scripts, highlightCode)
 
+// Watch props.resetValue for reset
+watch(() => props.resetValue, () => {
+  resetCodeBlock()
+})
+
 // Copy full script to clipboard
 const copyToClipboard = () => {
+
+  // Parse the JSON
+  let code = parseJSON(props.scripts)
+
+  // Convert all literal "\n" into real line breaks
+  code = code.replace(/\\n/g, '\n')
+
   navigator.clipboard
-    .writeText(props.scripts.toString())
+    .writeText(code)
     .then(() => {
       console.log('Code copied to clipboard')
     })
@@ -62,7 +97,7 @@ const copyToClipboard = () => {
     <div class="column">
       <h3 class="title">Generated Code</h3>
       <button class="secondary" @click="copyToClipboard">Copy</button>
-      <button class="primary">Reset Session</button>
+      <button class="primary" @click="resetSession">Reset Session</button>
     </div>
     <pre class="code-block">
       <code ref="codeRef" class="language-robot"></code>
@@ -81,7 +116,7 @@ const copyToClipboard = () => {
 }
 
 .code-block {
-  background-color: black;
+  background-color: #0d1117;
   flex: 1;
   border-radius: 4px;
   overflow-y: auto;
@@ -102,5 +137,10 @@ const copyToClipboard = () => {
 
 button {
   flex: 2;
+}
+
+.code-block :deep(.xpath-highlight) {
+  color: #EE82EE;
+  font-weight: bold;
 }
 </style>
