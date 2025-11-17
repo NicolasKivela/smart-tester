@@ -85,7 +85,7 @@ class ScriptGen:
                 print("Warning: generation failed, trying again...")
 
                 # try again
-                response = self.__call_agent(feature, locators, login)
+                response = self.__call_agent(feature, locators, login,url)
                 self.__failed_keyword_counter = 0
                 self.__temp_collect_test_lines(response)
                 self.__collect_keywords(response)
