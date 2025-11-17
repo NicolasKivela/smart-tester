@@ -7,9 +7,10 @@ and locators by calling LLM agent. Assembles all outputs to a single string
 
 import json
 
-from script_gen_agent import ScriptGenAgent
+from app.test_script_generator.script_gen_agent import ScriptGenAgent
 
 SECTION_MARKER_START_INDEX = 3
+MIN_VARIABLE_SPACE = 4
 
 
 class ScriptGen:
@@ -24,19 +25,32 @@ class ScriptGen:
         self.__variables = {}
         self.__scripts = []
 
+        self.__variable_offset = 0      # used to align variable values in final output
+        self.__id_storage = set()       # used to store IDs to prevent duplicate API calls
+        self.__no_new_scripts = True    # is set to false if API call is made
+
         self.__init_keywords()
 
-    def generate_script(self, features, locators, login):
+    async def generate_script(self, features, bdd_scenarios, locators, login, url):
         """
         Top level public method - returns robotframework test scripts from
         BDD-scenarios and locators by calling LLM agent
-        :param features: BDD scenarios as: list[tuple(string, list[string])]
+        :param features: Feature data as: list[Processed_req]
         :param locators: target locators as JSON
         :return: result: robotframework test script as JSON object
         """
 
+        self.__no_new_scripts = True
+
         for feature in features:
-            response = self.__call_agent(feature, locators, login)
+            # does not run feature with duplicate ID
+            if feature.id in self.__id_storage:
+                continue
+
+            # save id to prevent future duplicate and run
+            self.__id_storage.add(feature.id)
+            response = await self.__call_agent(feature,bdd_scenarios,locators,login,url)
+            self.__no_new_scripts = False
             self.__collect_keywords(response)
             self.__collect_variables(response)
             self.__scripts.append(response)
@@ -45,7 +59,7 @@ class ScriptGen:
 
     def __init_keywords(self):
         """
-        Initializes setup and teardown keywords to internal attributes
+        Initializes hard-coded setup keyword to internal attributes
         """
 
         self.__keywords_str = (
@@ -55,10 +69,8 @@ class ScriptGen:
             "   Wait Until Page Contains Element    ${ACCEPT_COOKIES_BUTTON}    timeout=10s\n"
             "   Click Element    ${ACCEPT_COOKIES_BUTTON}\n"
             "   Wait Until Element Is Not Visible    ${ACCEPT_COOKIES_BUTTON}    timeout=5s\n\n"
-            "Close Browser\n"
-            "   Close All Browsers\n\n"
         )
-        self.__keywords = {"Open browser to front page\n", "Close Browser\n"}
+        self.__keywords = {"Open browser to front page\n"}
 
     def __collect_keywords(self, response):
         """
@@ -138,11 +150,15 @@ class ScriptGen:
                 continue
             # new variable
             elif line:
-                line_elements = line.split("  ")
+                line_elements = line.split(" ")
                 name = line_elements.pop(0)
-                value = "  ".join(line_elements)
+                value = " ".join(line_elements)
                 name = name.strip()
                 value = value.strip()
+                # update variable offset
+                if len(name) > self.__variable_offset:
+                    self.__variable_offset = len(name)
+                # check for duplicate mismatch
                 if name in self.__variables and self.__variables[name] != value:
                     print("Warning: variable duplicate value mismatch;", name, value)
                 else:
@@ -211,9 +227,10 @@ class ScriptGen:
         for settings_line in settings_ordered:
             result += settings_line
 
+        self.__variable_offset += MIN_VARIABLE_SPACE
         result += "\n*** Variables ***\n"
         for variable in self.__variables.keys():
-            result += variable + "     " + self.__variables[variable] + "\n"
+            result += variable + (self.__variable_offset - len(variable)) * " " + self.__variables[variable] + "\n"
 
         result += "\n*** Test Cases ***\n" + tests
         result += "\n*** Keywords ***\n" + self.__keywords_str
@@ -223,39 +240,35 @@ class ScriptGen:
         self.__scripts.clear()
         self.__variables.clear()
         self.__init_keywords()
+        self.__variable_offset = 0
 
-        # convert to JSON
-        return json.dumps({"test_script": result})
+        if self.__no_new_scripts:
+            return None
+        else:
+            # convert to JSON
+            return json.dumps({"test_script": result})
 
-    def __call_agent(self, feature, locators, login):
+
+    def __call_agent(self, feature, bdd_scenarios, locators, login, url):
         """
         Assembles input to a single string and calls LLM-agent
-        :param feature: BDD scenarios for a specific feature as tuple(string, List[string])
+        :param feature: Feature as Processed_Req
         :param locators: All known locators as JSON
         :param login: known valid login information as JSON
         :return: LLM response as string
         """
-
-        feature_desc = feature[0] + "\n"
-        test_case_list = feature[1]
-
-        scenarios = ""
-
-        for test_case in test_case_list:
-            scenarios += test_case + "\n"
-
-        if self.__keywords_str == "":
-            keywords = "No available keywords\n"
-        else:
-            keywords = self.__keywords_str
-
+        feature_desc = str(feature.summary)
+        scenarios = str(bdd_scenarios)
+        str_url = str(url)
+        locators_str = str(locators)
         LLM_input = (
             "Feature to be tested:\n\n" + feature_desc +
+            "\nURL tested web application:\n\n" + str_url +
             "\nBDD scenarios:\n\n" + scenarios +
-            "\nLocators as JSON:\n\n" + json.dumps(locators) +
-            "\nUsable keywords:\n\n" + keywords +
-            "\nUsable variables: \n\n" + json.dumps(self.__variables) +
-            "\nLogin information as JSON:\n\n" + login
+            "\nLocators as JSON:\n\n" + locators_str +
+            "\nUsable keywords:\n\n" + self.__keywords_str +
+            "\nLogin information as JSON:\n\n" + str(login)
         )
         agent_obj = ScriptGenAgent()
         return agent_obj.execute_task(LLM_input)
+        

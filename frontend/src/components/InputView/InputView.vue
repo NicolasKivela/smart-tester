@@ -4,11 +4,23 @@ import ErrorPopup from '@/components/InputView/ErrorPopup.vue'
 import ProcessDataPopup from '@/components/InputView/ProcessDataPopup.vue'
 import { postRequirements, getTopics, postSelectedTopic } from '@/services/requirementService.ts'
 
+// Emits for loader functionality and bdd scenario updates
+const emit = defineEmits([
+  'start-loader',
+  'stop-loader',
+  'bddScenariosUpdated',
+  'chosen-feature-updated',
+  'reset-code-block',
+])
+
 // Initialize inputs
 const file = ref<File | null>(null)
 const url = ref('')
 const username = ref('')
 const password = ref('')
+
+// Tells if the requiremets have already been processed with the same specific input values
+const dataProcessed = ref(false)
 
 // Interface and storage for topics fetched from the backend
 interface Topic {
@@ -30,10 +42,9 @@ const errorMessage = ref('')
 // Popup visibility variable
 const showPopup = ref(false)
 
-const emit = defineEmits(['bddScenariosUpdated'])
-
 // Handle file input
 const handleFileUpload = (event: Event) => {
+  dataProcessed.value = false
   const target = event.target as HTMLInputElement
 
   // Clear any previous error in file input
@@ -61,57 +72,74 @@ const handleFileUpload = (event: Event) => {
   }
 }
 
+// Handle file input change event
+const handleFileInputChange = (event: Event) => {
+  handleFileUpload(event)
+  dataProcessed.value = false
+}
+
 // Show popup after clicking the "Process data button"
-// TODO: add a loader screen while the backend processes the req. file
 const processdata = async () => {
   showError.value = false // Reset URL error always
 
-  try {
-    // Try to validate URL
-    new URL(url.value)
-  } catch (error) {
-    // If invalid, show error and reset url field
-    errorMessage.value = 'Please enter a valid URL!'
-    showError.value = true
-    url.value = ''
-    return
-  }
+  // if data has not been processed already with the same inputs
+  if (!dataProcessed.value) {
+    try {
+      // Try to validate URL
+      new URL(url.value)
+    } catch (error) {
+      // If invalid, show error and reset url field
+      errorMessage.value = 'Please enter a valid URL!'
+      showError.value = true
+      url.value = ''
+      return
+    }
 
-  // Construct a json out of the text inputs
-  const jsonItem = {
-    url: url.value,
-    username: username.value,
-    password: password.value,
-  }
+    // Construct a json out of the text inputs
+    const jsonItem = {
+      url: url.value,
+      username: username.value,
+      password: password.value,
+    }
 
-  // Just to validate what is passed to backend
-  console.log(file.value, jsonItem)
+    // Just to validate what is passed to backend
+    console.log(file.value, jsonItem)
 
-  try {
-    // Post requirements to backend
-    await postRequirements(file.value!, jsonItem)
-  } catch (error) {
-    errorMessage.value = 'Failed to POST requirements!'
-    showError.value = true
-    return
-  }
+    // Start loader
+    emit('start-loader', 'Processing requirements, please wait...')
 
-  try {
-    // Get topics from backend
-    const getResponse = await getTopics()
+    try {
+      // Post requirements to backend
+      await postRequirements(file.value!, jsonItem)
+    } catch (error) {
+      emit('stop-loader')
+      errorMessage.value = 'Failed to POST requirements!'
+      showError.value = true
+      return
+    }
 
-    // Assign topics
-    topics.value = Object.values(getResponse).map((item: any) => ({
-      id: item.id,
-      name: item.feature,
-    }))
-  } catch (error) {
-    errorMessage.value = 'Failed to GET topics!'
-    showError.value = true
-    return
+    try {
+      // Get topics from backend
+      const getResponse = await getTopics()
+
+      // Assign topics
+      topics.value = Object.values(getResponse).map((item: any) => ({
+        id: item.id,
+        name: item.name,
+      }))
+    } catch (error) {
+      emit('stop-loader')
+      errorMessage.value = 'Failed to GET topics!'
+      showError.value = true
+      return
+    }
+
+    // Stop the loader
+    emit('stop-loader')
   }
 
   // If everything went successfully, proceed to show the popup
+  dataProcessed.value = true
   showPopup.value = true
 }
 
@@ -122,23 +150,29 @@ const resetInputs = () => {
   username.value = ''
   password.value = ''
   fileInputKey.value++
+  dataProcessed.value = false
 }
 
 // "Continue" button pressed in popup
 // Number "selected" is the topic's id selected in the "Process Data" - popup
 const handleContinue = async (selected: number) => {
   showPopup.value = false
-
   // Show the selected option in console for now
   console.log('Selected topic ID:', selected)
 
+  emit('chosen-feature-updated', selected)
+  emit('start-loader', 'Generating BDD scenarios, please wait...')
+  emit('reset-code-block')
+
   try {
     // Post the selected topic's id to backend
-    const response = await postSelectedTopic(selected)
+    await postSelectedTopic(selected)
 
     // Emit the generated scenarios to parent component
-    emit('bddScenariosUpdated', response.generated_scenarios)
+    emit('bddScenariosUpdated')
+    emit('stop-loader')
   } catch (error) {
+    emit('stop-loader')
     errorMessage.value = 'Failed to POST the selected topic!'
     showError.value = true
     return
@@ -152,7 +186,12 @@ const handleContinue = async (selected: number) => {
     <!-- File input -->
     <div class="titles" data-testid="file-input-section">
       <span>Add requirements file <span class="required-input" title="Required">*</span></span>
-      <input type="file" @change="handleFileUpload" :key="fileInputKey" data-testid="file-input" />
+      <input
+        type="file"
+        @change="handleFileInputChange($event)"
+        :key="fileInputKey"
+        data-testid="file-input"
+      />
       <p class="input-description">PDF (.pdf) or Text (.txt) file accepted</p>
     </div>
 
@@ -165,6 +204,7 @@ const handleContinue = async (selected: number) => {
         placeholder="URL"
         class="url-input"
         data-testid="url-input"
+        @change="dataProcessed = false"
       />
     </div>
 
@@ -177,6 +217,7 @@ const handleContinue = async (selected: number) => {
         placeholder="Username"
         class="text-input"
         data-testid="username-input"
+        @change="dataProcessed = false"
       />
     </div>
 
@@ -189,6 +230,7 @@ const handleContinue = async (selected: number) => {
         placeholder="Password"
         class="text-input"
         data-testid="password-input"
+        @change="dataProcessed = false"
       />
     </div>
 
@@ -200,7 +242,7 @@ const handleContinue = async (selected: number) => {
         :disabled="!file || !url.trim()"
         data-testid="process-data-btn"
       >
-        Process data
+        {{ dataProcessed ? 'Select a different feature' : 'Process data' }}
       </button>
 
       <button class="secondary" @click="resetInputs" data-testid="reset-inputs-btn">

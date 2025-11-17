@@ -1,18 +1,14 @@
 from pydantic import BaseModel,HttpUrl
-
+from typing import Optional
 class Credentials(BaseModel):
-    username: str
-    password: str
+    username: Optional[str] = None
+    password: Optional[str] = None
+    
 
-class Req_Process(BaseModel):
+class UrlCredentials(BaseModel):
     url: HttpUrl
-    credentials: Credentials
+    username: Optional[str] = None
+    password: Optional[str] = None
 
-class Processed_Req(BaseModel):
-    id: int
-    feature: str
-    summary: str 
-    requirements: list[str]
-class Req_Topics(BaseModel):
-    # topics: list
-    topics: list[str]
+class Extracted_Reqs(BaseModel):
+    topic_reqs: list [str]

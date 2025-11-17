@@ -20,10 +20,10 @@ class BaseAgent(ABC):
     """
     def __init__(
         self,
-        model: str = "gemini/gemini-2.5-flash", # specify model gemini/gemini-2.5-flash, ollama/llama3:8b for example
+        model: str = "gemini/gemini-2.5-flash-lite", # specify model gemini/gemini-2.5-flash, ollama/llama3:8b for example
         temperature: float = 0.1,
-        max_tokens: int = 30000,
-        timeout: int = 300,
+        max_tokens: int = 10000,
+        timeout: int = 3000,
         max_tool_calls: int = 5
     ):
         self.model = model
@@ -31,6 +31,7 @@ class BaseAgent(ABC):
         self.max_tokens = max_tokens
         self.timeout = timeout
         self.max_tool_calls = max_tool_calls
+        self.api_call_counter = 0
 
     @abstractmethod
     def _get_system_message(self) -> str:
@@ -191,14 +192,14 @@ class BaseAgent(ABC):
                 "content": f"Error while executing tool '{function_name}': {e}",
             }
 
-    async def execute_task(self, user_message: str) -> str:
+    async def execute_task(self, user_message: str, response_format=None) -> str:
         messages = [
             {"role": "system", "content": self._get_system_message()},
             {"role": "user", "content": user_message}
         ]
         
         for _ in range(self.max_tool_calls):
-
+            
             # Get the list of tools from the specific agent implementation.
             tools = self._get_tools()
             # Prepare the arguments for the litellm.completion call.
@@ -207,7 +208,8 @@ class BaseAgent(ABC):
                 "messages": messages,
                 "temperature": self.temperature,
                 "max_tokens": self.max_tokens,
-                "timeout": self.timeout
+                "timeout": self.timeout,
+                "response_format": response_format #Output format as a parameter from sub agents
             }
             # Only add tool-related parameters if the agent actually has tools.
             if tools:
@@ -234,5 +236,4 @@ class BaseAgent(ABC):
             )
             
             messages.extend(tool_outputs)
-            
         return "Error: Agent could not complete the task within the maximum number of tool calls."

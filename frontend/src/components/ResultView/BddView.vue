@@ -1,25 +1,34 @@
 <script setup lang="ts">
 import BddCard from '@/components/ResultView/BddCard.vue'
-import { watch, ref } from 'vue'
+import { watch, ref, computed } from 'vue'
 import type { BddScenario } from './types'
-import { postBddIds } from '@/services/resultsService.ts'
+import { createTests } from '@/services/resultsService.ts'
 
 const props = defineProps<{
   bddScenarios: BddScenario[]
+  featureId: number
 }>()
 
-const emit = defineEmits(['updateTests'])
+const emit = defineEmits(['updateTests', 'start-tests-loader', 'stop-tests-loader'])
 
 const mutatedBddScenarios = ref<BddScenario[]>(props.bddScenarios)
 
-const generateTests = async () => {
-  let testScripts = []
-  for (const scenario of mutatedBddScenarios.value) {
-    const result = await postBddIds(scenario.id)
-    testScripts = result
-  }
+// Function to check if the "Generate tests" -button should be activated
+const disabledButton = computed(() => {
+  return !props.featureId || props.bddScenarios.length === 0
+})
 
-  emit('updateTests', testScripts)
+const generateTests = async () => {
+  // Start loader
+  emit('start-tests-loader', 'Generating tests, please wait...')
+
+  const result = await createTests(props.featureId)
+
+  console.log('test scripts', result)
+  emit('updateTests', result)
+
+  // Stop loader
+  emit('stop-tests-loader')
 }
 
 // const addEmptyScenario = () => {
@@ -36,7 +45,6 @@ watch(
   () => props.bddScenarios,
   (newValue) => {
     mutatedBddScenarios.value = newValue
-    console.log(mutatedBddScenarios.value)
   },
 )
 </script>
@@ -45,11 +53,13 @@ watch(
   <div class="bdd-view">
     <div class="column">
       <h3 class="title">BDD Scenarios</h3>
-      <button class="primary" @click="generateTests">Generate Tests</button>
+      <button class="primary" @click="generateTests" :disabled="disabledButton">
+        Generate Tests
+      </button>
     </div>
     <div class="scrollable-section">
       <ul
-        v-for="(bddScenario, index) in bddScenarios"
+        v-for="(bddScenario, index) in mutatedBddScenarios"
         :key="index"
         style="list-style: none; padding-left: 0; margin-left: 0"
       >
@@ -95,5 +105,10 @@ button {
 .add-button {
   display: flex;
   align-items: center;
+}
+button.primary:disabled {
+  cursor: not-allowed !important;
+  background: #cccccc;
+  color: #666666;
 }
 </style>

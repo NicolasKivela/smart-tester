@@ -1,11 +1,88 @@
 <script setup lang="ts">
-const props = defineProps<{
-  scripts: object
-}>()
+import { ref, watch, onMounted, nextTick } from 'vue'
+import hljs from 'highlight.js/lib/core'
+import 'highlight.js/styles/github-dark.css'
+import hljsDefineRobot from 'highlightjs-robot'
 
+hljsDefineRobot(hljs)
+
+const props = defineProps<{ scripts: string, resetValue: number  }>()
+const codeRef = ref<HTMLElement | null>(null)
+
+// Try parsing the JSON
+const parseJSON = (original: string) => {
+  if (!original) return ''
+  try {
+    const parsed = JSON.parse(original)
+    if (parsed.test_script) return parsed.test_script
+  } catch {}
+  return original
+}
+
+// Render & highlight the generated code
+const highlightCode = async () => {
+  if (!codeRef.value) return
+
+  // Parse the JSON
+  let code = parseJSON(props.scripts)
+
+  // Convert all literal "\n" into real line breaks
+  code = code.replace(/\\n/g, '\n')
+
+  // Insert code into <code> block
+  codeRef.value.textContent = code
+  
+  // Delete any previous highlights
+  delete (codeRef.value as any).dataset.highlighted
+
+  // Highlight the code
+  hljs.highlightAll()
+
+  // Highlight 'xpath...]' sections
+  await nextTick()
+    const html = codeRef.value.innerHTML
+    codeRef.value.innerHTML = html.replace(
+    /(xpath\s*=\s*[^\]]*\])/gi,
+    '<span class="xpath-highlight">$1</span>'
+    )
+}
+
+// Reset the codeblock if a new feature is selected
+const resetCodeBlock = () => {
+  if (!codeRef.value) return
+  
+  // Delete any previous highlights
+  delete (codeRef.value as any).dataset.highlighted
+
+  // Clear the current code content
+  codeRef.value.textContent = ''
+}
+
+// Reset the whole session, refreshes the page
+const resetSession = () => {
+  window.location.reload()
+}
+
+// Watch props.scripts for changes
+onMounted(highlightCode)
+watch(() => props.scripts, highlightCode)
+
+// Watch props.resetValue for reset
+watch(() => props.resetValue, () => {
+  resetCodeBlock()
+})
+
+// Copy full script to clipboard
 const copyToClipboard = () => {
+
+  // Parse the JSON
+  let code = parseJSON(props.scripts)
+
+  // Convert all literal "\n" into real line breaks
+  code = code.replace(/\\n/g, '\n')
+
   navigator.clipboard
-    .writeText(props.scripts.toString())
+    .writeText(code)
     .then(() => {
       console.log('Code copied to clipboard')
     })
@@ -19,13 +96,12 @@ const copyToClipboard = () => {
   <div class="code-view">
     <div class="column">
       <h3 class="title">Generated Code</h3>
-      <!--<button class="secondary">Download .zip</button>-->
       <button class="secondary" @click="copyToClipboard">Copy</button>
-      <button class="primary">Reset Session</button>
+      <button class="primary" @click="resetSession">Reset Session</button>
     </div>
-    <div class="code-block">
-      <p v-for="(script, index) of scripts" :key="index">{{ script }}</p>
-    </div>
+    <pre class="code-block">
+      <code ref="codeRef" class="language-robot"></code>
+    </pre>
   </div>
 </template>
 
@@ -38,27 +114,33 @@ const copyToClipboard = () => {
   display: flex;
   flex-direction: column;
 }
+
 .code-block {
-  background-color: black;
-  color: white;
-  height: 400px;
-  border-radius: 4px;
-  padding-left: 1rem;
-  padding-right: 1rem;
+  background-color: #0d1117;
   flex: 1;
+  border-radius: 4px;
   overflow-y: auto;
+  white-space: pre-wrap;
 }
+
 .column {
   display: flex;
   gap: 1rem;
 }
+
 .title {
   flex: 6;
   justify-self: start;
   align-self: center;
   margin-top: 0.5rem;
 }
+
 button {
   flex: 2;
+}
+
+.code-block :deep(.xpath-highlight) {
+  color: #EE82EE;
+  font-weight: bold;
 }
 </style>

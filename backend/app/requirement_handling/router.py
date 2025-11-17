@@ -1,9 +1,10 @@
 
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException,Form, UploadFile, File
+from app.common.database import get_session
+from .schemas import UrlCredentials
 import json
-from fastapi import APIRouter, UploadFile, Form, File
-from .schemas import Req_Process, Req_Topics
-from .storage import REQ_TOPICS, REQUIREMENTS
-from .agents import RequirementAgent
+from .storage import db_requirements
 from .service import RequirementsProcessor
 from .file_handler import extract_text
 
@@ -12,14 +13,21 @@ router = APIRouter()
 #Get requirement file features
 @router.get("/requirements", tags=["requirements"])
 async def fetch_requirement_topics():
-    return REQUIREMENTS
+    response = db_requirements.get_all_feature_data()
+    return response
 #Process requirements
 @router.post("/requirements",tags=["requirements"])
-async def process_requirements(json_item:str = Form(...), file: UploadFile = File(...)):
+async def process_requirements(url: str = Form(...),
+                                username: Optional[str] = Form(None),
+                                password: Optional[str] = Form(None), 
+                               file: UploadFile = File(...)):
+    credentials = UrlCredentials(
+        url=url,
+        username=username,
+        password=password
+    )
     content = await file.read()
     text = extract_text(content,file.filename)
-    #process=RequirementsProcessor(json_item, text, req_file=file)
-    #process.run_pipeline()
-    #topics = process.topics
-    print("processing", REQUIREMENTS)
-    return {"message": "Requirements processed", "Requirements": REQUIREMENTS}
+    process=RequirementsProcessor(credentials, text, req_file=file.filename)
+    response = await process.run_pipeline()
+    return response

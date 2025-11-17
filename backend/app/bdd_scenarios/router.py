@@ -1,33 +1,39 @@
-from fastapi import APIRouter
-from .schemas import BDD_Scenario, Generate_BDD
-from app.requirement_handling.service import get_requirements
-from .storage import BDD_SCENARIOS
+from fastapi import APIRouter, Depends, HTTPException
+from sqlmodel import Session, select
+from app.common.database import get_session
+from app.common.models.bdd_model import BDDScenario
+from app.bdd_scenarios.schemas import BDD_Scenario
+from .storage import db_bdd_scenarios
 from .bdd_generation import generate_bdd_scenarios_logic 
 router = APIRouter()
 
-@router.get("/bdd_scenarios",tags=["bdd_scenarios"])
-async def read_bdd_scenarios():
-    return BDD_SCENARIOS
+@router.get("/bdd_scenarios", tags=["bdd_scenarios"])
+async def read_bdd_scenarios_by_feature(feature_id:int):
+    bdds = db_bdd_scenarios.get_all_bdd_scenarios_by_feature(feature_id=feature_id)
+    return bdds
 
-@router.put("/bdd_scenarios/{id}",tags=["bdd_scenarios"])
-async def update_bdd_scenario(item_id: int, item: BDD_Scenario):
-    BDD_SCENARIOS[item.id] = item.model_dump()
-    return {"message": "Item replaced", "id":item_id}
+@router.delete("/bdd_scenarios", tags=["bdd_scenario"])
+async def delete_bdd_scenario_by_id(feature_id:int,bdd_id: int):
+    response = db_bdd_scenarios.delete_bdd_scenario_by_id(feature_id,bdd_id)
+    return response
 
-@router.post("/bdd_scenarios",tags=["bdd_scenarios"])
-async def create_bdd_scenario(item: BDD_Scenario):
-    BDD_SCENARIOS[item.id]=item.model_dump()
-    return {"message": "Item created" , "id":item.id}
+@router.put("/bdd_scenarios", tags=["bdd_scenarios"])
+async def update_bdd_scenario(feature_id: int,bdd_id:int,item: BDD_Scenario):
+    
+    response = db_bdd_scenarios.update_bdd_scenario_by_id(feature_id,bdd_id, item)
+    return response
 
-#Generate BDD_scenarios
-@router.post("/bdd_scenarios/generate/{id}",tags=["bdd_scenarios"])
-async def generate_bdd_scenarios(item_id:int):
-    requirement_item = get_requirements(item_id) 
-    generated_bdds = await generate_bdd_scenarios_logic(requirement_item) 
 
-    for bdd in generated_bdds:
-        print(bdd)
-        BDD_SCENARIOS[bdd.id]= bdd.model_dump()
-    return {"message": "BDDs generated succesfully", "generated_scenarios": generated_bdds}
+@router.post("/bdd_scenarios", tags=["bdd_scenarios"])
+async def create_bdd_scenario(feature_id:int,item: BDD_Scenario):
+    response = db_bdd_scenarios.add_bdd_scenarios(feature_id,item)
+    return response
+
+@router.post("/bdd_scenarios/generate/{id}", tags=["bdd_scenarios"])
+async def generate_bdd_scenarios(id: int, session: Session = Depends(get_session)):
+    
+    generated_bdds = await generate_bdd_scenarios_logic(id)
+
+    return {"message": "BDDs generated successfully"}
 
 
