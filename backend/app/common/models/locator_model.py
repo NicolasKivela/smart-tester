@@ -11,6 +11,7 @@ class Status(str, Enum):
     ONGOING= "ongoing"
     READY= "ready"
     NEW="new"
+    FAILURE="failure"
 
 
 
@@ -52,7 +53,6 @@ class LocatorSelector(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     locator_item_id: int = Field(foreign_key="locator_items.id")
 
-    strategy: Optional[str] = Field(default=None)
     css:Optional[str] = Field(default=None)
     xpath: Optional[str] = Field(default=None)
     created_at: datetime = Field(default_factory=datetime.utcnow)

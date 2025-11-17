@@ -5,6 +5,7 @@ from app.locator_retrieval.agents import BDDTaskAgent,LocatorRetrievalAgent,Navi
 from app.requirement_handling.storage import REQUIREMENTS, URL_DATA, db_requirements
 from app.bdd_scenarios.storage import db_bdd_scenarios
 from app.requirement_handling.schemas import UrlCredentials
+from app.common.models.locator_model import Status
 from app.locator_retrieval.storage import LOCATORS,db_locator
 
 class LocatorRetrieving:
@@ -18,6 +19,7 @@ class LocatorRetrieving:
         try:
             url_data = URL_DATA
             scenarios = db_bdd_scenarios.get_all_bdd_scenarios_by_feature(self.feature_id)
+            print(scenarios)
             locators = asyncio.create_task(self.locator_retrieving_service(scenarios,url_data))
             #locators = self.locator_retrieving_service(scenarios,url_data)
             return {"status_code":200,"message":f"Locator process started,{locators}"}
@@ -68,6 +70,8 @@ class LocatorRetrieving:
                 await navigator.accept_cookies()
 
                 if not navigator.page:
+                    #Update locator element status
+                    db_locator.update_locator_element_status(locator_element_id, Status.FAILURE)
                     break
 
                 locator_input = await navigator.get_page_content_for_agent(task)
@@ -117,27 +121,37 @@ class LocatorRetrieving:
                     start_index = next_action_str.find('{')
                     end_index = next_action_str.rfind('}')
                     if start_index == -1 or end_index == -1:
+                        #Update locator element status
+                        db_locator.update_locator_element_status(locator_element_id, Status.FAILURE)
                         break
                     json_part = next_action_str[start_index : end_index + 1]
                     action_data = json.loads(json_part)
                     action_list = action_data.get('actions', [])
                     if not action_list:
+
+                        #Update locator element status
+                        db_locator.update_locator_element_status(locator_element_id, Status.FAILURE)
                         break
                     action_details = action_list[0]
                     action_history.append(action_details)
 
                     if action_details.get("action") == "finish":
+                        #Update locator element status
+                        db_locator.update_locator_element_status(locator_element_id, Status.READY)
                         break
 
                     await navigator.execute_action(action_details)
 
                 except (json.JSONDecodeError, IndexError):
+                        #Update locator element status
+                    db_locator.update_locator_element_status(locator_element_id, Status.FAILURE)
                     break
                 except Exception:
+                        #Update locator element status
+                    db_locator.update_locator_element_status(locator_element_id, Status.FAILURE)
                     break
         finally:
             if navigator:
                 await navigator.stop()
         LOCATORS.append(all_found_locators)
-        resp = db_locator.update_locator_element_status(locator_element_id)
         return LOCATORS

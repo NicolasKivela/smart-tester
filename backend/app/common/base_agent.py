@@ -20,7 +20,7 @@ class BaseAgent(ABC):
     """
     def __init__(
         self,
-        model: str = "gemini/gemini-2.5-flash", # specify model gemini/gemini-2.5-flash, ollama/llama3:8b for example
+        model: str = "gemini/gemini-2.5-flash-lite", # specify model gemini/gemini-2.5-flash, ollama/llama3:8b for example
         temperature: float = 0.1,
         max_tokens: int = 1000000,
         timeout: int = 3000,

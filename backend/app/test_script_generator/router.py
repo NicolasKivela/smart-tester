@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 import time
 from datetime import timedelta, datetime
 import asyncio
@@ -14,14 +14,13 @@ router = APIRouter()
 async def create_test(feature_id: int):
     timeout_seconds = 60
     locators = db_locator.get_selectors_by_feature(feature_id)
-    print("LOCATORS HERE", locators)
 
     if not locators:
         response = await start_scraper_process(feature_id)
+        if response["status_code"]!= 200:
+            raise HTTPException(status_code=400,detail="Locator retrieval failed")
         print("Locator process started", response)
-
     deadline = datetime.utcnow() + timedelta(seconds=timeout_seconds)
-
     while datetime.utcnow() < deadline:
         element = db_locator.get_locator_element_by_feature_id(feature_id)["body"]
         print("Element:", element)
@@ -29,15 +28,18 @@ async def create_test(feature_id: int):
         if element is None:
             print("No element found yet")
         else:
+            print(element)
             status = element.status.value
             print("Element status:", status)
 
             if status == "ready":
                 print("Locator process finished")
-                return element 
-
+                break
+            if status == "failure":
+                print("Error finding locators")
+                raise HTTPException(status_code=400,detail="Locator retrieval failed")
         print("Locator process is still going...")
-        await asyncio.sleep(5) 
+        await asyncio.sleep(4) 
     process = ScriptGen()
     
     feature_data = db_requirements.get_feature_data_by_id(feature_id)
