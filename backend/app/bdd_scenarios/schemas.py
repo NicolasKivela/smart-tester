@@ -1,13 +1,9 @@
 from pydantic import BaseModel
+from typing import Optional
 
 class BDD_Scenario(BaseModel):
-    id:int
-    feature: str
     scenario: str
-    given: list
-    when: list
-    then: list
-
+    content: str
 class Generate_BDD(BaseModel):
     prompt: str
     feature: str

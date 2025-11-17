@@ -1,10 +1,11 @@
 import asyncio
 from app.bdd_scenarios.bdd_generation_agent import BddGenerationAgent
-from app.bdd_scenarios.schemas import Generate_BDD, BDD_Scenario
-from app.bdd_scenarios.storage import BDD_SCENARIOS
-from app.requirement_handling.schemas import Processed_Req
+from app.common.models.bdd_model import BDDScenario
+from app.bdd_scenarios.schemas import BDD_Scenario
+from app.bdd_scenarios.storage import BDD_SCENARIOS, db_bdd_scenarios
+from app.requirement_handling.storage import db_requirements
 
-def parse_gherkin(gherkin_text: str, feature: str) -> list[BDD_Scenario]:
+def parse_gherkin(gherkin_text: str, feature: str, item_id) -> list[BDDScenario]:
     """
     Parses Gherkin text and converts it into a list of BDD_Scenario objects.
     """
@@ -33,33 +34,28 @@ def parse_gherkin(gherkin_text: str, feature: str) -> list[BDD_Scenario]:
                 then.append(line.replace("Then ", "").strip())
             elif line.startswith("And") and current_section is not None:
                 current_section.append(line.replace("And ", "").strip())
+        response = db_bdd_scenarios.add_bdd_scenarios(item_id,BDD_Scenario(
+            scenario=scenario_title,
+            content=block
+        ))
+        if response["status_code"] != 200:
+            return response
+    return response
 
-        new_id = len(BDD_SCENARIOS) + len(scenarios) + 1
-        scenarios.append(
-            BDD_Scenario(
-                id=new_id,
-                feature=feature,
-                scenario=scenario_title,
-                given=given,
-                when=when,
-                then=then
-            )
-        )
-    return scenarios
-
-async def generate_bdd_scenarios_logic(item: Processed_Req) -> list[BDD_Scenario]:
+async def generate_bdd_scenarios_logic(item_id: int) -> list[BDDScenario]:
     """
     Uses BddGenerationAgent to generate BDD scenarios and returns them as a list of BDD_Scenario objects.
     """
+    feature_data = db_requirements.get_feature_data_by_id(item_id)
+
     agent = BddGenerationAgent()
     
     # Construct the user message for the agent
-    user_message = f"Feature: {item.feature}\nRequirements:\n{item.requirements}"
+    user_message = f"Feature: {feature_data.name}\nRequirements:\n{feature_data.requirements}"
     
     # Run the agent asynchronously
-    generated_text = await asyncio.to_thread(agent.execute_task, user_message)
-    
+    generated_text = await agent.execute_task(user_message)
     # Parse the generated Gherkin text
-    generated_scenarios = parse_gherkin(generated_text, item.feature)
+    response = parse_gherkin(generated_text, feature_data, item_id)
     
-    return generated_scenarios
+    return response

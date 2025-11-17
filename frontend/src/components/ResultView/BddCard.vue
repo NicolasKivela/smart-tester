@@ -27,12 +27,12 @@ const saveEdited = () => {
 }
 
 const editable = ref(false)
-const rows = ref(
-  2 +
-    bddScenario.value.given.length +
-    bddScenario.value.when.length +
-    bddScenario.value.then.length,
-)
+// const rows = ref(
+//   2 +
+//     bddScenario.value.given.length +
+//     bddScenario.value.when.length +
+//     bddScenario.value.then.length,
+// )
 </script>
 
 <template>
@@ -42,11 +42,12 @@ const rows = ref(
         v-if="editable"
         :v-model="bddScenarioString"
         cols="50"
-        :rows="rows"
+        :rows="5"
         @blur="saveEdited"
       ></textarea>
       <div v-else>
-        <span>Feature: {{ bddScenario.feature }}<br /></span>
+        <span>{{ bddScenario.content }}</span>
+        <!-- <span>Feature: {{ bddScenario.feature }}<br /></span>
         <span>Scenario: {{ bddScenario.scenario }}<br /></span>
         <div style="margin-left: 20px">
           <span>Given {{ bddScenario.given[0] }}<br /></span>
@@ -61,7 +62,7 @@ const rows = ref(
           <span v-for="(then, index) in bddScenario.then.slice(1)" :key="index"
             >And {{ then }}<br
           /></span>
-        </div>
+        </div> -->
       </div>
     </div>
     <!-- <div class="actions">

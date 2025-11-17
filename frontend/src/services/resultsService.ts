@@ -2,9 +2,10 @@ import axios from 'axios'
 
 const API_URL = 'http://localhost:8010' // Adjust the URL as needed
 
-const getBddScenarios = async () => {
+const getBddScenarios = async (feature_id) => {
   try {
-    const response = await axios.get(API_URL + '/bdd_scenarios')
+    const response = await axios.get(API_URL + '/bdd_scenarios?feature_id=' + feature_id)
+
     return response.data
   } catch (e) {
     throw e
@@ -21,11 +22,9 @@ const postBddScenarios = async (scenarios) => {
   }
 }
 
-const postBddIds = async (id: Number) => {
+const createTests = async (id: number) => {
   try {
-    const response = await axios.post(`${API_URL}/test_scripts/generate`, null, {
-      params: { feature_id: id },
-    })
+    const response = await axios.post(`${API_URL}/test_scripts/generate?feature_id=` + id)
 
     return response.data
   } catch (e) {
@@ -33,4 +32,4 @@ const postBddIds = async (id: Number) => {
   }
 }
 
-export { getBddScenarios, postBddScenarios, postBddIds }
+export { getBddScenarios, postBddScenarios, createTests }
