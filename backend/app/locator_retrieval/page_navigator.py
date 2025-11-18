@@ -91,10 +91,10 @@ class PageNavigator:
             try:
                 if not self.silent:
                     print(f"Executing action: '{action_type}' by clicking selector: {selector}")
-                await self.page.locator(selector).first.click(timeout=10000)
+                await self.page.locator(selector).first.click(timeout=40000)
                 if not self.silent:
                     print("Click successful.")
-                await self.page.wait_for_load_state("networkidle", timeout=15000)
+                await self.page.wait_for_load_state("networkidle", timeout=30000)
             except Exception as e:
                 timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
                 screenshot_path = f"failure_{timestamp}.png"

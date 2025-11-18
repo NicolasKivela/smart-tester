@@ -5,6 +5,8 @@ from .page_navigator import PageNavigator # Import the refactored navigator
 from .locator_agent import LocatorRetrievalAgent
 from .navigator_agent import NavigatorAgent
 from .task_agent import BDDTaskAgent
+from .filter_agent import FilterAgent
+from ..requirement_handling.storage import URL_DATA
 
 #TO DO:
 #1. Duplikaatti lokaattorien poisto
@@ -12,9 +14,10 @@ from .task_agent import BDDTaskAgent
 
 
 async def main():
-    URL = "https://www.hsl.fi/"
     
-
+    URL="https://www.hsl.fi"
+    
+    credentials = URL_DATA.username + "," + URL_DATA.password
     all_found_locators = []
     action_history = []
 
@@ -22,6 +25,7 @@ async def main():
     navigator_agent = NavigatorAgent()
     locator_agent = LocatorRetrievalAgent()
     task_agent = BDDTaskAgent()
+    filter_agent = FilterAgent()
     
     # Path to scenarios.json
     scenarios_json_path = os.path.join(os.path.dirname(__file__), 'json_files', 'scenarios.json')
@@ -44,15 +48,19 @@ async def main():
         return
 
     scenarios_str = "\n".join(scenarios)
-    task_prompt = f"URL: {URL}\n\nBDD Scenarios:\n{scenarios_str}"
-    #task = await task_agent.execute_task(task_prompt)
-    #print(task)
-    task = """1. Go to "https://www.hsl.fi"
-    2. Fill "Helsinki Central Railway Station" into the "From" field.
-    3. Click the suggestion from the list.
-    4. Click To field
-    5. Fill "Espoo" into the "To" field.
-    6. Click the suggestion from the list."""
+    task_prompt =  """ User checks real-time departures for a stop Given the user is on the HSL.fi homepage 
+    When the user searches for stop Rautatientori 
+    Then the system should display a list of upcoming departures
+    And each departure should show line number, destination, and minutes until departure"""
+    task = await task_agent.execute_task(task_prompt)
+    print(task)
+    test_task = """ 1. Navigate to "https://www.hsl.fi/"
+                    2. Type "Rautatientori" into the search nearby stops input field
+                    3. Click the search button
+                    4. Click on the "Rautatientori" stop from the search results
+                """
+  
+    
 
     # Initialize the navigator
     video_path = os.path.join(os.path.dirname(__file__), 'videos')
@@ -61,6 +69,7 @@ async def main():
     try:
         await navigator.start()
         # Initial navigation and cookie handling
+        #await navigator.goto(URL_DATA.url)
         await navigator.goto(URL)
 
         # Main loop
@@ -77,7 +86,7 @@ async def main():
             print(f"Current URL: {navigator.page.url}")
             
             # 1. Scrape page using the navigator
-            locator_input = await navigator.get_page_content_for_agent(task)
+            locator_input = await navigator.get_page_content_for_agent(test_task)
             
             print("Asking LocatorAgent to find relevant locators...")
             relevant_locators_json_str = await locator_agent.execute_task(locator_input)
@@ -97,9 +106,50 @@ async def main():
                     print("No JSON object found in LocatorAgent response.")
             except json.JSONDecodeError:
                 print(f"Could not decode JSON from LocatorAgent response: {relevant_locators_json_str}")
+            
+            # 2. Filter duplicate locators
+            if all_found_locators: # Only filter if there are locators
+                filter_prompt = f'''
+                This is the list of locators:
+                {json.dumps(all_found_locators, indent=2)}
+                '''
+                print(f"Asking FilterAgent to process {len(all_found_locators)} locators...")
+                filtered_locators_str = await filter_agent.execute_task(filter_prompt)
                 
+                try:
+                    # The model might return a JSON object or a JSON array.
+                    # Let's find the start and end of the JSON, whether it's { or [
+                    start_char = '[' if '[' in filtered_locators_str else '{'
+                    start_index = filtered_locators_str.find(start_char)
+                    end_char = ']' if start_char == '[' else '}'
+                    end_index = filtered_locators_str.rfind(end_char)
 
-            # 2. Decide next action with NavigatorAgent
+                    if start_index != -1 and end_index != -1:
+                        json_part = filtered_locators_str[start_index : end_index + 1]
+                        parsed_data = json.loads(json_part)
+                        
+                        if isinstance(parsed_data, list):
+                            # If the agent returned a list directly, use it.
+                            all_found_locators = parsed_data
+                        elif isinstance(parsed_data, dict):
+                            # If it returned a dictionary, try to find the list of locators within it.
+                            found_list = False
+                            for key, value in parsed_data.items():
+                                if isinstance(value, list):
+                                    all_found_locators = value
+                                    found_list = True
+                                    break
+                            if not found_list:
+                                print("FilterAgent returned a dictionary, but no list of locators was found inside it. Keeping original list.")
+                        
+                        print(f"FilterAgent finished. Unique locators: {len(all_found_locators)}")
+                    else:
+                        print("No JSON object or array found in FilterAgent response, keeping original list.")
+                except json.JSONDecodeError:
+                    print(f"Could not decode JSON from FilterAgent response: {filtered_locators_str}")
+                    print("Continuing with unfiltered locators.")
+
+            # 3. Decide next action with NavigatorAgent
             navigator_prompt = f'''
             Overall Task: {task}
 
@@ -108,6 +158,9 @@ async def main():
 
             Locators found on the CURRENT page:
             {json.dumps(newly_found_locators, indent=2)}
+
+            Username and password:
+            {json.dumps(credentials, indent=2)}
 
             Based on the task, history, and current page locators, what is the single next action to perform?
             Provide a robust CSS or XPath selector.
@@ -121,7 +174,7 @@ async def main():
             print(f"Asking NavigatorAgent to decide the next action...")
             next_action_str = await navigator_agent.execute_task(navigator_prompt)
 
-            # 3. Parse and execute the action
+            # 4. Parse and execute the action
             try:
                 start_index = next_action_str.find('{')
                 end_index = next_action_str.rfind('}')
