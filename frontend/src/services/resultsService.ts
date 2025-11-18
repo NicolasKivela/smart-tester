@@ -12,19 +12,21 @@ const getBddScenarios = async (feature_id) => {
   }
 }
 
-const postBddScenarios = async (scenarios) => {
-  try {
-    const response = await axios.post(API_URL + '/bdd_scenarios', scenarios)
-
-    return response.data
-  } catch (e) {
-    throw e
-  }
-}
-
 const updateBddScenario = async (scenario) => {
   try {
-    const response = await axios.put(`${API_URL}/bdd_scenarios/${scenario.id}`, scenario)
+    const updatedScenario = {
+      content: scenario.content,
+      scenario: scenario.scenario,
+    }
+
+    const params = {
+      feature_id: scenario.feature_id,
+      bdd_id: scenario.id,
+    }
+
+    const response = await axios.put(`${API_URL}/bdd_scenarios`, updatedScenario, {
+      params: params,
+    })
 
     if (response.status === 200) {
       return 'success'
@@ -36,9 +38,34 @@ const updateBddScenario = async (scenario) => {
   }
 }
 
-const deleteBddScenario = async (id: number) => {
+const deleteBddScenario = async (feature_id: number, bdd_id: number) => {
   try {
-    const response = await axios.delete(`${API_URL}/bdd_scenarios/${id}`)
+    const params = {
+      feature_id: feature_id,
+      bdd_id: bdd_id,
+    }
+    const response = await axios.delete(`${API_URL}/bdd_scenarios`, { params: params })
+
+    if (response.status === 200) {
+      return 'success'
+    } else {
+      return response
+    }
+  } catch (e) {
+    throw e
+  }
+}
+
+const addBddScenario = async (scenario) => {
+  try {
+    const data = {
+      content: scenario.content,
+      scenario: scenario.scenario,
+    }
+    const response = await axios.post(
+      `${API_URL}/bdd_scenarios?feature_id=${scenario.feature_id}`,
+      data,
+    )
 
     if (response.status === 200) {
       return 'success'
@@ -60,4 +87,4 @@ const createTests = async (id: number) => {
   }
 }
 
-export { getBddScenarios, postBddScenarios, createTests, updateBddScenario, deleteBddScenario }
+export { getBddScenarios, createTests, updateBddScenario, deleteBddScenario, addBddScenario }

@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import type { BddScenario } from './types'
-import EditBdd from '@/components/ResultView/EditBdd.vue'
 import { updateBddScenario, deleteBddScenario } from '@/services/resultsService.ts'
 
 const props = defineProps({
@@ -22,27 +21,24 @@ watch(
   },
 )
 
-const saveEdited = (editedScenario) => {
+const saveEdited = () => {
   allowEdit.value = false
 
-  updateBddScenario(editedScenario).then((response) => {
+  updateBddScenario(bddScenario.value).then((response) => {
     if (response === 'success') {
-      emit('updateScenario', editedScenario)
+      emit('updateScenario', bddScenario.value)
     } else {
       console.error('Failed to update BDD scenario: ', response)
     }
   })
 }
 
-const editable = ref(false)
-// const rows = ref(
-//   2 +
-//     bddScenario.value.given.length +
-//     bddScenario.value.when.length +
-//     bddScenario.value.then.length,
-// )
+const rows = computed(() => {
+  return bddScenario.value.content ? bddScenario.value.content.split('\n').length : 4
+})
+
 const handleDelete = async () => {
-  deleteBddScenario(bddScenario.value.id).then((response) => {
+  deleteBddScenario(bddScenario.value.feature_id, bddScenario.value.id).then((response) => {
     if (response === 'success') {
       emit('delete', bddScenario.value)
     } else {
@@ -56,30 +52,14 @@ const handleDelete = async () => {
   <div class="bdd-card">
     <div class="bdd-text">
       <textarea
-        v-if="editable"
-        :v-model="bddScenarioString"
-        cols="50"
-        :rows="5"
+        v-if="allowEdit"
+        v-model="bddScenario.content"
+        cols="90"
+        :rows="rows"
         @blur="saveEdited"
       ></textarea>
       <div v-else>
         <span>{{ bddScenario.content }}</span>
-        <!-- <span>Feature: {{ bddScenario.feature }}<br /></span>
-        <span>Scenario: {{ bddScenario.scenario }}<br /></span>
-        <div style="margin-left: 20px">
-          <span>Given {{ bddScenario.given[0] }}<br /></span>
-          <span v-for="(given, index) in bddScenario.given.slice(1)" :key="index"
-            >And {{ given }}<br
-          /></span>
-          <span>When {{ bddScenario.when[0] }}<br /></span>
-          <span v-for="(when, index) in bddScenario.when.slice(1)" :key="index"
-            >And {{ when }}<br
-          /></span>
-          <span>Then {{ bddScenario.then[0] }}<br /></span>
-          <span v-for="(then, index) in bddScenario.then.slice(1)" :key="index"
-            >And {{ then }}<br
-          /></span>
-        </div> -->
       </div>
     </div>
     <div class="actions">
@@ -94,12 +74,6 @@ const handleDelete = async () => {
       </button>
     </div>
   </div>
-  <EditBdd
-    :visible="allowEdit"
-    :scenario="bddScenario"
-    @close="allowEdit = false"
-    @save="saveEdited"
-  />
 </template>
 
 <style scoped>
