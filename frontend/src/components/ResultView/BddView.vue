@@ -2,7 +2,7 @@
 import BddCard from '@/components/ResultView/BddCard.vue'
 import { watch, ref, computed } from 'vue'
 import type { BddScenario } from './types'
-import { createTests } from '@/services/resultsService.ts'
+import { createTests, getTests, startLocator, getLocatorStatus } from '@/services/resultsService.ts'
 
 const props = defineProps<{
   bddScenarios: BddScenario[]
@@ -12,17 +12,51 @@ const props = defineProps<{
 const emit = defineEmits(['updateTests', 'start-tests-loader', 'stop-tests-loader'])
 
 const mutatedBddScenarios = ref<BddScenario[]>(props.bddScenarios)
+const locatorsFetched = ref(false)
+const POLL_INTERVAL = 10000 // ms between polls
 
 // Function to check if the "Generate tests" -button should be activated
 const disabledButton = computed(() => {
-  return !props.featureId || props.bddScenarios.length === 0
+  return !props.featureId || props.bddScenarios.length === 0 || !locatorsFetched.value
 })
+
+const getLocators = async () => {
+  // Start loader
+  emit('start-tests-loader', 'Generating locators, please wait...')
+
+  const result = await startLocator(props.featureId)
+
+  if (result !== 'success') {
+    emit('stop-tests-loader')
+    console.error('Error starting locator generation:', result)
+    return
+  }
+
+  while (!locatorsFetched.value) {
+    const status = await getLocatorStatus(props.featureId)
+
+    if (status === 'ready') {
+      locatorsFetched.value = true
+    } else if (status === 'failure') {
+      emit('stop-tests-loader')
+      console.error('Error while polling locator status')
+      locatorsFetched.value = true
+    } else {
+      // Wait before next poll
+      await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL))
+    }
+  }
+
+  // Stop loader
+  emit('stop-tests-loader')
+}
 
 const generateTests = async () => {
   // Start loader
   emit('start-tests-loader', 'Generating tests, please wait...')
+  await createTests(props.featureId)
 
-  const result = await createTests(props.featureId)
+  const result = await getTests(props.featureId)
 
   console.log('test scripts', result)
   emit('updateTests', result)
@@ -53,6 +87,7 @@ watch(
   <div class="bdd-view">
     <div class="column">
       <h3 class="title">BDD Scenarios</h3>
+      <button class="primary" @click="getLocators">Fetch Locators</button>
       <button class="primary" @click="generateTests" :disabled="disabledButton">
         Generate Tests
       </button>
