@@ -1,10 +1,6 @@
 {
   "url": "https://www.hsl.fi",
   "scenarios": [
-    "Scenario: Browsing Different Ticket Types\nGiven the user navigates to the Tickets and Prices section\nWhen the page loads\nThen the user should see distinct categories for different ticket types (e.g., Single Tickets, Day Tickets, Season Tickets)\nAnd clicking on a ticket type should provide a description of its validity and use.",
-    
-    "Scenario: Checking Prices by Travel Zone\nGiven the user is viewing the pricing details for a specific ticket type (e.g., Season Ticket)\nWhen the user selects different travel zones (e.g., Zone AB, Zone BC, Zone D)\nThen the displayed price should update correctly for the selected zone combination\nAnd the user should be able to clearly identify the cost for their journey zone.",
-    
-    "Scenario: Finding Ticket Purchase Instructions\nGiven the user is in the Tickets and Prices section\nWhen the user looks for information on where to buy tickets\nThen the page should list various purchase channels (e.g., HSL App, Ticket Machines, Service Points)\nAnd each channel should have clear, step-by-step instructions or links detailing the purchase process."
+    "Scenario: User plans a trip from Helsinki Central Railway Station to Kamppi Given the user is on the HSL.fi homepage When the user enters Helsinki Central Railway Station in the From field And the user enters Espoo in the To field. User should click the correct value in dropdown menu or press enter. Then the system should display a list of route options And each route option should include travel time, modes of transport, and departure times"
   ]
 }

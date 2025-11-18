@@ -125,11 +125,30 @@ class PageNavigator:
                     print(f"Fill action failed for selector '{selector}'. Screenshot saved to {screenshot_path}. Reason: {e}")
                 raise e        
 
-
+        elif action_type == "press_enter":
+            selector = action_details.get('css') or action_details.get('xpath')
+            try:
+                if selector:
+                    if not self.silent:
+                        print(f"Executing action: '{action_type}' on selector: {selector}")
+                    await self.page.locator(selector).first.press('Enter', timeout=20000)
+                else:
+                    if not self.silent:
+                        print(f"Executing action: '{action_type}' on the page.")
+                    await self.page.keyboard.press('Enter')
+                if not self.silent:
+                    print("Press Enter successful.")
+            except Exception as e:
+                timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                screenshot_path = f"failure_{timestamp}.png"
+                await self.page.screenshot(path=screenshot_path)
+                if not self.silent:
+                    print(f"Press Enter action failed. Screenshot saved to {screenshot_path}. Reason: {e}")
+                raise e
 
         else:
             if not self.silent:
-                print(f"Action was '{action_type}', not 'click' or 'fill'. Skipping execution.")
+                print(f"Action was '{action_type}', not 'click', 'fill', or 'press_enter'. Skipping execution.")
 
     async def get_page_content_for_agent(self, task: str) -> str:
         """

@@ -8,9 +8,7 @@ from .task_agent import BDDTaskAgent
 from .filter_agent import FilterAgent
 from ..requirement_handling.storage import URL_DATA
 
-#TO DO:
-#1. Duplikaatti lokaattorien poisto
-#2. Käyttäjätunnus ja Salasana kulkemaan mukana
+
 
 
 async def main():
@@ -53,11 +51,12 @@ async def main():
     Then the system should display a list of upcoming departures
     And each departure should show line number, destination, and minutes until departure"""
     task = await task_agent.execute_task(task_prompt)
-    print(task)
-    test_task = """ 1. Navigate to "https://www.hsl.fi/"
-                    2. Type "Rautatientori" into the search nearby stops input field
-                    3. Click the search button
-                    4. Click on the "Rautatientori" stop from the search results
+    test_task = """ 1. Go to https://www.hsl.fi
+                2. Fill the "From" field with "Helsinki Central Railway Station"
+                3. Click the "Helsinki Central Railway Station" suggestion
+                4. Fill the "To" field with "Espoo"
+                5. Click the "Espoo" suggestion
+                6. finish
                 """
   
     
@@ -151,7 +150,7 @@ async def main():
 
             # 3. Decide next action with NavigatorAgent
             navigator_prompt = f'''
-            Overall Task: {task}
+            Overall Task: {test_task}
 
             Action History (what has been done so far):
             {json.dumps(action_history, indent=2)}
