@@ -9,11 +9,12 @@ class TokenLoggerService:
         self.api_calls: list[Dict[str, Any]] = []
         self.total_tokens = 0
 
-    def log_api_call(self, usage: Dict[str, Any], completion_kwargs: Dict[str, Any]):
+    def log_api_call(self, usage: Dict[str, Any], completion_kwargs: Dict[str, Any],agent):
         """Store one API call’s token usage."""
         entry = {
             "timestamp": datetime.utcnow().isoformat(),
             "model": completion_kwargs.get("model"),
+            "agent": agent,
             "prompt_tokens": usage.get("prompt_tokens", 0),
             "completion_tokens": usage.get("completion_tokens", 0),
             "total_tokens": usage.get("total_tokens", 0),

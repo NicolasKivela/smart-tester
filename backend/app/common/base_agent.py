@@ -26,6 +26,7 @@ class BaseAgent(ABC):
         timeout: int = 3000,
         max_tool_calls: int = 5,
         session_id: str = "default-session",
+        agent: str = None,
     ):
         self.model = model
         self.temperature = temperature
@@ -35,6 +36,7 @@ class BaseAgent(ABC):
         self.api_call_counter = 0
         
         self.token_logger = TokenLoggerService(session_id)
+        self.agent = agent ###?
 
         SESSION_TOKEN_LOGGERS[session_id] = self.token_logger
 
@@ -221,6 +223,7 @@ class BaseAgent(ABC):
             try:
                 # Logging input
                 logger.info("LITELLM INPUT")
+                print(completion_kwargs)
                 logger.info(json.dumps(completion_kwargs, indent=2, ensure_ascii=False))
 
                 response = litellm.completion(**completion_kwargs)
@@ -238,7 +241,9 @@ class BaseAgent(ABC):
                 # log token usage
                 usage = getattr(response, "usage", None)
                 if usage:
-                    entry = self.token_logger.log_api_call(usage, completion_kwargs)
+                    print("entry loading")
+                    entry = self.token_logger.log_api_call(usage, completion_kwargs,agent=self.agent)
+                    print("Entry",entry)
                     logger.info(f"TOKENS USED: {entry}")
 
                 logger.info(f"API CALL COUNT: {self.api_call_counter}")
