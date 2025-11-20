@@ -12,7 +12,7 @@ class ScriptGenAgent(BaseAgent):
 
     def __init__(self):
         # increased max tokens for script generation
-        super().__init__(model="gemini/gemini-2.5-flash", max_tokens= 32768)
+        super().__init__( max_tokens= 32768)#model="gemini/gemini-2.5-flash"
 
     def _get_system_message(self):
         return (
