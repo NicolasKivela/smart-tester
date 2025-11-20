@@ -7,7 +7,7 @@ and locators by calling LLM agent. Assembles all outputs to a single string
 
 import json
 
-from backend.app.test_script_generator.script_gen_agent import ScriptGenAgent
+from app.test_script_generator.script_gen_agent import ScriptGenAgent
 
 SECTION_MARKER_START_INDEX = 3
 MIN_VARIABLE_SPACE = 4
