@@ -1,5 +1,4 @@
-FROM python:3.12-slim
-
+FROM mcr.microsoft.com/playwright/python:v1.50.0-noble
 
 WORKDIR /app
 
@@ -14,6 +13,7 @@ COPY pyproject.toml poetry.lock* ./
 
 # Install dependencies
 RUN poetry install --no-interaction --no-ansi
+RUN playwright install
 
 # Copy app source
 COPY . .

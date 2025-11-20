@@ -1,0 +1,89 @@
+{
+  "tasks": [
+    {
+      "action": "open_page",
+      "target": "https://www.hsl.fi",
+      "details": "Navigate to the HSL homepage."
+    },
+    {
+      "action": "click",
+      "target": "Tickets and prices link in the main navigation",
+      "details": "Click to access the section detailing ticket types and pricing."
+    },
+    {
+      "action": "verify_text",
+      "target": "Single tickets category heading",
+      "details": "Ensure 'Single tickets' category is visible on the page."
+    },
+    {
+      "action": "verify_text",
+      "target": "Day tickets category heading",
+      "details": "Ensure 'Day tickets' category is visible on the page."
+    },
+    {
+      "action": "verify_text",
+      "target": "Season tickets category heading",
+      "details": "Ensure 'Season tickets' category is visible on the page."
+    },
+    {
+      "action": "click",
+      "target": "Season tickets link/card",
+      "details": "Click on 'Season tickets' to view its specific details and pricing."
+    },
+    {
+      "action": "verify_text",
+      "target": "Text describing Season ticket validity and use",
+      "details": "Confirm that a description of the season ticket's validity and use is present."
+    },
+    {
+      "action": "click",
+      "target": "Zone AB selection (e.g., radio button or tab)",
+      "details": "Select 'Zone AB' to view its corresponding price."
+    },
+    {
+      "action": "verify_text",
+      "target": "Displayed price for Zone AB",
+      "details": "Verify that the price updates and is displayed correctly for Zone AB."
+    },
+    {
+      "action": "click",
+      "target": "Zone BC selection (e.g., radio button or tab)",
+      "details": "Select 'Zone BC' to view its corresponding price."
+    },
+    {
+      "action": "verify_text",
+      "target": "Displayed price for Zone BC",
+      "details": "Verify that the price updates and is displayed correctly for Zone BC."
+    },
+    {
+      "action": "go_back",
+      "target": "Previous page",
+      "details": "Return to the main 'Tickets and prices' overview page to find purchase instructions."
+    },
+    {
+      "action": "verify_text",
+      "target": "HSL App purchase channel heading",
+      "details": "Confirm that 'HSL App' is listed as a channel for purchasing tickets."
+    },
+    {
+      "action": "verify_text",
+      "target": "Ticket machines purchase channel heading",
+      "details": "Confirm that 'Ticket machines' are listed as a channel for purchasing tickets."
+    },
+    {
+      "action": "verify_text",
+      "target": "Service points purchase channel heading",
+      "details": "Confirm that 'Service points' are listed as a channel for purchasing tickets."
+    },
+    {
+      "action": "click",
+      "target": "HSL App purchase channel link/button",
+      "details": "Click on 'HSL App' to view detailed purchase instructions for this channel."
+    },
+    {
+      "action": "verify_text",
+      "target": "Step-by-step instructions for HSL App ticket purchase",
+      "details": "Verify that clear, detailed instructions for purchasing tickets via the HSL App are displayed."
+    }
+  ]
+}

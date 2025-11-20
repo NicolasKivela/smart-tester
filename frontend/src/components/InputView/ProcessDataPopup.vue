@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch } from 'vue'
 
 const props = defineProps<{
   visible: boolean
   options: { id: number; name: string }[]
-}>();
+}>()
 
 // Call for parent in case of an event
 defineEmits(['close', 'continue'])
@@ -19,69 +19,67 @@ watch(
     if (newVal) {
       selectedOption.value = null // Reset immediately when popup opens
     }
-  }
-);
-
+  },
+)
 </script>
 
 <template>
-    <!-- Process data popup -->
+  <!-- Process data popup -->
   <div v-if="visible" class="popup-overlay" data-testid="process-popup-overlay">
     <div class="popup" data-testid="processdata-popup">
-
       <!-- Close button (X) in top right -->
-      <button 
-        class="close-btn"
-        @click="$emit('close')"
-        data-testid="processdata-popup-close-btn">
-        &times;</button>
-      
+      <button class="close-btn" @click="$emit('close')" data-testid="processdata-popup-close-btn">
+        &times;
+      </button>
+
       <h2 data-testid="processdata-popup-title">Requirements have been processed</h2>
-        <!-- Instruction text -->
-        <p class="instruction-text" data-testid="processdata-popup-instruction-text">
-          Choose the feature you want to continue making BDD scenarios and tests for.
-        </p>
+      <!-- Instruction text -->
+      <p class="instruction-text" data-testid="processdata-popup-instruction-text">
+        Choose the feature you want to continue making BDD scenarios and tests for.
+      </p>
 
       <!-- Radio Buttons -->
       <div class="radio-group" data-testid="popup-radio-group">
-        <label 
+        <label
           v-for="option in props.options"
           :key="option.id"
           class="radio-label"
-          :data-testid="`popup-radio-${option.name.replace(/\s+/g, '-').toLowerCase()}`">
-
-          <input 
+          :data-testid="`popup-radio-${option.name.replace(/\s+/g, '-').toLowerCase()}`"
+        >
+          <input
             type="radio"
             :value="option.id"
             v-model="selectedOption"
-            :data-testid="`radio-input-${option.id}`" />
+            :data-testid="`radio-input-${option.id}`"
+          />
           {{ option.name }}
         </label>
       </div>
 
       <!-- Action Buttons -->
       <div class="popup-buttons">
-        <button 
+        <button
           class="secondary cancel-btn"
           @click="$emit('close')"
-          data-testid="processdata-popup-cancel-btn">
+          data-testid="processdata-popup-cancel-btn"
+        >
           Cancel
         </button>
 
-        <button 
+        <button
           class="primary continue-btn"
           @click="$emit('continue', selectedOption)"
           :disabled="!selectedOption"
-          data-testid="processdata-popup-continue-btn">
+          data-testid="processdata-popup-continue-btn"
+        >
           Continue
         </button>
       </div>
-    </div>  
+    </div>
   </div>
 </template>
 
 <style scoped>
-
 /* Popup Styles */
 .popup-overlay {
   position: fixed;
@@ -89,7 +87,7 @@ watch(
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.4);
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -103,9 +101,11 @@ watch(
   border-radius: 8px;
   width: 100%;
   max-width: 450px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+  max-height: 80vh;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
   position: relative;
   text-align: left;
+  overflow-y: auto;
 }
 
 .popup h2 {
@@ -155,7 +155,7 @@ watch(
   cursor: pointer;
 }
 
-.radio-label input[type="radio"] {
+.radio-label input[type='radio'] {
   /* Default radio button appearance */
   margin-right: 10px;
   width: 18px;
@@ -184,8 +184,8 @@ watch(
 }
 
 button.primary:disabled {
-    cursor: not-allowed !important;
-    background: #cccccc;
-    color: #666666;
+  cursor: not-allowed !important;
+  background: #cccccc;
+  color: #666666;
 }
 </style>

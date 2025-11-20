@@ -14,10 +14,11 @@ const props = defineProps({
   featureId: {
     type: Number,
     required: true,
-  }
+  },
+  resetValue: Number,
 })
-console.log("feature id in resultview", props.featureId)
-const testScripts = ref()
+console.log('feature id in resultview', props.featureId)
+const testScripts = ref('')
 
 const handleTests = (tests) => {
   console.log(tests)
@@ -25,13 +26,12 @@ const handleTests = (tests) => {
 }
 
 // To pass loader events in BddView.vue to App.vue
-const loaderStart = (message: string) =>{
+const loaderStart = (message: string) => {
   emit('start-loader', message)
 }
-const loaderStop = (message: string) =>{
+const loaderStop = (message: string) => {
   emit('stop-loader')
 }
-
 </script>
 
 <template>
@@ -43,7 +43,7 @@ const loaderStop = (message: string) =>{
       @start-tests-loader="loaderStart"
       @stop-tests-loader="loaderStop"
     />
-    <CodeView :scripts="testScripts" />
+    <CodeView :scripts="testScripts" :reset-value="resetValue" />
   </div>
 </template>
 
