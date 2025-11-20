@@ -7,7 +7,7 @@ and locators by calling LLM agent. Assembles all outputs to a single string
 
 import json
 
-from app.test_script_generator.script_gen_agent import ScriptGenAgent
+from backend.app.test_script_generator.script_gen_agent import ScriptGenAgent
 
 SECTION_MARKER_START_INDEX = 3
 MIN_VARIABLE_SPACE = 4
@@ -32,11 +32,11 @@ class ScriptGen:
         self.__keywords = set()   # used to detect duplicates
         self.__keywords_str = ""  # used to store in order
         self.__variables = {}
-        self.__scripts = []
+        self.scripts = []
 
         self.__variable_offset = 0      # used to align variable values in final output
         self.__id_storage = set()       # used to store IDs to prevent duplicate API calls
-        self.__no_new_scripts = True    # is set to false if API call is made
+        self.__no_new_scripts = False   # is set to false if API call is made
         self.__temp_case_lines = set()
         self.__failed_keyword_counter = 0
 
@@ -65,9 +65,9 @@ class ScriptGen:
 
             # collect and validate keywords
             self.__failed_keyword_counter = 0
-            self.__temp_collect_test_lines(response)
+            self.temp_collect_test_lines(response)
             number_of_case_lines = len(self.__temp_case_lines)
-            self.__collect_keywords(response)
+            self.collect_keywords(response)
 
             # if there are no test cases or more than half
             # of the keywords do not match any test case lines - try again once
@@ -78,7 +78,7 @@ class ScriptGen:
             if float(self.__failed_keyword_counter) / float(number_of_case_lines) > 0.5:
                 # initialize attributes
                 self.__temp_case_lines.clear()
-                self.__scripts.clear()
+                self.scripts.clear()
                 self.__variables.clear()
                 self.__init_keywords()
                 self.__variable_offset = 0
@@ -87,15 +87,15 @@ class ScriptGen:
                 # try again
                 response = self.__call_agent(feature, locators, login,url)
                 self.__failed_keyword_counter = 0
-                self.__temp_collect_test_lines(response)
-                self.__collect_keywords(response)
+                self.temp_collect_test_lines(response)
+                self.collect_keywords(response)
 
             # continues normally regardless of what happened before
             self.__temp_case_lines.clear()
-            self.__collect_variables(response)
-            self.__scripts.append(response)
+            self.collect_variables(response)
+            self.scripts.append(response)
 
-        return self.__assemble_result()
+        return self.assemble_result()
 
     def __init_keywords(self):
         """
@@ -112,7 +112,7 @@ class ScriptGen:
         )
         self.__keywords = {"Open browser to front page\n"}
 
-    def __collect_keywords(self, response):
+    def collect_keywords(self, response):
         """
         saves keywords into internal attributes from robotframework script
         (does not save duplicates)
@@ -223,7 +223,7 @@ class ScriptGen:
             self.__failed_keyword_counter += 1
             return keyword
 
-    def __temp_collect_test_lines(self, response):
+    def temp_collect_test_lines(self, response):
         """
         Stores all test case lines in to set (test case names not included)
         param: response, robotframework script API response
@@ -264,7 +264,7 @@ class ScriptGen:
 
             self.__temp_case_lines.add(line.lower() + "\n")
 
-    def __collect_variables(self, response):
+    def collect_variables(self, response):
         """
         saves variables into internal attributes from robotframework script
         (does not save duplicates)
@@ -304,11 +304,11 @@ class ScriptGen:
                     self.__variable_offset = len(name)
                 # check for duplicate mismatch
                 if name in self.__variables and self.__variables[name] != value:
-                    print("Warning: variable duplicate value mismatch;", name, value)
+                    print("Warning: variable duplicate value mismatch:", name)
                 else:
                     self.__variables[name] = value
 
-    def __assemble_result(self):
+    def assemble_result(self):
         """
         assembles all LLM responses into a single script and removes duplicate
         settings
@@ -320,7 +320,7 @@ class ScriptGen:
         settings_ordered = []
         tests = ""
 
-        for script in self.__scripts:
+        for script in self.scripts:
             lines = script.splitlines(True)
             phase = "U"
             while lines:
@@ -379,7 +379,7 @@ class ScriptGen:
 
         # clear internal attributes
 
-        self.__scripts.clear()
+        self.scripts.clear()
         self.__variables.clear()
         self.__init_keywords()
         self.__variable_offset = 0
