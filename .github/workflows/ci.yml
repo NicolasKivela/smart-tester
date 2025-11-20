@@ -53,10 +53,7 @@ jobs:
           cache-to: type=gha, scope=backend, mode=max
 
       - name: Run tests
-        run: |
-            docker run --rm \
-              backend-test:latest \
-              pytest tests/
+        run: docker run pytest tests/
 
   test_frontend:
     name: Test frontend
