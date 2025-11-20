@@ -1,0 +1,91 @@
+
+*** Settings ***
+Library    SeleniumLibrary
+Test Setup    Open browser to front page
+Test Teardown    Close Browser
+
+*** Variables ***
+${URL}                                   https://www.hsl.fi
+${BROWSER}                               chrome
+                                         
+${FROM_LOCATION_HELSINKI}                Helsinki Central Railway Station
+${TO_LOCATION_ESPOO}                     Espoo
+${LOC_ACCEPT_COOKIES_BUTTON}             //button[normalize-space(text())='Hyväksy kaikki']
+${LOC_FROM_FIELD}                        //input[@placeholder='Syötä lähtöpaikka']
+${LOC_TO_FIELD}                          //input[@aria-controls='react-autowhatever-destination']
+${LOC_FROM_AND_TO_FIELD_FIRST_OPTION}    //li[@data-suggestion-index='1']
+${LOC_ROUTE}                             (//span[contains(@class,'itinerary-summary-row cursor-pointer')])[2]
+${LOGIN_USERNAME}                        <redacted>
+${LOGIN_PASSWORD}                        <redacted>
+${LOC_LOGIN_BUTTON}                      //a[@aria-label='Kirjaudu']
+${LOC_LOGIN_LABEL}                       //h2[normalize-space(text())='Kirjaudu sisään']
+${LOC_EMAIL_FIELD}                       (//div[contains(@class,'v-widget v-has-caption')]//input)[1]
+${LOC_PASSWORD_FIELD}                    (//div[contains(@class,'v-csslayout v-layout')]//input)[2]
+${LOC_LOGIN_SUBMIT_BUTTON}               (//div[contains(@class,'v-button v-widget')])[2]
+${LOC_USER_MENU_BUTTON}                  //button[@aria-controls='user-menu']
+
+*** Test Cases ***
+Scenario: User plans a trip from Helsinki Central Railway Station to Espoo
+    Given the user is on the HSL.fi homepage
+    When the user enters 'Helsinki Central Railway Station' in the 'From' field
+    And the user enters 'Espoo' in the 'To' field
+    Then the system should display a list of route options
+    And each route option should include travel time, modes of transport, and departure times
+
+User successfully logs into My HSL
+    Given the user is on the HSL.fi homepage
+    When the user clicks the Login button
+    And the login page is displayed
+    And the user enters a valid phone number and password
+    And the user clicks the Submit Login button
+    Then the user menu button should be visible
+
+*** Keywords ***
+Open browser to front page
+   Open Browser    ${URL}    ${BROWSER}
+   Maximize Browser Window
+   Wait Until Page Contains Element    ${LOC_ACCEPT_COOKIES_BUTTON}    timeout=10s
+   Click Element    ${LOC_ACCEPT_COOKIES_BUTTON}
+   Wait Until Element Is Not Visible    ${LOC_ACCEPT_COOKIES_BUTTON}    timeout=10s
+
+The user is on the HSL.fi homepage
+    Location Should Contain    ${URL}
+
+The user enters 'Helsinki Central Railway Station' in the 'From' field
+    Wait Until Page Contains Element    ${LOC_FROM_FIELD}    timeout=10s
+    Input Text    ${LOC_FROM_FIELD}    ${FROM_LOCATION_HELSINKI}
+    Wait Until Page Contains Element    ${LOC_FROM_AND_TO_FIELD_FIRST_OPTION}    timeout=10s
+    Click Element    ${LOC_FROM_AND_TO_FIELD_FIRST_OPTION}
+
+The user enters 'Espoo' in the 'To' field
+    Wait Until Page Contains Element    ${LOC_TO_FIELD}    timeout=10s
+    Input Text    ${LOC_TO_FIELD}    ${TO_LOCATION_ESPOO}
+    Wait Until Page Contains Element    ${LOC_FROM_AND_TO_FIELD_FIRST_OPTION}    timeout=10s
+    Click Element    ${LOC_FROM_AND_TO_FIELD_FIRST_OPTION}
+
+The system should display a list of route options
+    Wait Until Page Contains Element    ${LOC_ROUTE}    timeout=10s
+    Element Should Be Visible    ${LOC_ROUTE}
+
+the user clicks the login button
+    Wait Until Page Contains Element    ${LOC_LOGIN_BUTTON}    timeout=10s
+    Click Element    ${LOC_LOGIN_BUTTON}
+
+the login page is displayed
+    Wait Until Page Contains Element    ${LOC_LOGIN_LABEL}    timeout=10s
+    Element Should Be Visible    ${LOC_LOGIN_LABEL}
+
+the user enters a valid phone number and password
+    Wait Until Page Contains Element    ${LOC_EMAIL_FIELD}    timeout=10s
+    Input Text    ${LOC_EMAIL_FIELD}    ${LOGIN_USERNAME}
+    Wait Until Page Contains Element    ${LOC_PASSWORD_FIELD}    timeout=10s
+    Input Text    ${LOC_PASSWORD_FIELD}    ${LOGIN_PASSWORD}
+
+the user clicks the submit login button
+    Wait Until Page Contains Element    ${LOC_LOGIN_SUBMIT_BUTTON}    timeout=10s
+    Click Element    ${LOC_LOGIN_SUBMIT_BUTTON}
+
+the user menu button should be visible
+    Wait Until Page Contains Element    ${LOC_USER_MENU_BUTTON}    timeout=10s
+    Element Should Be Visible    ${LOC_USER_MENU_BUTTON}
+
