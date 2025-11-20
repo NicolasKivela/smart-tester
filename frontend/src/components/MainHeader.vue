@@ -1,5 +1,15 @@
 <script setup lang="ts">
-import { getLogs } from '@/services/logService.ts'
+import { ref, watch } from 'vue'
+import { getLogs, getTokens } from '@/services/logService.ts'
+
+const showMenu = ref(false)
+const totalTokens = ref(0)
+const promptTokens = ref(0)
+const completionTokens = ref(0)
+
+const toggleMenu = () => {
+  showMenu.value = !showMenu.value
+}
 
 const downloadLogs = async () => {
   try {
@@ -23,19 +33,40 @@ const downloadLogs = async () => {
     // Clean up
     document.body.removeChild(link)
     window.URL.revokeObjectURL(url)
+    showMenu.value = false
   } catch (error) {
     console.error('Failed to download logs:', error)
     alert('Failed to download logs. Please try again.')
   }
 }
+
+watch(showMenu, (newValue) => {
+  if (newValue) {
+    getTokens().then((tokenResponse) => {
+      totalTokens.value = tokenResponse.total_tokens
+      promptTokens.value = tokenResponse.api_calls[0].prompt_tokens
+      completionTokens.value = tokenResponse.api_calls[0].completion_tokens
+    })
+  }
+})
 </script>
 
 <template>
   <header class="main-header">
     <div class="header-text">Transformative Engine for Smart Testing</div>
-    <button class="settings-button" @click="downloadLogs" style="font-size: 14px">
-      <span class="material-icons">settings</span> Download logs
-    </button>
+    <div class="settings-container">
+      <button class="settings-button" @click="toggleMenu">
+        <span class="material-icons">settings</span>
+      </button>
+      <div v-if="showMenu" class="dropdown-menu">
+        <button class="menu-item menu-button" @click="downloadLogs">
+          <span class="material-icons">download</span> Download logs
+        </button>
+        <div class="menu-item menu-text">Total tokens {{ totalTokens }}</div>
+        <div class="menu-item menu-text">Prompt tokens {{ promptTokens }}</div>
+        <div class="menu-item menu-text">Completion tokens {{ completionTokens }}</div>
+      </div>
+    </div>
   </header>
 </template>
 
@@ -55,6 +86,10 @@ const downloadLogs = async () => {
   padding: 0 20px;
 }
 
+.settings-container {
+  position: relative;
+}
+
 .settings-button {
   border: none;
   background-color: #218a91;
@@ -64,5 +99,50 @@ const downloadLogs = async () => {
   display: flex;
   align-items: center;
   gap: 6px;
+  cursor: pointer;
+}
+
+.settings-button:hover {
+  background-color: #1a6e76;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  min-width: 200px;
+  z-index: 1000;
+  margin-top: 8px;
+}
+
+.menu-item {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.menu-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #333;
+  width: 100%;
+  text-align: left;
+  transition: background-color 0.2s;
+}
+
+.menu-button:hover {
+  background-color: #f0f0f0;
+}
+
+.menu-text {
+  color: #666;
+  cursor: default;
 }
 </style>

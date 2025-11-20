@@ -13,4 +13,13 @@ const getLogs = async () => {
   }
 }
 
-export { getLogs }
+// Get used tokens
+const getTokens = async () => {
+  try {
+    const response = await axios.get(API_URL + '/token-logs/default-session')
+    return response.data
+  } catch (error: Error) {
+    throw error
+  }
+}
+export { getLogs, getTokens }

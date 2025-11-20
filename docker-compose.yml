@@ -8,7 +8,6 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules  # prevent overwriting node_modules
-      - ./backend:/app
 
     environment:
       - NODE_ENV=development
