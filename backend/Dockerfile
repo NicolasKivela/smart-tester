@@ -12,6 +12,7 @@ RUN poetry config virtualenvs.create false
 COPY pyproject.toml poetry.lock* ./
 
 # Install dependencies
+RUN poetry lock
 RUN poetry install --no-interaction --no-ansi
 RUN playwright install
 

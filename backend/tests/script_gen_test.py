@@ -4,7 +4,7 @@ from ..app.test_script_generator.script_gen import ScriptGen
 from io import StringIO
 import sys
 
-INPUT_PATH = "../test_test-scripts/"
+INPUT_PATH = "tests/test_test-scripts/"
 
 
 class ScriptGenTests(unittest.TestCase):

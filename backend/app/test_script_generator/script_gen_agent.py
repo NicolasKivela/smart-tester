@@ -5,7 +5,7 @@ Implementation for abstract BaseAgent class:
 Gives the right context to LLM-agent for test script generation
 """
 
-from app.common.base_agent import BaseAgent
+from ..common.base_agent import BaseAgent
 
 
 class ScriptGenAgent(BaseAgent):
