@@ -29,29 +29,34 @@ jobs:
 
   #     - name: Perform CodeQL Analysis
   #       uses: github/codeql-action/analyze@v3
-  build:
-    name: Test backend
+  test_backend:
+    name: Test Backend
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.12"]
-
+    defaults:
+      run:
+        working-directory: ./backend
     steps:
-      - uses: szenius/set-timezone@v1.2
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend Docker Image
+        uses: docker/build-push-action@v5
         with:
-          timezoneLinux: "Europe/Berlin"
-      - uses: actions/checkout@v3
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
-        run: pip install pytest pytest-md pytest-emoji
-      - uses: pavelzw/pytest-action@v2
-        with:
-          emoji: false
-          verbose: false
-          job-summary: true
+          context: ./backend
+          file: ./backend/Dockerfile
+          tags: smart-tester-backend:latest
+          load: true
+          cache-from: type=gha, scope=backend
+          cache-to: type=gha, scope=backend, mode=max
+
+      - name: Run tests
+        run: |
+            docker run --rm \
+              smart-tester-backend:latest \
+              pytest tests/.
 
   test_frontend:
     name: Test frontend
