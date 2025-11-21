@@ -5,19 +5,28 @@ from io import StringIO
 import sys
 
 INPUT_PATH = "tests/test_test-scripts/"
-
+RESULT_KEY = "test_script"
 
 class ScriptGenTests(unittest.TestCase):
+    """
+    Runs robotframework scripts through the text processing functions
+    For more detail see the test_test-scripts folder see expected output and test input
+    """
 
     def test_correct_script(self):
-        with open(INPUT_PATH + "correct_script_in.txt") as f:
-            response = f.read()
 
-        with open(INPUT_PATH + "correct_script_out.txt") as f:
-            result = f.read()
+        file = open(INPUT_PATH + "correct_script_in.txt")
+        response = file.read()
+        file.close()
 
+        file = open(INPUT_PATH + "correct_script_out.txt")
+        result = file.read()
+        file.close()
+
+        # capture std out to see if program prints warnings
         buffer = StringIO()
         sys.stdout = buffer
+        file.close()
 
         obj = ScriptGen()
         obj.temp_collect_test_lines(response)
@@ -25,17 +34,19 @@ class ScriptGenTests(unittest.TestCase):
         obj.collect_variables(response)
         obj.scripts.append(response)
 
-        assert result == json.loads(obj.assemble_result())["test_script"]
-        assert buffer.getvalue() == ""
+        self.assertEqual(result, json.loads(obj.assemble_result())[RESULT_KEY])
+        self.assertEqual("", buffer.getvalue())
 
     def test_partially_correct_script(self):
+        file = open(INPUT_PATH + "partially_correct_script_in.txt")
+        response = file.read()
+        file.close()
 
-        with open(INPUT_PATH + "partially_correct_script_in.txt") as f:
-            response = f.read()
+        file = open(INPUT_PATH + "partially_correct_script_out.txt")
+        result = file.read()
+        file.close()
 
-        with open(INPUT_PATH + "partially_correct_script_out.txt") as f:
-            result = f.read()
-
+        # capture std out to see if program prints warnings
         buffer = StringIO()
         sys.stdout = buffer
 
@@ -53,21 +64,25 @@ class ScriptGenTests(unittest.TestCase):
             "waring: unexpected text after: '***': <\n"
         )
 
-        assert result == json.loads(obj.assemble_result())["test_script"]
-        assert buffer.getvalue() == expected_warnings
+        self.assertEqual(result, json.loads(obj.assemble_result())[RESULT_KEY])
+        self.assertEqual(expected_warnings, buffer.getvalue())
 
 
     def test_combined_script(self):
 
-        with open(INPUT_PATH + "correct_script_in.txt") as f:
-            response_1 = f.read()
+        file = open(INPUT_PATH + "correct_script_in.txt")
+        response_1 = file.read()
+        file.close()
 
-        with open(INPUT_PATH + "second_script_in.txt") as f:
-            response_2 = f.read()
+        file = open(INPUT_PATH + "second_script_in.txt")
+        response_2 = file.read()
+        file.close()
 
-        with open(INPUT_PATH + "combined_script_out.txt") as f:
-            result = f.read()
+        file = open(INPUT_PATH + "combined_script_out.txt")
+        result = file.read()
+        file.close()
 
+        # capture std out to see if program prints warnings
         buffer = StringIO()
         sys.stdout = buffer
 
@@ -85,5 +100,5 @@ class ScriptGenTests(unittest.TestCase):
 
         expected_warnings = "Warning: variable duplicate value mismatch: ${LOC_FROM_FIELD}\n"
 
-        assert result == json.loads(obj.assemble_result())["test_script"]
-        assert buffer.getvalue() == expected_warnings
+        self.assertEqual(result, json.loads(obj.assemble_result())[RESULT_KEY])
+        self.assertEqual(expected_warnings, buffer.getvalue())
