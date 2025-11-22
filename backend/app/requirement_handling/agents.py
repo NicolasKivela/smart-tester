@@ -3,8 +3,9 @@ from app.requirement_handling.schemas import Extracted_Reqs
 import json, re
 
 class RequirementAgent(BaseAgent):
-    def __init__(self):
-        super().__init__(agent="requirement_agent")
+    def __init__(self,  session_id: str):
+        super().__init__(session_id=session_id, agent="requirement_agent")
+        
     def _get_system_message(self) -> str:
         return (
             "You are an intelligent assistant that analyzes software requirement documents. "

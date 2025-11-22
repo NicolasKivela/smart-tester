@@ -20,25 +20,30 @@ class BaseAgent(ABC):
     """
     def __init__(
         self,
+        session_id: str,
+        agent: str,
         model: str = "gemini/gemini-2.5-flash-lite", # specify model gemini/gemini-2.5-flash, ollama/llama3:8b for example
         temperature: float = 0.1,
         max_tokens: int = 10000,
         timeout: int = 3000,
         max_tool_calls: int = 5,
-        session_id: str = "default-session",
-        agent: str = None,
     ):
         self.model = model
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.timeout = timeout
         self.max_tool_calls = max_tool_calls
-        self.api_call_counter = 0
+        self.agent = agent
         
-        self.token_logger = TokenLoggerService(session_id)
-        self.agent = agent ###?
+        # Initialize token logger ONCE per session
+        if session_id not in SESSION_TOKEN_LOGGERS:
+            SESSION_TOKEN_LOGGERS[session_id] = TokenLoggerService(session_id)
 
-        SESSION_TOKEN_LOGGERS[session_id] = self.token_logger
+        self.token_logger = SESSION_TOKEN_LOGGERS[session_id]
+        self.session_id = session_id
+        self.api_call_counter = 0
+
+
 
     @abstractmethod
     def _get_system_message(self) -> str:
@@ -242,7 +247,7 @@ class BaseAgent(ABC):
                 usage = getattr(response, "usage", None)
                 if usage:
                     print("entry loading")
-                    entry = self.token_logger.log_api_call(usage, completion_kwargs,agent=self.agent)
+                    entry = self.token_logger.log_api_call(usage, completion_kwargs, agent=self.agent)
                     print("Entry",entry)
                     logger.info(f"TOKENS USED: {entry}")
 

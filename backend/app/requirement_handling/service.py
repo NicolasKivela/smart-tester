@@ -1,3 +1,4 @@
+import uuid
 import time
 from .agents import RequirementAgent
 from .save_file import save_to_file
@@ -6,9 +7,12 @@ from .storage import REQUIREMENTS,db_requirements
 import re
 
 class RequirementsProcessor:
-    agent = RequirementAgent()
+    # agent = RequirementAgent()
 
-    def __init__(self, json_input, text, req_file):
+    def __init__(self, json_input, text, req_file, session_id: str):
+        self.session_id = session_id
+        self.agent = RequirementAgent(session_id=session_id)
+
         self.json_input = json_input
         self.req_file = req_file
         self.text = text
@@ -55,5 +59,6 @@ class RequirementsProcessor:
         requirements = self.get_requirements()
         db_requirements.create_processed_req(requirements, self.summaries, self.topics)
         reqs = self.get_requirements()
+        
 def get_requirements(req_id):
     return REQUIREMENTS[req_id]

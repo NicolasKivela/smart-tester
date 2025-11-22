@@ -47,11 +47,11 @@ def parse_gherkin(gherkin_text: str, feature: str) -> list[BDD_Scenario]:
         )
     return scenarios
 
-async def generate_bdd_scenarios_logic(item: Processed_Req) -> list[BDD_Scenario]:
+async def generate_bdd_scenarios_logic(item: Processed_Req, session_id: str) -> list[BDD_Scenario]:
     """
     Uses BddGenerationAgent to generate BDD scenarios and returns them as a list of BDD_Scenario objects.
     """
-    agent = BddGenerationAgent()
+    agent = BddGenerationAgent(session_id=session_id)
     
     # Construct the user message for the agent
     user_message = f"Feature: {item.feature}\nRequirements:\n{item.requirements}"

@@ -7,7 +7,9 @@ Gives the right context to LLM-agent for bdd scenario generation
 from app.common.base_agent import BaseAgent
 
 class   BddGenerationAgent(BaseAgent):
-
+    def __init__(self, session_id: str):
+        super().__init__(session_id=session_id, agent="bdd_agent")
+        
     def _get_system_message(self):
         return ("You are a BDD Scenario Generator Agent. Your task is to generate comprehensive Behavior-Driven Development (BDD) scenarios in Gherkin syntax based on the provided feature and its related requirements."
                 "Input:"
