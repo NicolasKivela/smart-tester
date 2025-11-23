@@ -73,7 +73,7 @@ class LocatorRetrieving:
             await navigator.start(record_video_dir=record_video_dir)
             await navigator.goto(url)
 
-            for i in range(10): # Max 10 iterations
+            for i in range(15): # Max 15 iterations
                 # DEBUG PRINT
                 print("still going")
                 # Remove this at some point
@@ -143,14 +143,23 @@ class LocatorRetrieving:
                         db_locator.update_locator_element_status(locator_element_id, Status.FAILURE)
                         break
                     action_details = action_list[0]
-                    action_history.append(action_details)
+                    action_details = action_list[0]
 
                     if action_details.get("action") == "finish":
                         #Update locator element status
                         db_locator.update_locator_element_status(locator_element_id, Status.READY)
+                        action_history.append(action_details)
                         break
 
-                    await navigator.execute_action(action_details)
+                    try:
+                        await navigator.execute_action(action_details)
+                        action_details["status"] = "success"
+                    except Exception as e:
+                        print(f"Action failed: {e}")
+                        action_details["status"] = "failure"
+                        action_details["error"] = str(e)
+                    
+                    action_history.append(action_details)
 
                 except (json.JSONDecodeError, IndexError):
                         #Update locator element status

@@ -35,7 +35,7 @@ async def main():
         await navigator.goto(URL)
 
         # Main loop
-        for i in range(10): # Set a max of 10 iterations to prevent infinite loops
+        for i in range(15): # Set a max of 15 iterations to prevent infinite loops
    
             await navigator.iteration_screenshot(i)
 
@@ -98,21 +98,30 @@ async def main():
                 if not action_list:
                     print("NavigatorAgent returned no actions. Ending task.")
                     break
+                
                 action_details = action_list[0]
-                action_history.append(action_details)
-
+                
                 if action_details.get("action") == "finish":
                     print(f"Task finished. Reason: {action_details.get('reason')}")
+                    action_history.append(action_details)
                     break
 
                 # Use the navigator to execute the action
-                await navigator.execute_action(action_details)
+                try:
+                    await navigator.execute_action(action_details)
+                    action_details["status"] = "success"
+                except Exception as e:
+                    print(f"Action failed: {e}")
+                    action_details["status"] = "failure"
+                    action_details["error"] = str(e)
+                
+                action_history.append(action_details)
 
             except json.JSONDecodeError:
                 print(f"Error: Could not decode JSON from NavigatorAgent response: {next_action_str}")
                 break
             except Exception as e:
-                print(f"An error occurred during action execution: {e}")
+                print(f"An error occurred during action processing: {e}")
                 break
     finally:
         # Final cleanup
