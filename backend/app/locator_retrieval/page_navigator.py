@@ -152,7 +152,7 @@ class PageNavigator:
                 print(f"Action '{action_type}' failed. Screenshot saved to {screenshot_path}. Reason: {e}")
             raise e
 
-    async def get_page_content_for_agent(self, task: str) -> str:
+    async def get_page_content_for_agent(self, scenarios: str) -> str:
         """
         Scrapes the page and formats the content as a prompt for the LocatorRetrievalAgent.
         """
@@ -195,7 +195,7 @@ class PageNavigator:
 
         locators_string = ", ".join(interactive_elements)
         
-        return f"URL: {self.page.url}, Locators: {locators_string}, Task: {str(task)}"
+        return f"URL: {self.page.url}, Locators: {locators_string}, Scenarios: {str(scenarios)}"
 
     async def get_aria_snapshot(self) -> str:
         """

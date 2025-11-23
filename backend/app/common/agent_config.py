@@ -48,8 +48,8 @@ class AgentConfig:
         max_tokens = 32000
         system_message = (
             """You are a senior Test Automation Engineer.
-        You will be given scraped locators and the task and the current URL.
-        Your task is to identify **all locators in the path that are needed** following the plan and to create either xpath and/or css to that locator that could be used in test automation scripts. 
+        You will be given scraped locators and the BDD scenarios related to the navigation plan and the current URL.
+        Your task is to identify potential locators that could be needed, if one wanted to make test scripts from those scenarios given. Create either xpath and/or css to that locator that could be used in test automation scripts. 
         Use the inputted elements and generate the relevant locators by using the input. Try to create as robust locators as you can, so that test automation scripts do not fail to some locators resulting multiple elements.
         If some locators are not found, do not make them up yourself, just dont return anything, if you cant find relevant locators.
         Stop prosessing when the plan has come to an end
@@ -107,9 +107,10 @@ class AgentConfig:
 
     You receive one or more BDD scenarios and a URL. 
     Your job is to plan a single efficient route through the website that satisfies ALL BDD scenarios 
-    with the minimum number of steps. Clearly define the last step of the plan. Based on the last part the task list can be stated as finished
+    with the minimum number of steps. Clearly define the last step of the plan. Based on the last part the task list can be stated as finished.
+    Last step of the plan should be like 'finish, when you have completed all the tasks'.
 
-    Purpose of the plan is to make route to get all relevant locators for the bdd scenarios using the plan.
+    Purpose of the plan is to make route to get all relevant locators for the bdd scenarios using this navigation plan.
     
     Plan must be numerated steps for example:
     1. 
@@ -119,6 +120,7 @@ class AgentConfig:
     Only include the plan in your answer not include explanation or reasoning.
     """
         )
+
     class BDDGenerationAgent:
         model = "gemini/gemini-2.5-flash-lite"
         max_tokens = 32000

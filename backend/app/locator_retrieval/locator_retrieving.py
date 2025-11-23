@@ -55,6 +55,10 @@ class LocatorRetrieving:
         #scenarios_str = "\n".join(scenarios)
         task_prompt = f"URL: {url}\n\nBDD Scenarios:\n{scenarios_str}"
         task = await task_agent.execute_task(task_prompt)
+        
+        # DEBUG, remove later
+        print(task)
+
         self.task = task
         all_found_locators = []
         action_history = []
@@ -80,7 +84,7 @@ class LocatorRetrieving:
                 if i == 0:
                     await navigator.accept_cookies()
                 
-                #Replace only with this method
+                #Replace only with this method to get screenshots of each iteration
                 await navigator.iteration_screenshot(i)
 
                 if not navigator.page:
@@ -88,7 +92,7 @@ class LocatorRetrieving:
                     db_locator.update_locator_element_status(locator_element_id, Status.FAILURE)
                     break
 
-                locator_input = await navigator.get_page_content_for_agent(task)
+                locator_input = await navigator.get_page_content_for_agent(scenarios_str)
                 
                 relevant_locators_json_str = await locator_agent.execute_task(locator_input)
                 
