@@ -60,6 +60,7 @@ class LocatorRetrieving:
         print(task)
 
         self.task = task
+        current_task = task
         all_found_locators = []
         action_history = []
 
@@ -143,7 +144,7 @@ class LocatorRetrieving:
 
                 # Construct prompt using NavigatorAgent's method
                 navigator_prompt = navigator_agent.construct_prompt(
-                    task=task,
+                    task=current_task,
                     history=action_history,
                     locators=newly_found_locators,
                     aria_snapshot=aria_snapshot,
@@ -161,13 +162,18 @@ class LocatorRetrieving:
                         break
                     json_part = next_action_str[start_index : end_index + 1]
                     action_data = json.loads(json_part)
+                    
+                    # Update task progress
+                    if action_data.get("updated_task"):
+                        current_task = action_data["updated_task"]
+                        print(f"Task updated:\n{current_task}")
+
                     action_list = action_data.get('actions', [])
                     if not action_list:
 
                         #Update locator element status
                         db_locator.update_locator_element_status(locator_element_id, Status.FAILURE)
                         break
-                    action_details = action_list[0]
                     action_details = action_list[0]
 
                     if action_details.get("action") == "finish":

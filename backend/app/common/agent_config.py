@@ -1,13 +1,13 @@
 class AgentConfig:
     class BaseAgent:
-        model = "gemini/gemini-2.5-flash-lite"
+        model = "moonshot/moonshot-v1-32k"
         temperature = 0.1
         max_tokens = 32000
         timeout = 3000
         max_tool_calls = 5
 
     class RequirementAgent:
-        model = "gemini/gemini-2.5-flash"
+        model = "moonshot/moonshot-v1-32k"
         max_tokens = 32000
         system_message = (
             "You are an intelligent assistant that analyzes software requirement documents. "
@@ -44,7 +44,7 @@ class AgentConfig:
         )
 
     class LocatorRetrievalAgent:
-        model = "gemini/gemini-2.5-flash"
+        model = "moonshot/kimi-k2-0905-preview"
         max_tokens = 32000
         system_message = (
             """You are a senior Test Automation Engineer.
@@ -70,7 +70,7 @@ class AgentConfig:
         )
 
     class NavigatorAgent:
-        model = "gemini/gemini-2.5-flash"
+        model = "moonshot-v1-128k-vision-preview"
         max_tokens = 32000
         use_aria_snapshot = True
         use_screenshot = True
@@ -78,6 +78,9 @@ class AgentConfig:
         system_message = (
             """
         You will be given all the relevant found locators and the task list. Your job is to decide what parts of the task are already done and what could be the next logical step to complete the task list. Most pages have some cookie acceptance in the first page, so make sure to accpet all cookies before continuing navigation. If you see that there is no cookies questioned ignore this. 
+        
+        You must also track the progress of the task. If a step in the task list is completed, mark it with "(done)" at the end of the line. Return the updated task list in the "updated_task" field.
+
         Choose the relevant locator and action to take using that locator. Available actions are 'click', 'fill', 'press_enter', and 'goto'.
         - 'click': Clicks the element using the locator.
         - 'fill': Fills the element chosen by the selector with the text given.
@@ -85,16 +88,17 @@ class AgentConfig:
         - 'goto': Navigates to a specific URL. Use this only when you find yourself stuck on wrong page. This way you can reset your session in a way and start again.
         Dont include any reasoning or other explanations. Only return the json output. 
         Return the information as valid json:
-        {{
+        {
+        "updated_task": "<the full task list with completed steps marked as (done)>",
         "actions": [
-            {{
+            {
             "action": "<action>",
             "css": "<CSS selector or N/A>",
             "xpath": "<XPath selector or N/A>",
             "possible text" : "<text to be filled>"    
-            }}
+            }
         ]
-        }}                
+        }                
             """
         )
 
@@ -122,7 +126,7 @@ class AgentConfig:
         )
 
     class BDDGenerationAgent:
-        model = "gemini/gemini-2.5-flash-lite"
+        model = "moonshot/moonshot-v1-32k"
         max_tokens = 32000
         system_message = (
             "You are a BDD Scenario Generator Agent. Your task is to generate comprehensive Behavior-Driven Development (BDD) scenarios in Gherkin syntax based on the provided feature and its related requirements."

@@ -41,12 +41,12 @@ class NavigatorAgent(BaseAgent):
         prompt_text += '''
         Based on the task, history, and current page locators (and aria snapshot if provided), what is the single next action to perform?
         Provide a robust CSS or XPath selector.
-        If the task is complete, respond with action 'finish'.
-        Your response must be a single JSON object with a list of 'actions'.
-        Example for click: {"actions": [{"action": "click", "css": "a[href='/tickets']", "description": "Navigate to tickets page."}]}
-        Example for press_enter: {"actions": [{"action": "press_enter", "css": "input[name='q']", "description": "Submit search query."}]}
-        Example for goto: {"actions": [{"action": "goto", "url": "https://www.hsl.fi/en", "description": "Navigate to home page."}]}
-        Example for finish: {"actions": [{"action": "finish", "reason": "The ticket price has been found."}]}
+        If the whole task is complete, respond with action 'finish'. If some step of the task is completed mark it as done.
+        Your response must be a single JSON object with a list of 'actions' and 'updated_task'.
+        Example for click: {"updated_task": "1. Navigate to tickets (done)\n2. Choose student...", "actions": [{"action": "click", "css": "a[href='/tickets']", "description": "Navigate to tickets page."}]}
+        Example for press_enter: {"updated_task": "1. Enter search query (done)\n2. Click search...", "actions": [{"action": "press_enter", "css": "input[name='q']", "description": "Submit search query."}]}
+        Example for goto: {"updated_task": "1. Navigate to home (done)\n2. ...", "actions": [{"action": "goto", "url": "https://www.hsl.fi/en", "description": "Navigate to home page."}]}
+        Example for finish: {"updated_task": "1. ... (done)\n2. ... (done)", "actions": [{"action": "finish", "reason": "The ticket price has been found."}]}
         '''
 
         if self.use_screenshot and screenshot:

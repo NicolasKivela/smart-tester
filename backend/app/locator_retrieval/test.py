@@ -34,6 +34,8 @@ async def main():
         # Initial navigation and cookie handling
         await navigator.goto(URL)
 
+        current_task = task
+
         # Main loop
         for i in range(15): # Set a max of 15 iterations to prevent infinite loops
    
@@ -47,7 +49,7 @@ async def main():
             print(f"Current URL: {navigator.page.url}")
             
             # 1. Scrape page using the navigator
-            locator_input = await navigator.get_page_content_for_agent(task)
+            locator_input = await navigator.get_page_content_for_agent(current_task)
             
             print("Asking LocatorAgent to find relevant locators...")
             relevant_locators_json_str = await locator_agent.execute_task(locator_input)
@@ -101,7 +103,7 @@ async def main():
 
             # Construct prompt using NavigatorAgent's method
             navigator_prompt = navigator_agent.construct_prompt(
-                task=task,
+                task=current_task,
                 history=action_history,
                 locators=newly_found_locators,
                 aria_snapshot=aria_snapshot,
@@ -120,6 +122,12 @@ async def main():
                     break
                 json_part = next_action_str[start_index : end_index + 1]
                 action_data = json.loads(json_part)
+                
+                # Update task progress
+                if action_data.get("updated_task"):
+                    current_task = action_data["updated_task"]
+                    print(f"Task updated:\n{current_task}")
+
                 action_list = action_data.get('actions', [])
                 if not action_list:
                     print("NavigatorAgent returned no actions. Ending task.")
