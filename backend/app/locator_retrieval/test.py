@@ -12,6 +12,7 @@ async def main():
                2. Choose student as the customer groupd in ABC zone
                3. Show prices
                4. See price for the single day ticket
+               5. When all steps are done finish the task
                """
 
     all_found_locators = []
