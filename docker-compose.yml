@@ -21,6 +21,7 @@ services:
       - "8010:8000"
     volumes:
       - ./backend:/app
+      - ./backend/database.db:/app/database.db
     env_file:
       - .env
     environment:

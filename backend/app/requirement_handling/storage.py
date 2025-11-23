@@ -1,121 +1,103 @@
 # temporary storage
-import re
-from app.requirement_handling.schemas import Processed_Req
+import logging
+from sqlmodel import Session, select
+from sqlalchemy.orm import selectinload
+from app.common.database import engine
+from app.common.models.req_model import Requirement,RequirementDocument,Feature
+from app.common.models.bdd_model import BDDScenario
+from app.requirement_handling.schemas import UrlCredentials
+
+# Optional: keep memory cache for speed / backward compatibility
+REQUIREMENTS: dict[int, Feature] = {}
 REQ_TOPICS = []
-REQUIREMENTS = {
-    1: Processed_Req(
-        id=1,
-        feature="Login",
-        summary="User authentication with email and password",
-        requirements=[
-            "User can register with email and password",
-            "User can log in with valid credentials",
-            "Invalid credentials return error message",
-            "Password must be hashed in the database"
-        ],
-        bdd_scenarios=[
-    {
-      "id": 1,
-      "feature": "Login",
-      "scenario": "User registration with email and password",
-      "given": [
-        "the user is on the registration page"
-      ],
-      "when": [
-        "the user provides a unique email and a password"
-      ],
-      "then": [
-        "a new user account should be created",
-        "the user should be able to log in with these credentials"
-      ]
-    },
-    {
-      "id": 2,
-      "feature": "Login",
-      "scenario": "Successful login with valid credentials",
-      "given": [
-        "a user is registered with email \"test@example.com\" and password \"Password123\"",
-        "the user is on the login page"
-      ],
-      "when": [
-        "the user enters \"test@example.com\" as email and \"Password123\" as password",
-        "the user clicks the login button"
-      ],
-      "then": [
-        "the user should be successfully logged in",
-        "the user should be redirected to the dashboard"
-      ]
-    },
-    {
-      "id": 3,
-      "feature": "Login",
-      "scenario": "Failed login with incorrect credentials",
-      "given": [
-        "a user is registered with email \"test@example.com\" and password \"Password123\"",
-        "the user is on the login page"
-      ],
-      "when": [
-        "the user enters \"test@example.com\" as email and \"WrongPassword\" as password",
-        "the user clicks the login button"
-      ],
-      "then": [
-        "an error message \"Invalid email or password\" should be displayed",
-        "the user should remain on the login page"
-      ]
-    }
-  ]
-    ),
-    2: Processed_Req(
-        id=2,
-        feature="Profile Management",
-        summary="Allow users to update personal details",
-        requirements=[
-            "User can update name, email, and phone number",
-            "Email must be unique across all accounts",
-            "Profile picture upload supported (JPG, PNG)"
-        ],
-        bdd_scenarios=[]
-    ),
-    3: Processed_Req(
-        id=3,
-        feature="Project Dashboard",
-        summary="Display all projects with key metrics",
-        requirements=[
-            "Projects are listed with name, status, and deadline",
-            "Search and filter functionality",
-            "Dashboard auto-refresh every 60 seconds"
-        ],
-        bdd_scenarios=[]
-    )
-}
-REQUIREMENTS={}
-class db_requirements():
-    def get_req_by_id(id):
+URL_DATA = UrlCredentials(url="https://www.hsl.fi/",username="", password="")
+
+class db_requirements:
+    @staticmethod
+    def get_feature_data_by_id(id: int):
+        if id in REQUIREMENTS:
+            return REQUIREMENTS[id]
+
+        with Session(engine) as session:
+            statement = (
+                select(Feature)
+                .options(selectinload(Feature.requirements))
+                .where(Feature.id == id)
+            )
+            feature = session.exec(statement).first()
+
+            if feature:
+                REQUIREMENTS[id] = feature
+            return feature
+    @staticmethod
+    def get_all_feature_data():
         try:
-            return REQUIREMENTS[id]    
-        except:
-            print(f"Requirement by {id} cannot be found")
-            return
-    def add_bdd_scenarios(feature_id,bdd_scenario):
-        try:
-            REQUIREMENTS[feature_id].bdd_scenarios.append(bdd_scenario)
-            return "bdd_scenarios updated succesfully"
-        except:
-            print("error when updating requirements data")
-            return
-    def create_processed_req(processed_reqs, summaries, topics):
-        try:
-          # Combine all data into Processed_Req objects
-          for i, (key, value) in enumerate(processed_reqs.items(),start=1):
-              processed = Processed_Req(
-                  id=i,
-                  feature=key,
-                  summary=re.sub(r'^\*\*Topic:.*?\*\*\s*', '', summaries.get(key, ""), flags=re.MULTILINE),
-                  requirements=value,
-                  bdd_scenarios=[]
-              )
-              REQUIREMENTS[i] = processed
+            with Session(engine) as session:
+                features = session.exec(select(Feature)).all()
+
+            return features
         except Exception as e:
-            print(e)
-            print("Error creating new requirements to database")
-            
+            return {"status_code": 400, "message": "Error fetching all feature data: {e}"}
+    @staticmethod
+    def add_bdd_scenarios(feature_id: int, bdd_scenario: dict):
+        with Session(engine) as session:
+            req = session.get(Feature, feature_id)
+            if not req:
+                print(f"Requirement {feature_id} not found")
+                return
+
+            new_bdd = BDDScenario(**bdd_scenario, processed_req_id=feature_id)
+            session.add(new_bdd)
+            session.commit()
+            session.refresh(req)
+
+            REQUIREMENTS[feature_id] = req
+            return "BDD scenario added successfully"
+    @staticmethod
+    def save_requirement_document(document_name, raw_text):
+        try:
+            with Session(engine) as session:
+                doc = RequirementDocument(document_name=document_name,raw_text=raw_text)
+                session.add(doc)
+                session.commit()
+                session.refresh(doc)
+                logging.info("Requirement document saved succesfully")
+                return doc.id
+
+        except Exception as e:
+            logging.exception("saving requirement document error")
+
+
+    @staticmethod
+    def create_processed_req(processed_reqs: dict, summaries: dict, topics: dict, doc_id: int):
+        try:
+            with Session(engine) as session:
+                doc = session.get(RequirementDocument, doc_id)
+                if not doc:
+                    logging.exception("When creating processed requirements data: Requirement document not found in database")
+                    return "error"
+                for i, (feature_name, req_texts) in enumerate(processed_reqs.items(), start=1):
+                    print(summaries)
+                    feature = Feature(name=feature_name, summary=summaries.get(feature_name))
+                    i = 0
+                    for req in req_texts:
+                        identifier = f"{feature_name[:3].upper()}-{i}"
+                        requirement = Requirement(identifier=identifier,text=req,feature=feature, document=doc)
+                        session.add(requirement)
+                    session.add(feature)
+                session.commit()
+                return "Processed requirements created successfully"
+        except Exception as e:
+            logging.exception("Error when creating processed reqs:")
+            return e
+
+
+    @staticmethod
+    def save_url_data(url, credentials):
+        global URL_DATA
+        try:
+            URL_DATA = UrlCredentials(url=url, credentials=credentials)
+            return "URL data saved successfully"
+        except Exception as e:
+            print("Error saving URL data:", e)
+            return None

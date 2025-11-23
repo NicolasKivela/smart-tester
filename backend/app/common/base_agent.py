@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Callable
 from app.common.logs.logger_config import logger
 from app.common.token_logging.service import TokenLoggerService, SESSION_TOKEN_LOGGERS
+import asyncio
+import inspect
 
 class BaseAgent(ABC):
     """
@@ -22,7 +24,7 @@ class BaseAgent(ABC):
         self,
         session_id: str,
         agent: str,
-        model: str = "gemini/gemini-2.5-flash-lite", # specify model gemini/gemini-2.5-flash, ollama/llama3:8b for example
+        model: str = "gemini/gemini-2.5-flash-lite",# specify model gemini/gemini-2.5-flash, ollama/llama3:8b,moonshot/kimi-k2-0905-preview",# specify m for example
         temperature: float = 0.1,
         max_tokens: int = 10000,
         timeout: int = 3000,
@@ -161,7 +163,7 @@ class BaseAgent(ABC):
         """        
         pass
 
-    def _execute_tool_call(self, tool_call) -> Dict[str, Any]:
+    async def _aexecute_tool_call(self, tool_call) -> Dict[str, Any]:
         function_name = tool_call.function.name
         
         try:
@@ -186,7 +188,10 @@ class BaseAgent(ABC):
         
         function_to_call = available_tools[function_name]
         try:
-            result = function_to_call(**function_args)
+            if inspect.iscoroutinefunction(function_to_call):
+                result = await function_to_call(**function_args)
+            else:
+                result = function_to_call(**function_args)
             return {
                 "tool_call_id": tool_call.id,
                 "role": "tool",
@@ -201,7 +206,7 @@ class BaseAgent(ABC):
                 "content": f"Error while executing tool '{function_name}': {e}",
             }
 
-    def execute_task(self, user_message: str, response_format=None) -> str:
+    async def execute_task(self, user_message: str, response_format=None) -> str:
         messages = [
             {"role": "system", "content": self._get_system_message()},
             {"role": "user", "content": user_message}
@@ -231,8 +236,10 @@ class BaseAgent(ABC):
                 print(completion_kwargs)
                 logger.info(json.dumps(completion_kwargs, indent=2, ensure_ascii=False))
 
-                response = litellm.completion(**completion_kwargs)
+                response = await litellm.acompletion(**completion_kwargs)
                 self.api_call_counter += 1
+                
+                print("API calls made",self.api_call_counter)
 
                 # Logging output
                 logger.info("LITELLM RESPONSE")
@@ -255,7 +262,7 @@ class BaseAgent(ABC):
 
             except Exception as e:
                 logger.error(f"Error in LLM call: {e}")
-                return f"Error: Failed to get a response from the model. Details: {e}"
+                return {"status_code": 400,"detail":f"Error: Failed to get a response from the model. Details: {e}"}
             
             if not response.choices or not response.choices[0].message:
                  return "Error: Received an invalid or empty response from the model."
@@ -266,10 +273,9 @@ class BaseAgent(ABC):
             if not response_message.tool_calls:
                 return response_message.content or "Task finished, but no final text content was provided."
 
-            tool_outputs = []
-            for tool_call in response_message.tool_calls:
-                tool_result = self._execute_tool_call(tool_call)
-                tool_outputs.append(tool_result)
+            tool_outputs = await asyncio.gather(
+                *(self._aexecute_tool_call(tool_call) for tool_call in response_message.tool_calls)
+            )
             
             messages.extend(tool_outputs)
 

@@ -22,7 +22,7 @@ class RequirementAgent(BaseAgent):
 
     # Custom Agent Methods
 
-    def detect_topics(self, text: str):
+    async def detect_topics(self, text: str):
         prompt = f"""
         You are an assistant that analyzes requirement documents.
         From the text below, identify all the main features as topics.
@@ -38,7 +38,7 @@ class RequirementAgent(BaseAgent):
         {text}
         """
 
-        content = self.execute_task(prompt)
+        content = await self.execute_task(prompt)
         print("Raw content from topics",content)
         try:
             return json.loads(content)
@@ -46,7 +46,7 @@ class RequirementAgent(BaseAgent):
             return list(set(re.findall(r'"([^"]+)"', content)))
     
 
-    def extract_requirements(self, text: str, topic: str):
+    async def extract_requirements(self, text: str, topic: str):
         prompt = f"""
         You are a requirement extraction assistant.
         From the document text below, extract all functional or testable requirements
@@ -61,7 +61,7 @@ class RequirementAgent(BaseAgent):
         Text:
         {text[:12000]}
         """
-        content = self.execute_task(prompt, response_format=Extracted_Reqs)
+        content = await self.execute_task(prompt, response_format=Extracted_Reqs)
         try:
             json_content = json.loads(content)
             return json_content.get("topic_reqs")
@@ -70,7 +70,7 @@ class RequirementAgent(BaseAgent):
             return 
     
 
-    def summarize_topic(self, text: str, topic: str):
+    async def summarize_topic(self, text: str, topic: str):
         prompt = f"""
         You are an assistant analyzing software requirements.
         Summarize all information related to the topic "{topic}".
@@ -79,4 +79,4 @@ class RequirementAgent(BaseAgent):
         Text:
         {text[:12000]}
         """
-        return self.execute_task(prompt)
+        return await self.execute_task(prompt)

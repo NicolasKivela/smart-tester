@@ -6,7 +6,7 @@ import hljsDefineRobot from 'highlightjs-robot'
 
 hljsDefineRobot(hljs)
 
-const props = defineProps<{ scripts: string, resetValue: number  }>()
+const props = defineProps<{ scripts: string; resetValue: number }>()
 const codeRef = ref<HTMLElement | null>(null)
 
 // Try parsing the JSON
@@ -22,7 +22,7 @@ const parseJSON = (original: string) => {
 // Render & highlight the generated code
 const highlightCode = async () => {
   if (!codeRef.value) return
-
+  console.log("code view ",props.scripts)
   // Parse the JSON
   let code = parseJSON(props.scripts)
 
@@ -31,7 +31,7 @@ const highlightCode = async () => {
 
   // Insert code into <code> block
   codeRef.value.textContent = code
-  
+
   // Delete any previous highlights
   delete (codeRef.value as any).dataset.highlighted
 
@@ -40,17 +40,17 @@ const highlightCode = async () => {
 
   // Highlight 'xpath...]' sections
   await nextTick()
-    const html = codeRef.value.innerHTML
-    codeRef.value.innerHTML = html.replace(
+  const html = codeRef.value.innerHTML
+  codeRef.value.innerHTML = html.replace(
     /(xpath\s*=\s*[^\]]*\])/gi,
-    '<span class="xpath-highlight">$1</span>'
-    )
+    '<span class="xpath-highlight">$1</span>',
+  )
 }
 
 // Reset the codeblock if a new feature is selected
 const resetCodeBlock = () => {
   if (!codeRef.value) return
-  
+
   // Delete any previous highlights
   delete (codeRef.value as any).dataset.highlighted
 
@@ -68,13 +68,15 @@ onMounted(highlightCode)
 watch(() => props.scripts, highlightCode)
 
 // Watch props.resetValue for reset
-watch(() => props.resetValue, () => {
-  resetCodeBlock()
-})
+watch(
+  () => props.resetValue,
+  () => {
+    resetCodeBlock()
+  },
+)
 
 // Copy full script to clipboard
 const copyToClipboard = () => {
-
   // Parse the JSON
   let code = parseJSON(props.scripts)
 
@@ -140,7 +142,7 @@ button {
 }
 
 .code-block :deep(.xpath-highlight) {
-  color: #EE82EE;
+  color: #ee82ee;
   font-weight: bold;
 }
 </style>

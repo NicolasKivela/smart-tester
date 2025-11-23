@@ -5,7 +5,13 @@ import ProcessDataPopup from '@/components/InputView/ProcessDataPopup.vue'
 import { postRequirements, getTopics, postSelectedTopic } from '@/services/requirementService.ts'
 
 // Emits for loader functionality and bdd scenario updates
-const emit = defineEmits(['start-loader', 'stop-loader', 'bddScenariosUpdated', 'chosen-feature-updated', 'reset-code-block'])
+const emit = defineEmits([
+  'start-loader',
+  'stop-loader',
+  'bddScenariosUpdated',
+  'chosen-feature-updated',
+  'reset-code-block',
+])
 
 // Initialize inputs
 const file = ref<File | null>(null)
@@ -66,13 +72,19 @@ const handleFileUpload = (event: Event) => {
   }
 }
 
+// Handle file input change event
+const handleFileInputChange = (event: Event) => {
+  handleFileUpload(event)
+  dataProcessed.value = false
+}
+
 // Show popup after clicking the "Process data button"
 const processdata = async () => {
   showError.value = false // Reset URL error always
 
   // if data has not been processed already with the same inputs
-  if (!dataProcessed.value){
-      try {
+  if (!dataProcessed.value) {
+    try {
       // Try to validate URL
       new URL(url.value)
     } catch (error) {
@@ -94,7 +106,7 @@ const processdata = async () => {
     console.log(file.value, jsonItem)
 
     // Start loader
-    emit('start-loader',"Processing requirements, please wait...");
+    emit('start-loader', 'Processing requirements, please wait...')
 
     try {
       // Post requirements to backend
@@ -113,7 +125,7 @@ const processdata = async () => {
       // Assign topics
       topics.value = Object.values(getResponse).map((item: any) => ({
         id: item.id,
-        name: item.feature,
+        name: item.name,
       }))
     } catch (error) {
       emit('stop-loader')
@@ -125,7 +137,6 @@ const processdata = async () => {
     // Stop the loader
     emit('stop-loader')
   }
-  
 
   // If everything went successfully, proceed to show the popup
   dataProcessed.value = true
@@ -148,16 +159,17 @@ const handleContinue = async (selected: number) => {
   showPopup.value = false
   // Show the selected option in console for now
   console.log('Selected topic ID:', selected)
-  
+
   emit('chosen-feature-updated', selected)
-  emit('start-loader',"Generating BDD scenarios, please wait...");
+  emit('start-loader', 'Generating BDD scenarios, please wait...')
   emit('reset-code-block')
-  
+
   try {
     // Post the selected topic's id to backend
-    const response = await postSelectedTopic(selected)
+    await postSelectedTopic(selected)
+
     // Emit the generated scenarios to parent component
-    emit('bddScenariosUpdated', response.generated_scenarios)
+    emit('bddScenariosUpdated')
     emit('stop-loader')
   } catch (error) {
     emit('stop-loader')
@@ -174,12 +186,12 @@ const handleContinue = async (selected: number) => {
     <!-- File input -->
     <div class="titles" data-testid="file-input-section">
       <span>Add requirements file <span class="required-input" title="Required">*</span></span>
-      <input 
+      <input
         type="file"
-        @change="handleFileUpload($event); dataProcessed = false"
+        @change="handleFileInputChange($event)"
         :key="fileInputKey"
         data-testid="file-input"
-        />
+      />
       <p class="input-description">PDF (.pdf) or Text (.txt) file accepted</p>
     </div>
 

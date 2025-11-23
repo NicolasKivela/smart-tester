@@ -6,12 +6,21 @@ and locators by calling LLM agent. Assembles all outputs to a single string
 """
 
 import json
-
+import traceback
 from app.test_script_generator.script_gen_agent import ScriptGenAgent
 
 SECTION_MARKER_START_INDEX = 3
 MIN_VARIABLE_SPACE = 4
 
+MAX_WRONG_WORDS = 2
+MIN_MATCHING_WORD_COUNT_TO_FIX = 3
+
+BDD_PREFIXES = {
+    "And",
+    "Then",
+    "When",
+    "Given"
+}
 
 class ScriptGen:
 
@@ -28,11 +37,12 @@ class ScriptGen:
         self.__variable_offset = 0      # used to align variable values in final output
         self.__id_storage = set()       # used to store IDs to prevent duplicate API calls
         self.__no_new_scripts = True    # is set to false if API call is made
+        self.__temp_case_lines = set()
+        self.__failed_keyword_counter = 0
 
         self.__init_keywords()
 
-
-    def generate_script(self, features, locators, login):
+    async def generate_script(self, features, bdd_scenarios, locators, login, url):
         """
         Top level public method - returns robotframework test scripts from
         BDD-scenarios and locators by calling LLM agent
@@ -40,23 +50,61 @@ class ScriptGen:
         :param locators: target locators as JSON
         :return: result: robotframework test script as JSON object
         """
+        try:
+            self.__no_new_scripts = True
 
-        self.__no_new_scripts = True
+            for feature in features:
+                # does not run feature with duplicate ID
+                if feature.id in self.__id_storage:
+                    continue
 
-        for feature in features:
-            # does not run feature with duplicate ID
-            if feature.id in self.__id_storage:
-                continue
+                # save id to prevent future duplicate and run
+                self.__id_storage.add(feature.id)
 
-            # save id to prevent future duplicate and run
-            self.__id_storage.add(feature.id)
-            response = self.__call_agent(feature, locators, login)
-            self.__no_new_scripts = False
-            self.__collect_keywords(response)
-            self.__collect_variables(response)
-            self.__scripts.append(response)
+                response = await self.__call_agent(feature,bdd_scenarios,locators,login,url)
+                try: 
+                    if response["status_code"] == 400:
+                        return {"status_code": 400, "detail":f"Error response from the model{e}"} 
+                except:
+                    print("model succesfully responses")
+                self.__no_new_scripts = False
+                # collect and validate keywords
+                self.__failed_keyword_counter = 0
+                self.__temp_collect_test_lines(response)
+                number_of_case_lines = len(self.__temp_case_lines)
+                self.__collect_keywords(response)
+                # if there are no test cases or more than half
+                # of the keywords do not match any test case lines - try again once
 
-        return self.__assemble_result()
+                if number_of_case_lines == 0:   # avoid dividing by 0
+                    number_of_case_lines = 1
+                    self.__failed_keyword_counter += 1
+                if float(self.__failed_keyword_counter) / float(number_of_case_lines) > 0.5:
+                    # initialize attributes
+                    self.__temp_case_lines.clear()
+                    self.__scripts.clear()
+                    self.__variables.clear()
+                    self.__init_keywords()
+                    self.__variable_offset = 0
+                    print("Warning: generation failed, trying again...")
+
+                    # try again
+                    response = await self.__call_agent(feature,bdd_scenarios,locators, login,url)
+                    self.__failed_keyword_counter = 0
+                    self.__temp_collect_test_lines(response)
+                    self.__collect_keywords(response)
+
+                # continues normally regardless of what happened before
+                self.__temp_case_lines.clear()
+                self.__collect_variables(response)
+                self.__scripts.append(response)
+
+            return {"status_code":200,"detail":"Scripts generated succesfully","body":self.__assemble_result()}
+        except Exception as e:
+            tb = traceback.format_exc()
+            print("Error:", e)
+            print("Traceback:\n", tb)
+            return {"status_code": 400, "detail":f"Error while generating test scripts: {e}"}
 
     def __init_keywords(self):
         """
@@ -67,9 +115,9 @@ class ScriptGen:
             "Open browser to front page\n"
             "   Open Browser    ${URL}    ${BROWSER}\n"
             "   Maximize Browser Window\n"
-            "   Wait Until Page Contains Element    ${ACCEPT_COOKIES_BUTTON}    timeout=10s\n"
-            "   Click Element    ${ACCEPT_COOKIES_BUTTON}\n"
-            "   Wait Until Element Is Not Visible    ${ACCEPT_COOKIES_BUTTON}    timeout=5s\n\n"
+            "   Wait Until Page Contains Element    ${LOC_ACCEPT_COOKIES_BUTTON}    timeout=10s\n"
+            "   Click Element    ${LOC_ACCEPT_COOKIES_BUTTON}\n"
+            "   Wait Until Element Is Not Visible    ${LOC_ACCEPT_COOKIES_BUTTON}    timeout=10s\n\n"
         )
         self.__keywords = {"Open browser to front page\n"}
 
@@ -79,6 +127,7 @@ class ScriptGen:
         (does not save duplicates)
         :param response: LLM response as string
         """
+
         response_lines = response.splitlines(True)
         keywords_found = False
 
@@ -112,6 +161,7 @@ class ScriptGen:
                 if line not in self.__keywords:
                     is_new_keyword = True
                     new_keyword = line
+                    new_keyword = self.__validate_keyword(new_keyword)
                     self.__keywords.add(new_keyword)
 
                 else:
@@ -120,7 +170,109 @@ class ScriptGen:
             else:
                 if is_new_keyword:
                     new_keyword += line
+
         self.__keywords_str += new_keyword + "\n"
+
+    def __validate_keyword(self, keyword, auto_add_the = False):
+        """
+        Automatically fixes keyword to match the closest line in test cases
+        If there are less that 3 matching words or fixing requires more than 2
+        new words, returns keyword parameter as is
+        param: keyword, the keyword to be modified
+        param: auto_add_the, if true automatically tries to add 'the ' at the beginning of the keyword
+        returns: modified keyword if success, and keyword parameter if failure
+        """
+
+        if len(keyword) <= 1:
+            return keyword
+        # check if keyword is already valid
+        if keyword.lower() in self.__temp_case_lines:
+            self.__temp_case_lines.remove(keyword.lower())
+            return keyword
+
+        # auto add "the " (common known problem)
+        if keyword.lower()[0:4] != "the " and auto_add_the:
+            keyword = "The " + keyword
+            if keyword.lower() in self.__temp_case_lines:
+                print("Successful keyword validation")
+                return keyword
+
+        # finds out the number of common words with each test case line and stores them to a list
+        # each index corresponds to a test case line
+        keyword_words = keyword.split(" ")
+        matching_words = []
+        case_lines_list = list(self.__temp_case_lines)
+        for case_line in case_lines_list:
+            case_line_words = case_line.split(" ")
+            case_line_words_set = set(case_line_words)
+
+            num_of_matching_words = 0
+            for word in keyword_words:
+                if word.lower() in case_line_words_set:
+                    num_of_matching_words += 1
+
+            matching_words.append(num_of_matching_words)
+
+        # use the with the most matching words
+        max_num_of_matching_words = max(matching_words)##ERROR HERE matching words empty
+        best_word_index = matching_words.index(max_num_of_matching_words)
+
+        # validates only if there are at least 3 mathing words and at most 2 new added words
+        if max_num_of_matching_words >= MIN_MATCHING_WORD_COUNT_TO_FIX and \
+                len(keyword_words) - max_num_of_matching_words <= MAX_WRONG_WORDS:
+
+            print("Successful keyword validation")
+            return case_lines_list[best_word_index]
+        else:
+            if not auto_add_the:
+                # recursively tries again (only once) by adding "the " at the beginning
+                keyword = self.__validate_keyword(keyword, True)
+            # if validation fails:
+            print("Waring: Failed keyword:", keyword)
+            self.__failed_keyword_counter += 1
+            return keyword
+
+    def __temp_collect_test_lines(self, response):
+        """
+        Stores all test case lines in to set (test case names not included)
+        param: response, robotframework script API response
+        """
+
+        test_cases_found = False
+        response_lines = response.splitlines(True)
+
+        # finds the testcase starting point
+        while response_lines:
+            line = response_lines.pop(0)
+            if "***Test Cases***" in line or "*** Test Cases ***" in line:
+                test_cases_found = True
+                break
+
+        if not test_cases_found:
+            print("Warning: Test Cases found.")
+            return
+
+        while response_lines:
+            line = response_lines.pop(0)
+            # end condition
+            if "***" in line:
+                return
+            # ignore empty
+            if len(line) <= 1:
+                continue
+            # ignore test case names
+            if line[0] != " ":
+                continue
+            # remove BDD prefix
+            line = line.strip()
+            lines = line.split(" ")
+            prefix = lines.pop(0)
+            line = " ".join(lines)
+            if prefix not in BDD_PREFIXES:
+                line = prefix + " " + line
+
+            self.__temp_case_lines.add(line.lower() + "\n")
+
     def __collect_variables(self, response):
         """
         saves variables into internal attributes from robotframework script
@@ -215,10 +367,8 @@ class ScriptGen:
                             break
                             # Print warnings instead of raising exception (for now)
                         case "U":
-                            #raise RuntimeError("'***' not found")
                             print("waring: '***' not found")
                         case _:
-                            #raise RuntimeError("Unexpected text after: '***'")
                             print("waring: unexpected text after: '***':", phase)
 
 
@@ -229,12 +379,12 @@ class ScriptGen:
             result += settings_line
 
         self.__variable_offset += MIN_VARIABLE_SPACE
-        result += "\n*** Variables ***\n"
+        result += "*** Variables ***\n"
         for variable in self.__variables.keys():
             result += variable + (self.__variable_offset - len(variable)) * " " + self.__variables[variable] + "\n"
 
         result += "\n*** Test Cases ***\n" + tests
-        result += "\n*** Keywords ***\n" + self.__keywords_str
+        result += "*** Keywords ***\n" + self.__keywords_str
 
         # clear internal attributes
 
@@ -243,6 +393,9 @@ class ScriptGen:
         self.__init_keywords()
         self.__variable_offset = 0
 
+        if self.__failed_keyword_counter > 0:
+            print("Warning:", self.__failed_keyword_counter, "failed keywords")
+
         if self.__no_new_scripts:
             return None
         else:
@@ -250,7 +403,7 @@ class ScriptGen:
             return json.dumps({"test_script": result})
 
 
-    def __call_agent(self, feature, locators, login):
+    def __call_agent(self, feature, bdd_scenarios, locators, login, url):
         """
         Assembles input to a single string and calls LLM-agent
         :param feature: Feature as Processed_Req
@@ -259,14 +412,17 @@ class ScriptGen:
         :return: LLM response as string
         """
         feature_desc = str(feature.summary)
-        scenarios = str(feature.bdd_scenarios)
-
+        scenarios = str(bdd_scenarios)
+        str_url = str(url)
+        locators_str = str(locators)
         LLM_input = (
             "Feature to be tested:\n\n" + feature_desc +
+            "\nURL tested web application:\n\n" + str_url +
             "\nBDD scenarios:\n\n" + scenarios +
-            "\nLocators as JSON:\n\n" + json.dumps(locators) +
+            "\nLocators as JSON:\n\n" + locators_str +
             "\nUsable keywords:\n\n" + self.__keywords_str +
             "\nLogin information as JSON:\n\n" + str(login)
         )
         agent_obj = ScriptGenAgent()
         return agent_obj.execute_task(LLM_input)
+        

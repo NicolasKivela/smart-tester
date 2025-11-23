@@ -8,15 +8,11 @@ describe('BddCard tests', () => {
       props: {
         modelValue: {
           id: 1,
-          feature: 'Login',
-          scenario: 'Login with valid credentials',
-          given: ['User is on login page'],
-          when: ['User enters valid username and password'],
-          then: ['App logs user in'],
+          content: 'Login with valid credentials',
         },
       },
     })
 
-    expect(wrapper.text()).toContain('Feature: Login')
+    expect(wrapper.text()).toContain('Login with valid credentials')
   })
 })

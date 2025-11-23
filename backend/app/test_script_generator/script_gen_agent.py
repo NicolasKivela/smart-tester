@@ -12,21 +12,25 @@ class ScriptGenAgent(BaseAgent):
 
     def __init__(self):
         # increased max tokens for script generation
-        super().__init__(model="gemini/gemini-2.5-flash", max_tokens= 32768)
+        super().__init__(model="gemini/gemini-2.5-flash", max_tokens= 32768)#model="gemini/gemini-2.5-flash"
 
     def _get_system_message(self):
         return (
             "Your job is to write test test scripts for web applications using robotframework. "
             "Write atleast one test case per scenario. "
-            "Generate the test scripts based on the given BDD-scenarios"
+            "Generate the test scripts based on the given BDD-scenarios. "
             "You are also given login information that can be used if needed. "
             "You are given a list of locators. to use. If a needed locator is not provided, use |@| as placeholder. "
             "Do not generate any locator that you aren't specifically given. "
-            "Prefer xpath over css. "
-            "Make all input field contents in to variables. "
+            "Prefer xpath over css. Give every locator variable name 'LOC' prefix. "
+            "Make all input field contents and locators in to variables. "
             "You can use previously generated keywords that you are given, or generate new ones if needed. "
             "Make sure that every line in the BDD scenario test case is a defined keyword. "
             "If testcase starts from the frontpage, verify that frontpage is open. "
+            "Do not put any arguments to test cases. "
+            "To do that use 'Location Should Contain' keyword "
+            "Include 'Wait Until Page Contains' Before 'Click Element' in keywords. "
+            "Include timeout argument if necessary. "
             "You can use selenium library but no other external libraries. "
             "Use 'Open browser to front page' as test setup keyword. Use Close browser as test teardown. "
             "Do not make other setup or teardown keywords. "
