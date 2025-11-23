@@ -173,7 +173,26 @@ class PageNavigator:
         selectors = ['input', 'button', 'a', 'select', 'textarea', 'label', 'submit']
         elements = soup.find_all(selectors)
         
-        interactive_elements = [str(el) for el in elements]
+        interactive_elements = []
+        for el in elements:
+            # Extract only essential attributes
+            attrs = {
+                'tag': el.name,
+                'text': el.get_text(strip=True)[:50], # Limit text length
+                'id': el.get('id'),
+                'class': el.get('class'),
+                'name': el.get('name'),
+                'type': el.get('type'),
+                'role': el.get('role'),
+                'href': el.get('href'),
+                'placeholder': el.get('placeholder'),
+                'aria-label': el.get('aria-label'),
+                'title': el.get('title')
+            }
+            # Remove None values
+            clean_attrs = {k: v for k, v in attrs.items() if v}
+            interactive_elements.append(str(clean_attrs))
+
         locators_string = ", ".join(interactive_elements)
         
         return f"URL: {self.page.url}, Locators: {locators_string}, Task: {str(task)}"
