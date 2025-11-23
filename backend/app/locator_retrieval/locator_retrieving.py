@@ -100,15 +100,36 @@ class LocatorRetrieving:
                         json_part = relevant_locators_json_str[start_index : end_index + 1]
                         newly_found_locators = json.loads(json_part)
                         if newly_found_locators.get("locators"):
-                            all_found_locators.extend(newly_found_locators["locators"])
                             for locator in newly_found_locators["locators"]:
-                                description = locator["description"]
-                                css = locator["css"]
-                                xpath = locator["xpath"]
-                                page_url = locator["locator found from"]
-                                resp= db_locator.save_locator_item(locator_element_id,description=description,page_url=page_url, task=task, css=css, xpath=xpath)
-                                print(resp)
-                            print(newly_found_locators)
+                                css = locator.get("css")
+                                xpath = locator.get("xpath")
+                                
+                                # Check if valid (at least one selector is present and not N/A)
+                                is_valid = (css and css != "N/A") or (xpath and xpath != "N/A")
+                                
+                                if is_valid:
+                                    # Check if duplicate (CSS/XPath AND URL must match)
+                                    is_duplicate = False
+                                    for existing in all_found_locators:
+                                        existing_url = existing.get("locator found from")
+                                        page_url = locator.get("locator found from")
+                                        
+                                        # If URLs are different, they are not duplicates even if selectors match
+                                        if page_url != existing_url:
+                                            continue
+
+                                        if (css and css != "N/A" and existing.get("css") == css) or \
+                                           (xpath and xpath != "N/A" and existing.get("xpath") == xpath):
+                                            is_duplicate = True
+                                            break
+                                    
+                                    if not is_duplicate:
+                                        all_found_locators.append(locator)
+                                        description = locator.get("description")
+                                        page_url = locator.get("locator found from")
+                                        resp= db_locator.save_locator_item(locator_element_id,description=description,page_url=page_url, task=task, css=css, xpath=xpath)
+                                        print(resp)
+                            print(f"Processed {len(newly_found_locators['locators'])} locators (filtered).")
                 except json.JSONDecodeError:
                     pass
 

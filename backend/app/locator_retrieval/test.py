@@ -59,9 +59,35 @@ async def main():
                 if start_index != -1 and end_index != -1:
                     json_part = relevant_locators_json_str[start_index : end_index + 1]
                     newly_found_locators = json.loads(json_part)
+                    
                     if newly_found_locators.get("locators"):
-                        all_found_locators.extend(newly_found_locators["locators"])
-                        print(f"Found {len(newly_found_locators['locators'])} new locators.")
+                        for locator in newly_found_locators["locators"]:
+                            css = locator.get("css")
+                            xpath = locator.get("xpath")
+                            page_url = locator.get("locator found from")
+                            
+                            # Check if valid (at least one selector is present and not N/A)
+                            is_valid = (css and css != "N/A") or (xpath and xpath != "N/A")
+                            
+                            if is_valid:
+                                # Check if duplicate (CSS/XPath AND URL must match)
+                                is_duplicate = False
+                                for existing in all_found_locators:
+                                    existing_url = existing.get("locator found from")
+                                    # If URLs are different, they are not duplicates even if selectors match
+                                    if page_url != existing_url:
+                                        continue
+                                        
+                                    if (css and css != "N/A" and existing.get("css") == css) or \
+                                       (xpath and xpath != "N/A" and existing.get("xpath") == xpath):
+                                        is_duplicate = True
+                                        break
+                                
+                                if not is_duplicate:
+                                    all_found_locators.append(locator)
+                        
+                        print(f"Found {len(newly_found_locators['locators'])} new locators (after filtering).")
+
                 else:
                     print("No JSON object found in LocatorAgent response.")
             except json.JSONDecodeError:
