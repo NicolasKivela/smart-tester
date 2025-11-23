@@ -143,6 +143,42 @@ class PageNavigator:
         
         return f"URL: {self.page.url}, Locators: {locators_string}, Task: {str(task)}"
 
+    async def get_aria_snapshot(self) -> str:
+        """
+        Captures the aria snapshot of the current page.
+        """
+        if not self.page:
+            raise Exception("Page is not initialized.")
+        try:
+            # Playwright's aria_snapshot is available on the locator or page.
+            # Using page.locator("body") to get the whole page snapshot or just page.accessibility.snapshot()
+            # Wait, aria_snapshot is a specific method in newer playwright versions.
+            # Let's try to use the locator('body').aria_snapshot() if available, or fallback.
+            # Actually, the user asked for "playwright's aria-snapshot". 
+            # It is likely `await page.locator("body").aria_snapshot()`
+            snapshot = await self.page.locator("body").aria_snapshot()
+            return snapshot
+        except Exception as e:
+            if not self.silent:
+                print(f"Failed to get aria snapshot: {e}")
+            return ""
+
+    async def get_screenshot(self) -> str:
+        """
+        Captures a screenshot and returns it as a base64 encoded string.
+        """
+        if not self.page:
+            raise Exception("Page is not initialized.")
+        try:
+            import base64
+            screenshot_bytes = await self.page.screenshot(type='jpeg', quality=50)
+            screenshot_b64 = base64.b64encode(screenshot_bytes).decode('utf-8')
+            return screenshot_b64
+        except Exception as e:
+            if not self.silent:
+                print(f"Failed to get screenshot: {e}")
+            return ""
+
     async def stop(self):
         """Stops the browser and the Playwright instance."""
         if not self.silent:

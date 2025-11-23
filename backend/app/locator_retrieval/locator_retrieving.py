@@ -26,6 +26,8 @@ class LocatorRetrieving:
         except Exception as e:
             print(f"Unexpected {e=}, {type(e)=}")
             return {"status_code":400,"message":f"Error starting scraper process: {e.args}"}
+
+
     async def locator_retrieving_service(self, scenarios: list[dict], url_data: UrlCredentials):
         """
         Retrieves locators for web elements based on BDD scenarios by navigating a web page.
@@ -98,22 +100,18 @@ class LocatorRetrieving:
                 except json.JSONDecodeError:
                     pass
 
-                navigator_prompt = f'''
-                Overall Task: {task}
+                # Capture aria snapshot and screenshot
+                aria_snapshot = await navigator.get_aria_snapshot()
+                screenshot = await navigator.get_screenshot()
 
-                Action History (what has been done so far):
-                {json.dumps(action_history, indent=2)}
-
-                Locators found on the CURRENT page:
-                {json.dumps(newly_found_locators, indent=2)}
-
-                Based on the task, history, and current page locators, what is the single next action to perform?
-                Provide a robust CSS or XPath selector.
-                If the task is complete, respond with action 'finish'.
-                Your response must be a single JSON object with a list of 'actions'.
-                Example for click: {{"actions": [{{"action": "click", "css": "a[href='/tickets']", "description": "Navigate to tickets page."}}]}}
-                Example for finish: {{"actions": [{{"action": "finish", "reason": "The ticket price has been found."}}]}}
-                '''
+                # Construct prompt using NavigatorAgent's method
+                navigator_prompt = navigator_agent.construct_prompt(
+                    task=task,
+                    history=action_history,
+                    locators=newly_found_locators,
+                    aria_snapshot=aria_snapshot,
+                    screenshot=screenshot
+                )
                 
                 next_action_str = await navigator_agent.execute_task(navigator_prompt)
 

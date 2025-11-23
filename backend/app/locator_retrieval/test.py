@@ -1,13 +1,17 @@
 import asyncio
 import json
-from .page_navigator import PageNavigator # Import the refactored navigator
-from .locator_agent import LocatorRetrievalAgent
-from .navigator_agent import NavigatorAgent
-from .task_agent import BDDTaskAgent
+from app.locator_retrieval.page_navigator import PageNavigator 
+from app.locator_retrieval.agents.locator_agent import LocatorRetrievalAgent
+from app.locator_retrieval.agents.navigator_agent import NavigatorAgent
+from app.locator_retrieval.agents.task_agent import BDDTaskAgent
 
 async def main():
-    URL = "https://www.hsl.fi/"
-    task = "First, navigate to the searchbar page. Then get fill it and click the first option in the list."
+    URL = "https://www.hsl.fi/en"
+    task = f"""1. Navigate to the tickets and fares.
+               2. Choose student as the customer groupd in ABC zone
+               3. Show prices
+               4. See price for the single day ticket
+               """
 
     all_found_locators = []
     action_history = []
@@ -18,7 +22,7 @@ async def main():
     task_agent = BDDTaskAgent()
     
     # Initialize the navigator
-    navigator = PageNavigator()
+    navigator = PageNavigator(headless=True, silent=False)
 
     try:
         await navigator.start()
@@ -60,23 +64,19 @@ async def main():
                 print(f"Could not decode JSON from LocatorAgent response: {relevant_locators_json_str}")
 
             # 2. Decide next action with NavigatorAgent
-            navigator_prompt = f'''
-            Overall Task: {task}
+            
+            # Capture aria snapshot and screenshot
+            aria_snapshot = await navigator.get_aria_snapshot()
+            screenshot = await navigator.get_screenshot()
 
-            Action History (what has been done so far):
-            {json.dumps(action_history, indent=2)}
-
-            Locators found on the CURRENT page:
-            {json.dumps(newly_found_locators, indent=2)}
-
-            Based on the task, history, and current page locators, what is the single next action to perform?
-            Provide a robust CSS or XPath selector.
-            If the task is complete, respond with action 'finish'.
-            Your response must be a single JSON object with a list of 'actions'.
-            Example for click: {{"actions": [{{"action": "click", "css": "a[href='/tickets']", "description": "Navigate to tickets page."}}]}}
-            Example for fill: {{"actions": [{{"action": "fill", "css": "a[href='/tickets']", "description": "Fill the username field."}}]}}
-            Example for finish: {{"actions": [{{"action": "finish", "reason": "The ticket price has been found."}}]}}
-            '''
+            # Construct prompt using NavigatorAgent's method
+            navigator_prompt = navigator_agent.construct_prompt(
+                task=task,
+                history=action_history,
+                locators=newly_found_locators,
+                aria_snapshot=aria_snapshot,
+                screenshot=screenshot
+            )
             
             print(f"Asking NavigatorAgent to decide the next action...")
             next_action_str = await navigator_agent.execute_task(navigator_prompt)

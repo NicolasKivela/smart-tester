@@ -70,8 +70,10 @@ class AgentConfig:
         )
 
     class NavigatorAgent:
-        model = "gemini/gemini-2.5-flash-lite"
+        model = "gemini/gemini-2.5-flash"
         max_tokens = 32000
+        use_aria_snapshot = True
+        use_screenshot = True
         system_message = (
             """
         You will be given all the relevant found locators and the task list. Your job is to decide what parts of the task are already done and what could be the next logical step to complete the task list. 
