@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 from app.locator_retrieval.page_navigator import PageNavigator 
 from app.locator_retrieval.agents.locator_agent import LocatorRetrievalAgent
 from app.locator_retrieval.agents.navigator_agent import NavigatorAgent
@@ -22,10 +23,14 @@ async def main():
     task_agent = BDDTaskAgent()
     
     # Initialize the navigator
+    # Ensure video directory exists
+    video_dir = os.path.join(os.path.dirname(__file__), "videos")
+    os.makedirs(video_dir, exist_ok=True)
+    
     navigator = PageNavigator(headless=True, silent=False)
 
     try:
-        await navigator.start()
+        await navigator.start(record_video_dir=video_dir)
         # Initial navigation and cookie handling
         await navigator.goto(URL)
 
@@ -33,7 +38,7 @@ async def main():
         for i in range(10): # Set a max of 10 iterations to prevent infinite loops
 
             #There seems to be cookies in every page. Accept them
-            await navigator.accept_cookies()
+            await navigator.iteration_screenshot(i)
 
             if not navigator.page:
                 print("Page object is not available. Exiting.")
@@ -118,6 +123,12 @@ async def main():
         print(f"\nTotal Locators Found: {len(all_found_locators)}")
         print(json.dumps(all_found_locators, indent=2))
         if navigator:
+            if navigator.page:
+                try:
+                    video = await navigator.page.video.path()
+                    print(f"\nVideo saved to: {video}")
+                except Exception as e:
+                    print(f"Could not get video path: {e}")
             await navigator.stop()
 
 

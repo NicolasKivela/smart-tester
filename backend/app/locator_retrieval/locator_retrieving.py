@@ -7,6 +7,8 @@ from app.bdd_scenarios.storage import db_bdd_scenarios
 from app.requirement_handling.schemas import UrlCredentials
 from app.common.models.locator_model import Status
 from app.locator_retrieval.storage import LOCATORS,db_locator
+from app.common.agent_config import AgentConfig
+import os
 
 class LocatorRetrieving:
     """
@@ -63,7 +65,12 @@ class LocatorRetrieving:
         navigator = PageNavigator(headless=True, silent=True)
 
         try:
-            await navigator.start()
+            record_video_dir = None
+            if getattr(AgentConfig.NavigatorAgent, 'record_video', False):
+                record_video_dir = os.path.join(os.path.dirname(__file__), "videos")
+                os.makedirs(record_video_dir, exist_ok=True)
+                
+            await navigator.start(record_video_dir=record_video_dir)
             await navigator.goto(url)
 
             for _ in range(10): # Max 10 iterations

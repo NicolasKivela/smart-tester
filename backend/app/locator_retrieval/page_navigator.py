@@ -14,15 +14,22 @@ class PageNavigator:
         self.headless = headless
         self.silent = silent
 
-    async def start(self):
+    async def start(self, record_video_dir: str = None):
         """Starts the Playwright instance and launches a browser."""
         if not self.silent:
             print("Starting browser...")
         self.playwright = await async_playwright().start()
         self.browser = await self.playwright.chromium.launch(headless=self.headless)
-        context = await self.browser.new_context(
-            user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-        )
+        
+        context_args = {
+            'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
+        if record_video_dir:
+            context_args['record_video_dir'] = record_video_dir
+            if not self.silent:
+                print(f"Recording video to {record_video_dir}")
+
+        context = await self.browser.new_context(**context_args)
         self.page = await context.new_page()
         if not self.silent:
             print("Browser started.")
@@ -57,6 +64,15 @@ class PageNavigator:
                 await self.page.screenshot(path=screenshot_path)
                 if not self.silent:
                     print(f"Click action failed for selector in cookie consent'{cookie_locator}'. Screenshot saved to {screenshot_path}. Reason: {e}")
+
+    async def iteration_screenshot(self, iteration: int):
+        """Takes a screenshot of the page, in the current iteration"""
+        if not self.page:
+            raise Exception("Page is not initialized.")
+        screenshot_path = f"iteration_{iteration}.png"
+        await self.page.screenshot(path=screenshot_path)
+        if not self.silent:
+            print(f"Screenshot saved to {screenshot_path}")                
 
     async def execute_action(self, action_details: dict):
         """

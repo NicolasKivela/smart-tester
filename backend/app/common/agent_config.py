@@ -74,9 +74,10 @@ class AgentConfig:
         max_tokens = 32000
         use_aria_snapshot = True
         use_screenshot = True
+        record_video = False
         system_message = (
             """
-        You will be given all the relevant found locators and the task list. Your job is to decide what parts of the task are already done and what could be the next logical step to complete the task list. 
+        You will be given all the relevant found locators and the task list. Your job is to decide what parts of the task are already done and what could be the next logical step to complete the task list. Most pages have some cookie acceptance in the first page, so make sure to accpet all cookies before continuing navigation. 
         Choose the relevant locator and action to take using that locator. Available actions are 'click' and 'fill' and this should be in the outputs action part. Click just simply clicks the element using the locator. Fill fills the element chosen by the selector and fills in the text given. 
         Dont include any reasoning or other explanations. Only return the json output. 
         Return the information as valid json:
