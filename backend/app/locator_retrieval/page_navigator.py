@@ -48,7 +48,7 @@ class PageNavigator:
             raise Exception("Page is not initialized.")
             
         # As requested, a placeholder for the locator.
-        cookie_locator = self.page.get_by_role("button", name="Hyväksy kaikki")
+        cookie_locator = self.page.get_by_role("button", name="Accept all")
         
         if not self.silent:
             print("Checking for and clicking cookie consent button...")

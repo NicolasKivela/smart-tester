@@ -70,7 +70,7 @@ class AgentConfig:
         )
 
     class NavigatorAgent:
-        model = "moonshot-v1-128k-vision-preview"
+        model = "moonshot/moonshot-v1-128k-vision-preview"
         max_tokens = 32000
         use_aria_snapshot = True
         use_screenshot = True
