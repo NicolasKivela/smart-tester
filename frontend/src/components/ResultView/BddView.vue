@@ -65,6 +65,7 @@ const generateTests = async () => {
   emit('stop-tests-loader')
 }
 
+//TODO: Handle adding new scenarios
 // const addEmptyScenario = () => {
 //   mutatedBddScenarios.value.push({
 //     feature: 'New Feature',

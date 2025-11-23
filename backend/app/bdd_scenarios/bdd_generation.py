@@ -49,13 +49,13 @@ async def generate_bdd_scenarios_logic(item_id: int) -> list[BDDScenario]:
     feature_data = db_requirements.get_feature_data_by_id(item_id)
 
     agent = BddGenerationAgent()
-    
+
     # Construct the user message for the agent
     user_message = f"Feature: {feature_data.name}\nRequirements:\n{feature_data.requirements}"
-    
+
     # Run the agent asynchronously
     generated_text = await agent.execute_task(user_message)
     # Parse the generated Gherkin text
     response = parse_gherkin(generated_text, feature_data, item_id)
-    
+
     return response
