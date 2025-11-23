@@ -22,9 +22,9 @@ async def create_bdd_scenario(item: BDD_Scenario):
 
 #Generate BDD_scenarios
 @router.post("/bdd_scenarios/generate/{id}",tags=["bdd_scenarios"])
-async def generate_bdd_scenarios(item_id:int, session_id: str):
+async def generate_bdd_scenarios(item_id:int):
     requirement_item = get_requirements(item_id) 
-    generated_bdds = await generate_bdd_scenarios_logic(requirement_item, session_id=session_id) 
+    generated_bdds = await generate_bdd_scenarios_logic(requirement_item) 
 
     for bdd in generated_bdds:
         print(bdd)
