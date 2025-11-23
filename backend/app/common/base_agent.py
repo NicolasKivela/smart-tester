@@ -220,11 +220,10 @@ class BaseAgent(ABC):
             try:
                 # Use dictionary unpacking to pass the conditional arguments.
                 response = await litellm.acompletion(**completion_kwargs)
-                print(response)
                 self.api_call_counter += 1
                 print("API calls made",self.api_call_counter)
             except Exception as e:
-                return f"Error: Failed to get a response from the model. Details: {e}"
+                return {"status_code": 400,"detail":f"Error: Failed to get a response from the model. Details: {e}"}
             
             if not response.choices or not response.choices[0].message:
                  return "Error: Received an invalid or empty response from the model."

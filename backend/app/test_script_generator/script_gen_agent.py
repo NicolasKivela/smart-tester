@@ -13,7 +13,11 @@ class ScriptGenAgent(BaseAgent):
 
     def __init__(self):
         # increased max tokens for script generation
+<<<<<<< HEAD
         super().__init__(model=AgentConfig.ScriptGenAgent.model, max_tokens=AgentConfig.ScriptGenAgent.max_tokens)
+=======
+        super().__init__(model="gemini/gemini-2.5-flash", max_tokens= 32768)#model="gemini/gemini-2.5-flash"
+>>>>>>> origin/dev
 
     def _get_system_message(self):
         return AgentConfig.ScriptGenAgent.system_message

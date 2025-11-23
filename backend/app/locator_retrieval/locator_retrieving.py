@@ -203,5 +203,4 @@ class LocatorRetrieving:
         finally:
             if navigator:
                 await navigator.stop()
-        LOCATORS.append(all_found_locators)
-        return LOCATORS
+        return "Locator process finished"

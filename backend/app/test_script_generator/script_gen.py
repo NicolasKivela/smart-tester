@@ -6,7 +6,7 @@ and locators by calling LLM agent. Assembles all outputs to a single string
 """
 
 import json
-
+import traceback
 from app.test_script_generator.script_gen_agent import ScriptGenAgent
 
 SECTION_MARKER_START_INDEX = 3
@@ -50,52 +50,61 @@ class ScriptGen:
         :param locators: target locators as JSON
         :return: result: robotframework test script as JSON object
         """
+        try:
+            self.__no_new_scripts = True
 
-        self.__no_new_scripts = True
+            for feature in features:
+                # does not run feature with duplicate ID
+                if feature.id in self.__id_storage:
+                    continue
 
-        for feature in features:
-            # does not run feature with duplicate ID
-            if feature.id in self.__id_storage:
-                continue
+                # save id to prevent future duplicate and run
+                self.__id_storage.add(feature.id)
 
-            # save id to prevent future duplicate and run
-            self.__id_storage.add(feature.id)
-            response = await self.__call_agent(feature,bdd_scenarios,locators,login,url)
-            self.__no_new_scripts = False
-
-            # collect and validate keywords
-            self.__failed_keyword_counter = 0
-            self.__temp_collect_test_lines(response)
-            number_of_case_lines = len(self.__temp_case_lines)
-            self.__collect_keywords(response)
-
-            # if there are no test cases or more than half
-            # of the keywords do not match any test case lines - try again once
-
-            if number_of_case_lines == 0:   # avoid dividing by 0
-                number_of_case_lines = 1
-                self.__failed_keyword_counter += 1
-            if float(self.__failed_keyword_counter) / float(number_of_case_lines) > 0.5:
-                # initialize attributes
-                self.__temp_case_lines.clear()
-                self.__scripts.clear()
-                self.__variables.clear()
-                self.__init_keywords()
-                self.__variable_offset = 0
-                print("Warning: generation failed, trying again...")
-
-                # try again
-                response = self.__call_agent(feature, locators, login,url)
+                response = await self.__call_agent(feature,bdd_scenarios,locators,login,url)
+                try: 
+                    if response["status_code"] == 400:
+                        return {"status_code": 400, "detail":f"Error response from the model{e}"} 
+                except:
+                    print("model succesfully responses")
+                self.__no_new_scripts = False
+                # collect and validate keywords
                 self.__failed_keyword_counter = 0
                 self.__temp_collect_test_lines(response)
+                number_of_case_lines = len(self.__temp_case_lines)
                 self.__collect_keywords(response)
+                # if there are no test cases or more than half
+                # of the keywords do not match any test case lines - try again once
 
-            # continues normally regardless of what happened before
-            self.__temp_case_lines.clear()
-            self.__collect_variables(response)
-            self.__scripts.append(response)
+                if number_of_case_lines == 0:   # avoid dividing by 0
+                    number_of_case_lines = 1
+                    self.__failed_keyword_counter += 1
+                if float(self.__failed_keyword_counter) / float(number_of_case_lines) > 0.5:
+                    # initialize attributes
+                    self.__temp_case_lines.clear()
+                    self.__scripts.clear()
+                    self.__variables.clear()
+                    self.__init_keywords()
+                    self.__variable_offset = 0
+                    print("Warning: generation failed, trying again...")
 
-        return self.__assemble_result()
+                    # try again
+                    response = await self.__call_agent(feature,bdd_scenarios,locators, login,url)
+                    self.__failed_keyword_counter = 0
+                    self.__temp_collect_test_lines(response)
+                    self.__collect_keywords(response)
+
+                # continues normally regardless of what happened before
+                self.__temp_case_lines.clear()
+                self.__collect_variables(response)
+                self.__scripts.append(response)
+
+            return {"status_code":200,"detail":"Scripts generated succesfully","body":self.__assemble_result()}
+        except Exception as e:
+            tb = traceback.format_exc()
+            print("Error:", e)
+            print("Traceback:\n", tb)
+            return {"status_code": 400, "detail":f"Error while generating test scripts: {e}"}
 
     def __init_keywords(self):
         """
@@ -205,7 +214,7 @@ class ScriptGen:
             matching_words.append(num_of_matching_words)
 
         # use the with the most matching words
-        max_num_of_matching_words = max(matching_words)
+        max_num_of_matching_words = max(matching_words)##ERROR HERE matching words empty
         best_word_index = matching_words.index(max_num_of_matching_words)
 
         # validates only if there are at least 3 mathing words and at most 2 new added words
