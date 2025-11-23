@@ -73,10 +73,15 @@ class LocatorRetrieving:
             await navigator.start(record_video_dir=record_video_dir)
             await navigator.goto(url)
 
-            for _ in range(10): # Max 10 iterations
+            for i in range(10): # Max 10 iterations
                 # DEBUG PRINT
                 print("still going")
-                await navigator.accept_cookies()
+                # Remove this at some point
+                if i == 0:
+                    await navigator.accept_cookies()
+                
+                #Replace only with this method
+                await navigator.iteration_screenshot(i)
 
                 if not navigator.page:
                     #Update locator element status

@@ -36,8 +36,7 @@ async def main():
 
         # Main loop
         for i in range(10): # Set a max of 10 iterations to prevent infinite loops
-
-            #There seems to be cookies in every page. Accept them
+   
             await navigator.iteration_screenshot(i)
 
             if not navigator.page:

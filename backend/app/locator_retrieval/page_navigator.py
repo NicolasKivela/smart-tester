@@ -83,55 +83,74 @@ class PageNavigator:
 
         action_type = action_details.get('action')
 
-        if action_type == "click":
-            selector = action_details.get('css') or action_details.get('xpath')
-            if not selector:
-                if not self.silent:
-                    print("Action was 'click' but no selector was provided.")
-                return
+        try:
+            if action_type == "click":
+                selector = action_details.get('css') or action_details.get('xpath')
+                if not selector:
+                    if not self.silent:
+                        print("Action was 'click' but no selector was provided.")
+                    return
 
-            try:
                 if not self.silent:
                     print(f"Executing action: '{action_type}' by clicking selector: {selector}")
                 await self.page.locator(selector).first.click(timeout=10000)
                 if not self.silent:
                     print("Click successful.")
                 await self.page.wait_for_load_state("networkidle", timeout=10000)
-            except Exception as e:
-                timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-                screenshot_path = f"failure_{timestamp}.png"
-                await self.page.screenshot(path=screenshot_path)
-                if not self.silent:
-                    print(f"Click action failed for selector '{selector}'. Screenshot saved to {screenshot_path}. Reason: {e}")
-                raise e
-        # Can add more actions like 'fill' here in the future
-        elif action_type == "fill":
-            selector = action_details.get('css') or action_details.get('xpath')
-            username = "tickets and prices"
 
-            if not selector or username is None:
-                if not self.silent:
-                    print("Action was 'fill' but selector or value was missing.")
-                return
-            try:
-                if not self.silent:
-                    print(f"Executing action: '{action_type}' by filling selector: {selector} with value: '{username}'")
-                await self.page.locator(selector).first.fill(username, timeout=10000)
-                if not self.silent:
-                    print(f"Filled '{selector}' successfully with '{username}'.")
-            except Exception as e:
-                timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-                screenshot_path = f"failure_{timestamp}.png"
-                await self.page.screenshot(path=screenshot_path)
-                if not self.silent:
-                    print(f"Fill action failed for selector '{selector}'. Screenshot saved to {screenshot_path}. Reason: {e}")
-                raise e        
+            elif action_type == "fill":
+                selector = action_details.get('css') or action_details.get('xpath')
+                text_value = action_details.get('possible text') or "tickets and prices" # Fallback or specific field
 
+                if not selector:
+                    if not self.silent:
+                        print("Action was 'fill' but selector was missing.")
+                    return
+                
+                if not self.silent:
+                    print(f"Executing action: '{action_type}' by filling selector: {selector} with value: '{text_value}'")
+                await self.page.locator(selector).first.fill(text_value, timeout=10000)
+                if not self.silent:
+                    print(f"Filled '{selector}' successfully.")
 
+            elif action_type == "press_enter":
+                selector = action_details.get('css') or action_details.get('xpath')
+                if not selector:
+                    if not self.silent:
+                        print("Action was 'press_enter' but no selector was provided.")
+                    return
 
-        else:
+                if not self.silent:
+                    print(f"Executing action: '{action_type}' on selector: {selector}")
+                await self.page.locator(selector).first.press("Enter", timeout=10000)
+                if not self.silent:
+                    print("Press Enter successful.")
+                await self.page.wait_for_load_state("networkidle", timeout=10000)
+
+            elif action_type == "goto":
+                url = action_details.get('url')
+                if not url:
+                    if not self.silent:
+                        print("Action was 'goto' but no URL was provided.")
+                    return
+
+                if not self.silent:
+                    print(f"Executing action: '{action_type}' to URL: {url}")
+                await self.page.goto(url, timeout=60000, wait_until="networkidle")
+                if not self.silent:
+                    print(f"Navigated to {url} successfully.")
+
+            else:
+                if not self.silent:
+                    print(f"Action was '{action_type}', skipping execution.")
+
+        except Exception as e:
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            screenshot_path = f"failure_{timestamp}.png"
+            await self.page.screenshot(path=screenshot_path)
             if not self.silent:
-                print(f"Action was '{action_type}', not 'click' or 'fill'. Skipping execution.")
+                print(f"Action '{action_type}' failed. Screenshot saved to {screenshot_path}. Reason: {e}")
+            raise e
 
     async def get_page_content_for_agent(self, task: str) -> str:
         """

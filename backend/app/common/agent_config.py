@@ -77,8 +77,12 @@ class AgentConfig:
         record_video = False
         system_message = (
             """
-        You will be given all the relevant found locators and the task list. Your job is to decide what parts of the task are already done and what could be the next logical step to complete the task list. Most pages have some cookie acceptance in the first page, so make sure to accpet all cookies before continuing navigation. 
-        Choose the relevant locator and action to take using that locator. Available actions are 'click' and 'fill' and this should be in the outputs action part. Click just simply clicks the element using the locator. Fill fills the element chosen by the selector and fills in the text given. 
+        You will be given all the relevant found locators and the task list. Your job is to decide what parts of the task are already done and what could be the next logical step to complete the task list. Most pages have some cookie acceptance in the first page, so make sure to accpet all cookies before continuing navigation. If you see that there is no cookies questioned ignore this. 
+        Choose the relevant locator and action to take using that locator. Available actions are 'click', 'fill', 'press_enter', and 'goto'.
+        - 'click': Clicks the element using the locator.
+        - 'fill': Fills the element chosen by the selector with the text given.
+        - 'press_enter': Simulates pressing the Enter key on the element.
+        - 'goto': Navigates to a specific URL. Use this only when you find yourself stuck on wrong page. This way you can reset your session in a way and start again.
         Dont include any reasoning or other explanations. Only return the json output. 
         Return the information as valid json:
         {{

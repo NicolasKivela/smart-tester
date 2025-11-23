@@ -44,6 +44,8 @@ class NavigatorAgent(BaseAgent):
         If the task is complete, respond with action 'finish'.
         Your response must be a single JSON object with a list of 'actions'.
         Example for click: {"actions": [{"action": "click", "css": "a[href='/tickets']", "description": "Navigate to tickets page."}]}
+        Example for press_enter: {"actions": [{"action": "press_enter", "css": "input[name='q']", "description": "Submit search query."}]}
+        Example for goto: {"actions": [{"action": "goto", "url": "https://www.hsl.fi/en", "description": "Navigate to home page."}]}
         Example for finish: {"actions": [{"action": "finish", "reason": "The ticket price has been found."}]}
         '''
 
