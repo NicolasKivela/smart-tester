@@ -1,4 +1,3 @@
-import uuid
 import json
 from fastapi import APIRouter, UploadFile, Form, File
 from .schemas import Req_Process, Req_Topics
@@ -20,7 +19,7 @@ async def process_requirements(json_item:str = Form(...), file: UploadFile = Fil
     content = await file.read()
     text = extract_text(content,file.filename)
     
-    session_id = "run-123"    # str(uuid.uuid4())
+    session_id = "full_session"
     process=RequirementsProcessor(json_item, text, req_file=file, session_id=session_id)
 
     process.run_pipeline()

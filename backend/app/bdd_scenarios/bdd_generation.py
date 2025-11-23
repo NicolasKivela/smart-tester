@@ -51,7 +51,7 @@ async def generate_bdd_scenarios_logic(item: Processed_Req) -> list[BDD_Scenario
     """
     Uses BddGenerationAgent to generate BDD scenarios and returns them as a list of BDD_Scenario objects.
     """
-    session_id = "run-123"
+    session_id = "full_session"
     agent = BddGenerationAgent(session_id=session_id)
     
     # Construct the user message for the agent
