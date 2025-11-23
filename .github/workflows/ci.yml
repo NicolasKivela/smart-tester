@@ -30,35 +30,43 @@ jobs:
   #     - name: Perform CodeQL Analysis
   #       uses: github/codeql-action/analyze@v3
 
-  # Uncomment the following job to enable backend tests
-  # test_backend:
-  #   name: Test Backend
-  #   runs-on: ubuntu-latest
-  #   defaults:
-  #     run:
-  #       working-directory: ./backend
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v4
+  test_backend:
+    name: Test Backend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-  #     - name: Set up Docker Buildx
-  #       uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-  #     - name: Build backend Docker Image
-  #       uses: docker/build-push-action@v5
-  #       with:
-  #         context: ./backend
-  #         file: ./backend/Dockerfile
-  #         tags: backend-test:latest
-  #         load: true
-  #         cache-from: type=gha, scope=backend
-  #         cache-to: type=gha, scope=backend, mode=max
+      - name: Build backend Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          tags: smart-tester-backend:latest
+          load: true
+          cache-from: type=gha, scope=backend
+          cache-to: type=gha, scope=backend, mode=max
+      
+      - name: Run tests
+        run: |
+            docker run --rm \
+              -v $(pwd):/test-results \
+              smart-tester-backend:latest \
+              pytest -v --html=/test-results/report.html tests/.
 
-  #     - name: Run tests
-  #       run: |
-  #           docker run --rm \
-  #             backend-test:latest \
-  #             pytest tests/
+      - name: Upload Test Report
+        if: always() 
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-report
+          path: ./backend/report.html
+          retention-days: 5
 
   test_frontend:
     name: Test frontend
