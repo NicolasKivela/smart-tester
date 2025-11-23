@@ -1,6 +1,11 @@
 import logging
 import os
 
+
+for name in logging.root.manager.loggerDict:
+    if name.startswith("sqlalchemy"):
+        logging.getLogger(name).disabled = True
+        
 # Creates log file
 LOG_DIR = os.path.join(os.path.dirname(__file__), "files")
 os.makedirs(LOG_DIR, exist_ok=True)
