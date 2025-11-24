@@ -20,6 +20,7 @@ class LocatorRetrieving:
     async def scraper_process(self):
         try:
             url_data = URL_DATA
+            print(url_data)
             scenarios = db_bdd_scenarios.get_all_bdd_scenarios_by_feature(self.feature_id)
             print(scenarios)
             locators = asyncio.create_task(self.locator_retrieving_service(scenarios,url_data))

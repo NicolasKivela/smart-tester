@@ -22,6 +22,7 @@ async def create_test(feature_id: int):
     if not bdd_scenarios:
         return f"Error: No bdd scenarios found for feature_id:{feature_id}"
     locators = db_locator.get_selectors_by_feature(feature_id)
+    print("locators", locators)
     if not locators:
         return JSONResponse(status_code=400, content={"error": "Locators not found"})
       

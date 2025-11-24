@@ -17,7 +17,7 @@ class AgentConfig:
         )
 
     class ScriptGenAgent:
-        model = "moonshot/kimi-k2-0905-preview"
+        model = "gemini/gemini-2.5-flash"
         max_tokens = 32768
         system_message = (
             "Your job is to write test test scripts for web applications using robotframework. "
@@ -44,7 +44,7 @@ class AgentConfig:
         )
 
     class LocatorRetrievalAgent:
-        model = "moonshot/kimi-k2-0905-preview"
+        model = "gemini/gemini-2.5-flash"
         max_tokens = 32000
         system_message = (
             """You are a senior Test Automation Engineer.
@@ -70,7 +70,7 @@ class AgentConfig:
         )
 
     class NavigatorAgent:
-        model = "moonshot/moonshot-v1-128k-vision-preview"
+        model = "gemini/gemini-2.5-flash"
         max_tokens = 32000
         use_aria_snapshot = True
         use_screenshot = True
