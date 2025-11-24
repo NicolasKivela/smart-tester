@@ -1,0 +1,13 @@
+
+*** Settings ***
+*** Variables ***
+
+*** Test Cases ***
+*** Keywords ***
+Open browser to front page
+   Open Browser    ${URL}    ${BROWSER}
+   Maximize Browser Window
+   Wait Until Page Contains Element    ${LOC_ACCEPT_COOKIES_BUTTON}    timeout=10s
+   Click Element    ${LOC_ACCEPT_COOKIES_BUTTON}
+   Wait Until Element Is Not Visible    ${LOC_ACCEPT_COOKIES_BUTTON}    timeout=10s
+

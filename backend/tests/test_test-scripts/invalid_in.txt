@@ -1,0 +1,12 @@
+this is just
+random text that
+is not valid
+robot framework script
+and therefore the
+resposne text processing
+will not work
+and none of
+this text will be picked
+up.
+*** J <-- this should cause a different kind of warning
+some more text
