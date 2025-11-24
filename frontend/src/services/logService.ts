@@ -16,7 +16,7 @@ const getLogs = async () => {
 // Get used tokens
 const getTokens = async () => {
   try {
-    const response = await axios.get(API_URL + '/token-logs/default-session')
+    const response = await axios.get(API_URL + '/token-logs/full_session')
     return response.data
   } catch (error: Error) {
     throw error

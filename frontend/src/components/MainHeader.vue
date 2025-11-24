@@ -4,8 +4,7 @@ import { getLogs, getTokens } from '@/services/logService.ts'
 
 const showMenu = ref(false)
 const totalTokens = ref(0)
-const promptTokens = ref(0)
-const completionTokens = ref(0)
+const tokenJson = ref()
 
 const toggleMenu = () => {
   showMenu.value = !showMenu.value
@@ -40,12 +39,29 @@ const downloadLogs = async () => {
   }
 }
 
+const downloadTokenData = () => {
+  const blob = new Blob([JSON.stringify(tokenJson.value, null, 2)], { type: 'application/json' })
+  // Create a temporary download link
+  const url = window.URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `tokens-${new Date().toISOString().split('T')[0]}.txt`
+
+  // Trigger the download by simulating a click
+  document.body.appendChild(link)
+  link.click()
+
+  // Clean up
+  document.body.removeChild(link)
+  window.URL.revokeObjectURL(url)
+  showMenu.value = false
+}
+
 watch(showMenu, (newValue) => {
   if (newValue) {
     getTokens().then((tokenResponse) => {
+      tokenJson.value = tokenResponse
       totalTokens.value = tokenResponse.total_tokens
-      promptTokens.value = tokenResponse.api_calls[0].prompt_tokens
-      completionTokens.value = tokenResponse.api_calls[0].completion_tokens
     })
   }
 })
@@ -62,9 +78,10 @@ watch(showMenu, (newValue) => {
         <button class="menu-item menu-button" @click="downloadLogs">
           <span class="material-icons">download</span> Download logs
         </button>
-        <div class="menu-item menu-text">Total tokens {{ totalTokens }}</div>
-        <div class="menu-item menu-text">Prompt tokens {{ promptTokens }}</div>
-        <div class="menu-item menu-text">Completion tokens {{ completionTokens }}</div>
+        <button class="menu-item menu-button" @click="downloadTokenData">
+          <span class="material-icons">download</span> Download token data
+        </button>
+        <div class="menu-item menu-text">Total tokens used {{ totalTokens }}</div>
       </div>
     </div>
   </header>
