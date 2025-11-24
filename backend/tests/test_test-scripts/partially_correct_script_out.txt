@@ -1,0 +1,54 @@
+
+*** Settings ***
+Library    SeleniumLibrary
+Test Setup    Open browser to front page
+Test Teardown    Close Browser
+
+*** Variables ***
+${URL}                                   https://www.hsl.fi
+${BROWSER}                               chrome
+                                         
+${FROM_LOCATION_HELSINKI}                Helsinki Central Railway Station
+${TO_LOCATION_ESPOO}                     Espoo
+${LOC_ACCEPT_COOKIES_BUTTON}             //button[normalize-space(text())='Hyväksy kaikki']
+${LOC_FROM_FIELD}                        //input[@placeholder='Syötä lähtöpaikka']
+${LOC_TO_FIELD}                          //input[@aria-controls='react-autowhatever-destination']
+${LOC_FROM_AND_TO_FIELD_FIRST_OPTION}    //li[@data-suggestion-index='1']
+${LOC_ROUTE}                             (//span[contains(@class,'itinerary-summary-row cursor-pointer')])[2]
+
+*** Test Cases ***
+Scenario: User plans a trip from Helsinki Central Railway Station to Espoo
+    Given the user is on the HSL.fi homepage
+    When the user enters 'Helsinki Central Railway Station' in the 'From' field
+    And the user enters 'Espoo' in the 'To' field
+    Then the system should display a list of route options
+    And each route option should include travel time, modes of transport, and departure times
+
+*** Keywords ***
+Open browser to front page
+   Open Browser    ${URL}    ${BROWSER}
+   Maximize Browser Window
+   Wait Until Page Contains Element    ${LOC_ACCEPT_COOKIES_BUTTON}    timeout=10s
+   Click Element    ${LOC_ACCEPT_COOKIES_BUTTON}
+   Wait Until Element Is Not Visible    ${LOC_ACCEPT_COOKIES_BUTTON}    timeout=10s
+
+the user is on the hsl.fi homepage
+    Location Should Contain    ${URL}
+
+the user enters 'helsinki central railway station' in the 'from' field
+    Wait Until Page Contains Element    ${LOC_FROM_FIELD}    timeout=10s
+    Input Text    ${LOC_FROM_FIELD}    ${FROM_LOCATION_HELSINKI}
+    Wait Until Page Contains Element    ${LOC_FROM_AND_TO_FIELD_FIRST_OPTION}    timeout=10s
+    Click Element    ${LOC_FROM_AND_TO_FIELD_FIRST_OPTION}
+
+The this should fail
+    Wait Until Page Contains Element    ${LOC_TO_FIELD}    timeout=10s
+    Input Text    ${LOC_TO_FIELD}    ${TO_LOCATION_ESPOO}
+    Wait Until Page Contains Element    ${LOC_FROM_AND_TO_FIELD_FIRST_OPTION}    timeout=10s
+    Click Element    ${LOC_FROM_AND_TO_FIELD_FIRST_OPTION}
+
+The system should display a list of route options
+    Wait Until Page Contains Element    ${LOC_ROUTE}    timeout=10s
+    Element Should Be Visible    ${LOC_ROUTE}
+
+
