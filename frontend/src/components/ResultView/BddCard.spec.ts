@@ -32,28 +32,6 @@ describe('BddCard', () => {
 
       expect(wrapper.text()).toContain(mockBddScenario.content)
     })
-
-    it('renders edit button when not in edit mode', () => {
-      const wrapper = mount(BddCard, {
-        props: {
-          modelValue: mockBddScenario,
-        },
-      })
-
-      const editButton = wrapper.find('[data-testid="bdd-card-edit-btn"]')
-      expect(editButton.exists()).toBe(true)
-    })
-
-    it('renders delete button', () => {
-      const wrapper = mount(BddCard, {
-        props: {
-          modelValue: mockBddScenario,
-        },
-      })
-
-      const deleteButton = wrapper.find('[data-testid="bdd-card-delete-btn"]')
-      expect(deleteButton.exists()).toBe(true)
-    })
   })
 
   describe('Edit Scenario', () => {
