@@ -22,7 +22,7 @@ const parseJSON = (original: string) => {
 // Render & highlight the generated code
 const highlightCode = async () => {
   if (!codeRef.value) return
-
+  console.log("code view ",props.scripts)
   // Parse the JSON
   let code = parseJSON(props.scripts)
 

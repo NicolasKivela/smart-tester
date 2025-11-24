@@ -30,10 +30,11 @@ class db_test_scripts():
                     loc.test_script_id = test_script.id
 
                 session.commit()
-            return "Succesfully saved test script object"
+            return {"status_code":200,"detail":"Succesfully saved test script object"}
         except Exception as e:
             print(f"error {e}")
             print(f"Error saving testscript id:{id}")  
+            return {"status_code":400,"detail": "Error when saving test script to database"}
     def get_test_script_by_feature_id(feature_id):
         try:
             with Session(engine) as session:

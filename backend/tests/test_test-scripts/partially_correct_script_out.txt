@@ -41,7 +41,7 @@ the user enters 'helsinki central railway station' in the 'from' field
     Wait Until Page Contains Element    ${LOC_FROM_AND_TO_FIELD_FIRST_OPTION}    timeout=10s
     Click Element    ${LOC_FROM_AND_TO_FIELD_FIRST_OPTION}
 
-The user enters 'Espoo' in the 'To' field
+The this should fail
     Wait Until Page Contains Element    ${LOC_TO_FIELD}    timeout=10s
     Input Text    ${LOC_TO_FIELD}    ${TO_LOCATION_ESPOO}
     Wait Until Page Contains Element    ${LOC_FROM_AND_TO_FIELD_FIRST_OPTION}    timeout=10s

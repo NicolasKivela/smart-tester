@@ -12,7 +12,7 @@ class ScriptGenTests(unittest.TestCase):
     Runs robotframework scripts through the text processing functions
     For more detail see the test_test-scripts folder see expected output and test input
     """
-
+    maxDiff = None
     def test_correct_script(self):
 
         file = open(INPUT_PATH + "correct_script_in.txt")
@@ -59,9 +59,11 @@ class ScriptGenTests(unittest.TestCase):
         expected_warnings = (
             "Successful keyword validation\n"
             "Successful keyword validation\n"
+            "Waring: Failed keyword: The this should fail\n"
             "Warning: variable duplicate value mismatch: ${LOC_ROUTE}\n"
-            "waring: '***' not found\n"
-            "waring: unexpected text after: '***': <\n"
+            "Waring: '***' not found\n"
+            "Waring: unexpected text after: '***': <\n"
+            "Warning: 1 failed keywords\n"
         )
 
         self.assertEqual(result, json.loads(obj.assemble_result())[RESULT_KEY])
@@ -102,3 +104,44 @@ class ScriptGenTests(unittest.TestCase):
 
         self.assertEqual(result, json.loads(obj.assemble_result())[RESULT_KEY])
         self.assertEqual(expected_warnings, buffer.getvalue())
+
+    def test_invalid_script(self):
+
+        file = open(INPUT_PATH + "invalid_in.txt")
+        response = file.read()
+        file.close()
+
+        file = open(INPUT_PATH + "invalid_out.txt")
+        result = file.read()
+        file.close()
+
+        # capture std out to see if program prints warnings
+        buffer = StringIO()
+        sys.stdout = buffer
+
+        obj = ScriptGen()
+        obj.temp_collect_test_lines(response)
+        obj.collect_keywords(response)
+        obj.collect_variables(response)
+        obj.scripts.append(response)
+
+        expected_warnings = (
+            "Warning: No test cases found.\n"
+            "Warning: No keywords found.\n"
+            "Warning: No variables found.\n"
+            "Waring: '***' not found\n"
+            "Waring: '***' not found\n"
+            "Waring: '***' not found\n"
+            "Waring: '***' not found\n"
+            "Waring: '***' not found\n"
+            "Waring: '***' not found\n"
+            "Waring: '***' not found\n"
+            "Waring: '***' not found\n"
+            "Waring: '***' not found\n"
+            "Waring: '***' not found\n"
+            "Waring: unexpected text after: '***': J\n"
+        )
+
+        self.assertEqual(result, json.loads(obj.assemble_result())[RESULT_KEY])
+        self.assertEqual(expected_warnings, buffer.getvalue())
+

@@ -6,8 +6,10 @@ and locators by calling LLM agent. Assembles all outputs to a single string
 """
 
 import json
+import traceback
 
 from .script_gen_agent import ScriptGenAgent
+
 
 SECTION_MARKER_START_INDEX = 3
 MIN_VARIABLE_SPACE = 4
@@ -35,7 +37,6 @@ class ScriptGen:
         self.scripts = []
 
         self.__variable_offset = 0      # used to align variable values in final output
-        self.__id_storage = set()       # used to store IDs to prevent duplicate API calls
         self.__no_new_scripts = False   # is set to false if API call is made
         self.__temp_case_lines = set()
         self.__failed_keyword_counter = 0
@@ -50,52 +51,57 @@ class ScriptGen:
         :param locators: target locators as JSON
         :return: result: robotframework test script as JSON object
         """
+        try:
+            self.__no_new_scripts = True
 
-        self.__no_new_scripts = True
+            for feature in features:
 
-        for feature in features:
-            # does not run feature with duplicate ID
-            if feature.id in self.__id_storage:
-                continue
+                response = await self.__call_agent(feature,bdd_scenarios,locators,login,url)
+                try: 
+                    if response["status_code"] == 400:
+                        return {"status_code": 400, "detail":f"Error response from the model{e}"} 
+                except:
+                    print("model succesfully responses")
 
-            # save id to prevent future duplicate and run
-            self.__id_storage.add(feature.id)
-            response = await self.__call_agent(feature,bdd_scenarios,locators,login,url)
-            self.__no_new_scripts = False
-
-            # collect and validate keywords
-            self.__failed_keyword_counter = 0
-            self.temp_collect_test_lines(response)
-            number_of_case_lines = len(self.__temp_case_lines)
-            self.collect_keywords(response)
-
-            # if there are no test cases or more than half
-            # of the keywords do not match any test case lines - try again once
-
-            if number_of_case_lines == 0:   # avoid dividing by 0
-                number_of_case_lines = 1
-                self.__failed_keyword_counter += 1
-            if float(self.__failed_keyword_counter) / float(number_of_case_lines) > 0.5:
-                # initialize attributes
-                self.__temp_case_lines.clear()
-                self.scripts.clear()
-                self.__variables.clear()
-                self.__init_keywords()
-                self.__variable_offset = 0
-                print("Warning: generation failed, trying again...")
-
-                # try again
-                response = self.__call_agent(feature, locators, login,url)
+                self.__no_new_scripts = False
+                # collect and validate keywords
                 self.__failed_keyword_counter = 0
                 self.temp_collect_test_lines(response)
+                number_of_case_lines = len(self.__temp_case_lines)
                 self.collect_keywords(response)
+                # if there are no test cases or more than half
+                # of the keywords do not match any test case lines - try again once
 
-            # continues normally regardless of what happened before
-            self.__temp_case_lines.clear()
-            self.collect_variables(response)
-            self.scripts.append(response)
+                if number_of_case_lines == 0:   # avoid dividing by 0
+                    number_of_case_lines = 1
+                    self.__failed_keyword_counter += 1
+                if float(self.__failed_keyword_counter) / float(number_of_case_lines) > 0.5:
+                    # initialize attributes
+                    self.__temp_case_lines.clear()
+                    self.scripts.clear()
+                    self.__variables.clear()
+                    self.__init_keywords()
+                    self.__variable_offset = 0
+                    print("Warning: generation failed, trying again...")
 
-        return self.assemble_result()
+                    # try again
+                    response = await self.__call_agent(feature,bdd_scenarios,locators, login,url)
+                    self.__failed_keyword_counter = 0
+                    self.temp_collect_test_lines(response)
+                    self.collect_keywords(response)
+
+                # continues normally regardless of what happened before
+                self.__temp_case_lines.clear()
+                self.collect_variables(response)
+                self.scripts.append(response)
+
+            return {"status_code":200,"detail":"Scripts generated succesfully","body":self.assemble_result()}
+
+        except Exception as e:
+            tb = traceback.format_exc()
+            print("Error:", e)
+            print("Traceback:\n", tb)
+            return {"status_code": 400, "detail":f"Error while generating test scripts: {e}"}
 
     def __init_keywords(self):
         """
@@ -204,7 +210,12 @@ class ScriptGen:
 
             matching_words.append(num_of_matching_words)
 
-        # use the with the most matching words
+        if not matching_words:
+            print("Waring: Failed keyword:", keyword)
+            self.__failed_keyword_counter += 1
+            return keyword
+
+        # use the one with the most matching words
         max_num_of_matching_words = max(matching_words)
         best_word_index = matching_words.index(max_num_of_matching_words)
 
@@ -217,9 +228,9 @@ class ScriptGen:
         else:
             if not auto_add_the:
                 # recursively tries again (only once) by adding "the " at the beginning
-                keyword = self.__validate_keyword(keyword, True)
+                return  self.__validate_keyword(keyword, True)
             # if validation fails:
-            print("Waring: Failed keyword:", keyword)
+            print("Waring: Failed keyword:", keyword, end="")
             self.__failed_keyword_counter += 1
             return keyword
 
@@ -240,7 +251,7 @@ class ScriptGen:
                 break
 
         if not test_cases_found:
-            print("Warning: Test Cases found.")
+            print("Warning: No test cases found.")
             return
 
         while response_lines:
@@ -358,9 +369,9 @@ class ScriptGen:
                             break
                             # Print warnings instead of raising exception (for now)
                         case "U":
-                            print("waring: '***' not found")
+                            print("Waring: '***' not found")
                         case _:
-                            print("waring: unexpected text after: '***':", phase)
+                            print("Waring: unexpected text after: '***':", phase)
 
 
         # build final result
