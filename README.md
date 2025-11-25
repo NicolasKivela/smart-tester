@@ -23,7 +23,7 @@ The service should now be running locally.
 
 - API documentation: http://localhost:8000/docs
 - App frontend: http://localhost:5174
-- To reset the database, at the moment you have to manually remove the database file (located at backend/app/database.db)
+- To reset the database, at the moment you have to manually remove the database file (located at backend/app/database.db). After removing database the app should be restarted with docker
 
 ---
 #  Branching Rules
