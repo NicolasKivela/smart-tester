@@ -1,18 +1,16 @@
 from app.common.base_agent import BaseAgent
 from app.requirement_handling.schemas import Extracted_Reqs
+from app.common.agent_config import AgentConfig
 import json, re
 
 class RequirementAgent(BaseAgent):
     def __init__(self,  session_id: str):
-        super().__init__(session_id=session_id, agent="requirement_agent")
+        super().__init__(model=AgentConfig.RequirementAgent.model,
+                        max_tokens=AgentConfig.RequirementAgent.max_tokens,
+                        session_id=session_id, agent="requirement_agent")
         
     def _get_system_message(self) -> str:
-        return (
-            "You are an intelligent assistant that analyzes software requirement documents. "
-            "You detect topics, summarize them, and extract detailed requirements."
-            "Always output clear, structured, and concise responses."
-            "Do not translate the content."
-        )
+        return AgentConfig.RequirementAgent.system_message
 
     def _get_tools(self):
         return None 

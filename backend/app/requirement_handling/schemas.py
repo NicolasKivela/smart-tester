@@ -6,7 +6,6 @@ class Credentials(BaseModel):
     
 
 class UrlCredentials(BaseModel):
-    url: HttpUrl
     username: Optional[str] = None
     password: Optional[str] = None
 

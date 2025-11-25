@@ -18,14 +18,11 @@ class db_locator():
                 )
                 scenarios = session.exec(statement).all()
                 new_locator_element = LocatorElements(feature_id=feature_id, app_url=app_url,status=Status.ONGOING)
-                print(new_locator_element)
-                print(scenarios)
                 new_locator_element.bdd_scenarios = scenarios
                 session.add(new_locator_element)
                 session.flush()
                 locator_element_id = new_locator_element.id
                 session.commit()
-            print("body",new_locator_element)
             return {"status_code":200, "message": "Locator element saved succesfully","body": locator_element_id}
         except Exception as e:
             print(e)

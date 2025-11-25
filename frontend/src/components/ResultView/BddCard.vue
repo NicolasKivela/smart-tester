@@ -56,20 +56,35 @@ const handleDelete = async () => {
         v-model="bddScenario.content"
         cols="90"
         :rows="rows"
+        data-testid="bdd-card-edit-textarea"
         @blur="saveEdited"
       ></textarea>
       <div v-else>
-        <span>{{ bddScenario.content }}</span>
+        <span data-testid="bdd-card-text">{{ bddScenario.content }}</span>
       </div>
     </div>
     <div class="actions">
-      <button v-if="!allowEdit" class="round-button edit-button" @click="allowEdit = true">
+      <button
+        v-if="!allowEdit"
+        class="round-button edit-button"
+        data-testid="bdd-card-edit-btn"
+        @click="allowEdit = true"
+      >
         <span class="material-icons" style="font-size: 20px">edit</span>
       </button>
-      <button v-else class="round-button save-button" @click="saveEdited">
+      <button
+        v-else
+        class="round-button save-button"
+        data-testid="bdd-card-save-btn"
+        @click="saveEdited"
+      >
         <span class="material-icons" style="font-size: 20px">check</span>
       </button>
-      <button class="round-button delete-button" @click="handleDelete">
+      <button
+        class="round-button delete-button"
+        data-testid="bdd-card-delete-btn"
+        @click="handleDelete"
+      >
         <span class="material-icons" style="font-size: 20px">close</span>
       </button>
     </div>
