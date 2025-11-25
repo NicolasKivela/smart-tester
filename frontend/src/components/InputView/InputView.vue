@@ -207,8 +207,8 @@ const handleContinue = async (selected: number) => {
         @change="dataProcessed = false"
       />
     </div>
+<!--
 
-    <!-- Username input -->
     <div class="titles" data-testid="username-input-section">
       <span>Username <small class="input-description">(optional)</small></span>
       <input
@@ -221,7 +221,7 @@ const handleContinue = async (selected: number) => {
       />
     </div>
 
-    <!-- Password input -->
+    
     <div class="titles" data-testid="password-input-section">
       <span>Password <small class="input-description">(optional)</small></span>
       <input
@@ -233,7 +233,7 @@ const handleContinue = async (selected: number) => {
         @change="dataProcessed = false"
       />
     </div>
-
+-->
     <!-- Buttons -->
     <div class="buttons" data-testid="buttons-section">
       <button

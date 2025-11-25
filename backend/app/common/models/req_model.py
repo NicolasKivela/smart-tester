@@ -20,6 +20,7 @@ class RequirementDocument(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     document_name: str
     raw_text: Optional[str] = None
+    app_url: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
@@ -31,6 +32,7 @@ class Feature(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
     summary: Optional[str] = None
+    app_url: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     requirement_document: Optional["RequirementDocument"] = Relationship(back_populates="features")

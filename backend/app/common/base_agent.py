@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Callable
 import asyncio
 import inspect
+from app.common.agent_config import AgentConfig
 
 class BaseAgent(ABC):
     """
@@ -20,11 +21,11 @@ class BaseAgent(ABC):
     """
     def __init__(
         self,
-        model: str = "gemini/gemini-2.5-flash-lite",# specify model gemini/gemini-2.5-flash, ollama/llama3:8b,moonshot/kimi-k2-0905-preview",# specify m for example
-        temperature: float = 0.1,
-        max_tokens: int = 10000,
-        timeout: int = 3000,
-        max_tool_calls: int = 5
+        model: str = AgentConfig.BaseAgent.model, 
+        temperature: float = AgentConfig.BaseAgent.temperature,
+        max_tokens: int = AgentConfig.BaseAgent.max_tokens,
+        timeout: int = AgentConfig.BaseAgent.timeout,
+        max_tool_calls: int = AgentConfig.BaseAgent.max_tool_calls
     ):
         self.model = model
         self.temperature = temperature
