@@ -14,7 +14,6 @@ router = APIRouter()
 @router.get("/requirements", tags=["requirements"])
 async def fetch_requirement_topics():
     response = db_requirements.get_all_feature_data()
-    print(response)
     return response
 #Process requirements
 @router.post("/requirements",tags=["requirements"])
@@ -31,7 +30,7 @@ async def process_requirements(url: str = Form(...),
     
     session_id = "full_session"
 
-    process=RequirementsProcessor(credentials, text, req_file=file.filename, session_id=session_id)
+    process=RequirementsProcessor(url,credentials, text, req_file=file.filename, session_id=session_id)
 
     response = await process.run_pipeline()
     
