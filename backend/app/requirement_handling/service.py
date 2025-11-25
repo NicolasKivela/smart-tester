@@ -7,14 +7,14 @@ import re
 class RequirementsProcessor:
     agent = RequirementAgent()
 
-    def __init__(self, json_input: UrlCredentials, text, req_file):
-        self.json_input = json_input
+    def __init__(self,url,credentials_input: UrlCredentials, text, req_file):
+        self.credentials_input = credentials_input
         self.req_file = req_file
         self.text = text
         self.topics = []
         self.summaries = {}
-        self.url = json_input.url
-        self.credentials = Credentials(username=json_input.username,password=json_input.password)
+        self.url = url
+        self.credentials = Credentials(username=credentials_input.username,password=credentials_input.password)
     async def process_req_document(self):
         """Ask the model for topics, then extract them cleanly."""
         topics_text = await self.agent.detect_topics(self.text)
@@ -50,14 +50,14 @@ class RequirementsProcessor:
     async def run_pipeline(self):
         try:
             #Save url and credentials
-            db_requirements.save_url_data(self.url, self.credentials)
-            doc_id = db_requirements.save_requirement_document(self.req_file,self.text)
+            db_requirements.save_credentials_data_local(self.credentials)
+            doc_id = db_requirements.save_requirement_document(self.req_file,self.text, self.url)
             await self.process_req_document()
             # Summaries
             await self.summarize()
             # Detailed requirements
             requirements = await self.get_requirements()
-            db_requirements.create_processed_req(requirements, self.summaries, self.topics, doc_id)
+            db_requirements.create_processed_req(requirements, self.summaries, self.topics, doc_id,app_url=self.url)
             return {"status_code":200,"message":"Succesfully processed requirements"}
         except Exception as e:
             return {"status_code": 400, "Message":f"Error processing requirements: {e}"}

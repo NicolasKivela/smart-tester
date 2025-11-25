@@ -4,7 +4,8 @@ from .page_navigator import PageNavigator
 from app.locator_retrieval.agents import BDDTaskAgent,LocatorRetrievalAgent,NavigatorAgent
 from app.requirement_handling.storage import REQUIREMENTS, URL_DATA, db_requirements
 from app.bdd_scenarios.storage import db_bdd_scenarios
-from app.requirement_handling.schemas import UrlCredentials
+from app.bdd_scenarios.storage import db_requirements
+from app.requirement_handling.schemas import UrlCredentials, Credentials
 from app.common.models.locator_model import Status
 from app.locator_retrieval.storage import LOCATORS,db_locator
 from app.common.agent_config import AgentConfig
@@ -19,11 +20,12 @@ class LocatorRetrieving:
         self.task = ""
     async def scraper_process(self):
         try:
-            url_data = URL_DATA
-            print(url_data)
+            
+            feature = db_requirements.get_feature_data_by_id(self.feature_id)
+            url = feature.app_url
             scenarios = db_bdd_scenarios.get_all_bdd_scenarios_by_feature(self.feature_id)
-            print(scenarios)
-            locators = asyncio.create_task(self.locator_retrieving_service(scenarios,url_data))
+            user_creds = db_requirements.get_credentials()
+            locators = asyncio.create_task(self.locator_retrieving_service(scenarios,url,user_creds))
             #locators = self.locator_retrieving_service(scenarios,url_data)
             return {"status_code":200,"message":f"Locator process started,{locators}"}
         except Exception as e:
@@ -31,7 +33,7 @@ class LocatorRetrieving:
             return {"status_code":400,"message":f"Error starting scraper process: {e.args}"}
 
 
-    async def locator_retrieving_service(self, scenarios: list[dict], url_data: UrlCredentials):
+    async def locator_retrieving_service(self, scenarios: list[dict], url, user_creds: Credentials):
         """
         Retrieves locators for web elements based on BDD scenarios by navigating a web page.
 
@@ -43,15 +45,12 @@ class LocatorRetrieving:
         Returns:
             list: A list of dictionaries, where each dictionary represents a found locator.
         """
-        url = str(url_data.url)
-        print(url)
-        print(type(url))
+        url = str(url)
         task_agent = BDDTaskAgent()
         scenarios_str = scenarios
         response = db_locator.save_locator_element(feature_id=self.feature_id,app_url=url,scenarios=scenarios)
         if response["status_code"] == 400:
             return response
-        print(response)
         locator_element_id = response["body"]
         #scenarios_str = "\n".join(scenarios)
         task_prompt = f"URL: {url}\n\nBDD Scenarios:\n{scenarios_str}"

@@ -22,12 +22,11 @@ async def create_test(feature_id: int):
     if not bdd_scenarios:
         return f"Error: No bdd scenarios found for feature_id:{feature_id}"
     locators = db_locator.get_selectors_by_feature(feature_id)
-    print("locators", locators)
     if not locators:
         return JSONResponse(status_code=400, content={"error": "Locators not found"})
-      
-    login = {"username": URL_DATA.username,"password": URL_DATA.password}
-    url = URL_DATA.url
+    login = db_requirements.get_credentials()
+    login = {"username": "username","password": "password"}
+    url = feature_data.app_url 
     result = await process.generate_script([feature_data],bdd_scenarios,locators, login, url)
     if result["status_code"] != 200:
         raise HTTPException(status_code=result["status_code"], detail=result["detail"])
