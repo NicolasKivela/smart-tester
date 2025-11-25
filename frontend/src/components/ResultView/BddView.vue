@@ -88,8 +88,15 @@ watch(
   <div class="bdd-view">
     <div class="column">
       <h3 class="title">BDD Scenarios</h3>
-      <button class="primary" @click="getLocators">Fetch Locators</button>
-      <button class="primary" @click="generateTests" :disabled="disabledButton">
+      <button class="primary" data-testid="bdd-view-fetch-locators-btn" @click="getLocators">
+        Fetch Locators
+      </button>
+      <button
+        class="primary"
+        data-testid="bdd-view-generate-tests-btn"
+        @click="generateTests"
+        :disabled="disabledButton"
+      >
         Generate Tests
       </button>
     </div>
@@ -101,6 +108,7 @@ watch(
       >
         <BddCard
           :modelValue="bddScenario"
+          :data-testid="`bdd-view-bdd-card-${index}`"
           @update-scenario="(value) => (mutatedBddScenarios[index] = value)"
           @delete="mutatedBddScenarios.splice(index, 1)"
         />
