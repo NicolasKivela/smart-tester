@@ -79,13 +79,15 @@ class LocatorRetrieving:
             await navigator.goto(url)
 
             for i in range(15): # Max 15 iterations
-                # DEBUG PRINT
-                print("still going")
-                # Remove this at some point
-                if i == 0:
-                    await navigator.accept_cookies()
                 
-                #Replace only with this method to get screenshots of each iteration
+                # DEBUG PRINT
+                print(f"still going: iteration {i}")
+
+                # Remove this at some point
+                #if i == 0:
+                #    await navigator.accept_cookies()
+                
+                # Screenshot of each iteration for debugging. Stored in the backend folder.
                 await navigator.iteration_screenshot(i)
 
                 if not navigator.page:
@@ -93,7 +95,12 @@ class LocatorRetrieving:
                     db_locator.update_locator_element_status(locator_element_id, Status.FAILURE)
                     break
 
-                locator_input = await navigator.get_page_content_for_agent(scenarios_str)
+                # Capture aria snapshot and screenshot. Used for locator agent and navigator agent to understand the page.
+                aria_snapshot = await navigator.get_aria_snapshot()
+                screenshot = await navigator.get_screenshot()
+
+                scraped_elements = await navigator.get_page_content_for_agent(scenarios_str)
+                locator_input = locator_agent.construct_prompt(scraped_elements, aria_snapshot, screenshot)
                 
                 relevant_locators_json_str = await locator_agent.execute_task(locator_input)
                 
@@ -137,10 +144,6 @@ class LocatorRetrieving:
                             print(f"Processed {len(newly_found_locators['locators'])} locators (filtered).")
                 except json.JSONDecodeError:
                     pass
-
-                # Capture aria snapshot and screenshot
-                aria_snapshot = await navigator.get_aria_snapshot()
-                screenshot = await navigator.get_screenshot()
 
                 # Construct prompt using NavigatorAgent's method
                 navigator_prompt = navigator_agent.construct_prompt(
