@@ -140,6 +140,18 @@ class PageNavigator:
                 if not self.silent:
                     print(f"Navigated to {url} successfully.")
 
+            elif action_type == "wait_loading":
+                time = action_details.get('time')
+                if not time:
+                    if not self.silent:
+                        print("Action was waiting, but no time provided. Waiting 10 seconds")
+                    await self.page.wait_for_load_state("networkidle", timeout=10000)
+                    return
+                
+                if not self.silent:
+                    print(f"Executing action: '{action_type}' for '{time}'")
+                await self.page.wait_for_load_state("networkidle", timeout=time)
+
             else:
                 if not self.silent:
                     print(f"Action was '{action_type}', skipping execution.")
