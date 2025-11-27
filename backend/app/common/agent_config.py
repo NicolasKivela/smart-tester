@@ -1,13 +1,18 @@
+#"moonshot/kimi-k2-turbo-preview"
+#"moonshot/moonshot-v1-32k"
+moonshot = "moonshot/kimi-k2-0711-preview"
+
+gemini_lite = "gemini/gemini-2.5-flash-lite"
 class AgentConfig:
     class BaseAgent:
-        model = "moonshot/kimi-k2-turbo-preview"
+        model = "moonshot/moonshot-v1-32k"
         temperature = 0.1
         max_tokens = 32000
         timeout = 3000
         max_tool_calls = 5
 
     class RequirementAgent:
-        model = "moonshot/kimi-k2-turbo-preview"
+        model = "moonshot/moonshot-v1-32k"
         max_tokens = 32000
         system_message = (
             "You are an intelligent assistant that analyzes software requirement documents. "
@@ -17,7 +22,7 @@ class AgentConfig:
         )
 
     class ScriptGenAgent:
-        model = "moonshot/kimi-k2-turbo-preview"
+        model = gemini_lite
         max_tokens = 32768
         system_message = (
             "Your job is to write test test scripts for web applications using robotframework. "
@@ -44,8 +49,8 @@ class AgentConfig:
         )
 
     class LocatorRetrievalAgent:
-        model = "gemini/gemini-2.5-flash"
-        max_tokens = 32000
+        model = moonshot
+        max_tokens = 100000
         use_aria_snapshot = True
         use_screenshot = True
         system_message = (
@@ -72,8 +77,8 @@ class AgentConfig:
         )
 
     class NavigatorAgent:
-        model = "gemini/gemini-2.5-flash"
-        max_tokens = 32000
+        model = moonshot
+        max_tokens =100000
         use_aria_snapshot = True
         use_screenshot = True
         record_video = False
@@ -108,7 +113,7 @@ class AgentConfig:
         )
 
     class BDDTaskAgent:
-        model = "moonshot/kimi-k2-turbo-preview"
+        model = moonshot
         max_tokens = 32000
         system_message = (
             """ 
