@@ -26,8 +26,10 @@ async def process_requirements(url: str = Form(...),
         username=username,
         password=password
     )
+    print("ROUTEER CALLED PROCESSING")
     content = await file.read()
     text = extract_text(content,file.filename)
     process=RequirementsProcessor(url,credentials, text, req_file=file.filename)
+    print(process)
     response = await process.run_pipeline()
     return response
