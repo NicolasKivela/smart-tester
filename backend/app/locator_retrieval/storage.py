@@ -1,8 +1,9 @@
 import logging
 from sqlmodel import Session, select
+from typing import List,Dict,Any
 from app.common.database import engine
 from app.common.models import LocatorElements,BDDScenario
-from app.common.models.locator_model import LocatorItem,LocatorSelector
+from app.common.models.locator_model import LocatorItem,LocatorSelector,Status
 LOCATORS = {}
 #TODO: Add locator database CRUD logic here
 
@@ -16,20 +17,31 @@ class db_locator():
                     .where(BDDScenario.feature_id ==feature_id)
                 )
                 scenarios = session.exec(statement).all()
-                new_locator_element = LocatorElements(feature_id=feature_id, app_url=app_url)
-                print(new_locator_element)
-                print(scenarios)
+                new_locator_element = LocatorElements(feature_id=feature_id, app_url=app_url,status=Status.ONGOING)
                 new_locator_element.bdd_scenarios = scenarios
                 session.add(new_locator_element)
                 session.flush()
                 locator_element_id = new_locator_element.id
                 session.commit()
-            print("body",new_locator_element)
             return {"status_code":200, "message": "Locator element saved succesfully","body": locator_element_id}
         except Exception as e:
             print(e)
             return {"status_code":400, "message": "Error when saving locator element"}
-
+    def update_locator_element_status(locator_element_id,status):
+        try:
+            with Session(engine) as session:
+                locator_element = session.get(LocatorElements,locator_element_id)
+                if locator_element is None:
+                    return {
+                        "status_code": 404,
+                        "message": f"LocatorElement with id {locator_element_id} not found",
+                    }
+                locator_element.status = status
+                session.commit()
+                return {"status_code":200, "message":"status succesfully updated"}
+        except Exception as e:
+            return {"status_code":400, "message":f"Error occured when updating status: {e}"}
+        
     def get_locator_element_by_id(locator_element_id):
         try:
             with Session(engine) as session:
@@ -55,7 +67,27 @@ class db_locator():
             return {"status_code":200, "message": "Locator element fetched succesfully", "body": locator_element}
         except:
             return {"status_code":400, "message": "Error when fetching locator element"}
-    
+    def get_all_locator_data_by_feature_id(feature_id):
+        try:
+            with Session(engine) as session:
+                statement = (
+                    select(LocatorElements, LocatorItem, LocatorSelector)
+                    .join(LocatorItem, LocatorItem.locator_id== LocatorElements.id)
+                    .join(LocatorSelector, LocatorSelector.locator_item_id == LocatorItem.id)
+                    .where(LocatorElements.feature_id == feature_id)
+                )
+
+                locator_element = session.exec(statement).all()
+            body: List[Dict[str, Any]] = []
+            for element, item, selector in locator_element:
+                body.append({
+                    "locator_element": element.model_dump() if hasattr(element, "model_dump") else element.dict(),
+                    "locator_item": item.model_dump() if hasattr(item, "model_dump") else item.dict(),
+                    "locator_selector": selector.model_dump() if hasattr(selector, "model_dump") else selector.dict(),
+                })
+            return {"status_code":200, "message": "Locator element fetched succesfully", "body": body}
+        except:
+            return {"status_code":400, "message": "Error when fetching locator element"}
     def save_locator_item(locator_element_id,description,page_url,task,css,xpath):
         try:
             print("locator element id",locator_element_id)

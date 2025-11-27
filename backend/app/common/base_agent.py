@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Callable
 import asyncio
 import inspect
+from app.common.agent_config import AgentConfig
 
 class BaseAgent(ABC):
     """
@@ -20,11 +21,11 @@ class BaseAgent(ABC):
     """
     def __init__(
         self,
-        model: str = "gemini/gemini-2.5-flash-lite", # specify model gemini/gemini-2.5-flash, ollama/llama3:8b for example
-        temperature: float = 0.1,
-        max_tokens: int = 65000,
-        timeout: int = 3000,
-        max_tool_calls: int = 5
+        model: str = AgentConfig.BaseAgent.model, 
+        temperature: float = AgentConfig.BaseAgent.temperature,
+        max_tokens: int = AgentConfig.BaseAgent.max_tokens,
+        timeout: int = AgentConfig.BaseAgent.timeout,
+        max_tool_calls: int = AgentConfig.BaseAgent.max_tool_calls
     ):
         self.model = model
         self.temperature = temperature
@@ -219,8 +220,10 @@ class BaseAgent(ABC):
             try:
                 # Use dictionary unpacking to pass the conditional arguments.
                 response = await litellm.acompletion(**completion_kwargs)
+                self.api_call_counter += 1
+                print("API calls made",self.api_call_counter)
             except Exception as e:
-                return f"Error: Failed to get a response from the model. Details: {e}"
+                return {"status_code": 400,"detail":f"Error: Failed to get a response from the model. Details: {e}"}
             
             if not response.choices or not response.choices[0].message:
                  return "Error: Received an invalid or empty response from the model."

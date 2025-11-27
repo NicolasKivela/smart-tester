@@ -21,8 +21,7 @@ console.log('feature id in resultview', props.featureId)
 const testScripts = ref('')
 
 const handleTests = (tests) => {
-  console.log(tests)
-  testScripts.value = tests
+  testScripts.value = tests[0].script_code
 }
 
 // To pass loader events in BddView.vue to App.vue

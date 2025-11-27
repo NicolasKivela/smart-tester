@@ -5,8 +5,7 @@ Smart testing tool for software engineering project course.
 ##  Getting Started
 
 ### 1. Clone the Repository
-
-   
+To access the most recent stable version, switch to dev-branch.
 
 ### 2. Run with Docker
 Download docker desktop
@@ -23,6 +22,12 @@ The service should now be running locally.
 ##  Usage
 
 - API documentation: http://localhost:8000/docs
+- App frontend: http://localhost:5174
+- To reset the database, at the moment you have to manually remove the database file (located at backend/app/database.db). After removing database the app should be restarted with docker
+
+## Configurations
+- backend/app/common/agent_config.py has configurations for all the different AI agents in our system including their system messages
+- Switching models and model providers requires the provideres API key in the .env file. See .env.example for more information about this.
 
 ---
 #  Branching Rules
@@ -72,7 +77,7 @@ For more information go to: https://packaging.python.org/en/latest/guides/instal
 
 like this:
 
-    robot <path>/<filename>.robot    
+    robot <path>/<filename>.robot
 
 for example, if your file is testrun.robot and the file in the current working directory, run:
 
