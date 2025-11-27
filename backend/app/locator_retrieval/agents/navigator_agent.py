@@ -5,7 +5,7 @@ from app.common.agent_config import AgentConfig
 class NavigatorAgent(BaseAgent):
     def __init__(self):
         super().__init__(model=AgentConfig.NavigatorAgent.model, max_tokens=AgentConfig.NavigatorAgent.max_tokens)
-        self.use_aria_snapshot = getattr(AgentConfig.NavigatorAgent, 'use_aria_snapshot', False)
+        self.use_aria_snapshot = getattr(AgentConfig.NavigatorAgent, 'use_aria_snapshot', True)
         self.use_screenshot = getattr(AgentConfig.NavigatorAgent, 'use_screenshot', False)
     
     def _get_system_message(self):
