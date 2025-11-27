@@ -180,7 +180,7 @@ class LocatorRetrieving:
                         #Update locator element status
                         db_locator.update_locator_element_status(locator_element_id, Status.READY)
                         action_history.append(action_details)
-                        break
+                        return "Locator process finished READY"
 
                     try:
                         await navigator.execute_action(action_details)
@@ -195,12 +195,13 @@ class LocatorRetrieving:
                 except (json.JSONDecodeError, IndexError):
                         #Update locator element status
                     db_locator.update_locator_element_status(locator_element_id, Status.FAILURE)
-                    break
+                    return "Locator process finished FAILURE"
                 except Exception:
                         #Update locator element status
                     db_locator.update_locator_element_status(locator_element_id, Status.FAILURE)
-                    break
+                    return "Locator process finished FAILURE"
         finally:
             if navigator:
                 await navigator.stop()
-        return "Locator process finished"
+        db_locator.update_locator_element_status(locator_element_id, Status.FAILURE)
+        return "Locator process finished FAILURE"

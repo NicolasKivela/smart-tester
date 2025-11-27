@@ -1,6 +1,11 @@
+#"moonshot/kimi-k2-turbo-preview"
+#"moonshot/moonshot-v1-32k"
+moonshot = "moonshot/kimi-k2-0711-preview"
+
+gemini_lite = "gemini/gemini-2.5-flash-lite"
 class AgentConfig:
     class BaseAgent:
-        model = "moonshot/moonshot-v1-32k"
+        model =  "moonshot/moonshot-v1-32k"
         temperature = 0.1
         max_tokens = 32000
         timeout = 3000
@@ -17,7 +22,7 @@ class AgentConfig:
         )
 
     class ScriptGenAgent:
-        model = "gemini/gemini-2.5-flash"
+        model = gemini_lite
         max_tokens = 32768
         system_message = (
             "Your job is to write test test scripts for web applications using robotframework. "
@@ -44,8 +49,8 @@ class AgentConfig:
         )
 
     class LocatorRetrievalAgent:
-        model = "gemini/gemini-2.5-flash"
-        max_tokens = 32000
+        model = moonshot
+        max_tokens = 100000
         system_message = (
             """You are a senior Test Automation Engineer.
         You will be given scraped locators and the BDD scenarios related to the navigation plan and the current URL.
@@ -70,8 +75,8 @@ class AgentConfig:
         )
 
     class NavigatorAgent:
-        model = "gemini/gemini-2.5-flash"
-        max_tokens = 32000
+        model = moonshot
+        max_tokens =100000
         use_aria_snapshot = True
         use_screenshot = True
         record_video = False
@@ -103,7 +108,7 @@ class AgentConfig:
         )
 
     class BDDTaskAgent:
-        model = "moonshot/moonshot-v1-32k"
+        model = moonshot
         max_tokens = 32000
         system_message = (
             """ 
@@ -126,7 +131,7 @@ class AgentConfig:
         )
 
     class BDDGenerationAgent:
-        model = "moonshot/moonshot-v1-32k"
+        model = moonshot
         max_tokens = 32000
         system_message = (
             "You are a BDD Scenario Generator Agent. Your task is to generate comprehensive Behavior-Driven Development (BDD) scenarios in Gherkin syntax based on the provided feature and its related requirements."
