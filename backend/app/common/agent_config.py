@@ -1,10 +1,14 @@
 #"moonshot/kimi-k2-turbo-preview"
 #"moonshot/moonshot-v1-32k"
 <<<<<<< HEAD
+<<<<<<< HEAD
 moonshot = "moonshot/kimi-k2-0711-preview"
 =======
 moonshot = "moonshot/moonshot-v1-32k"
 >>>>>>> 4429759 (Fix improvements)
+=======
+moonshot = "moonshot/kimi-k2-0711-preview"
+>>>>>>> ebf17d1 (Changed models to moonshot and flash-lite combo)
 
 gemini_lite = "gemini/gemini-2.5-flash-lite"
 class AgentConfig:
@@ -27,10 +31,14 @@ class AgentConfig:
 
     class ScriptGenAgent:
 <<<<<<< HEAD
+<<<<<<< HEAD
         model = gemini_lite
 =======
         model = "moonshot/moonshot-v1-32k"
 >>>>>>> 4429759 (Fix improvements)
+=======
+        model = gemini_lite
+>>>>>>> ebf17d1 (Changed models to moonshot and flash-lite combo)
         max_tokens = 32768
         system_message = (
             "Your job is to write test test scripts for web applications using robotframework. "
@@ -90,10 +98,14 @@ class AgentConfig:
     class NavigatorAgent:
         model = moonshot
 <<<<<<< HEAD
+<<<<<<< HEAD
         max_tokens =100000
 =======
         max_tokens = 32000
 >>>>>>> 4429759 (Fix improvements)
+=======
+        max_tokens =100000
+>>>>>>> ebf17d1 (Changed models to moonshot and flash-lite combo)
         use_aria_snapshot = True
         use_screenshot = True
         record_video = False

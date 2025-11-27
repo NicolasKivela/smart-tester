@@ -238,6 +238,7 @@ class BaseAgent(ABC):
                 logger.info(json.dumps(completion_kwargs, indent=2, ensure_ascii=False))
 
                 response = await litellm.acompletion(**completion_kwargs)
+                print(response)
                 self.api_call_counter += 1
                 
                 print("API calls made",self.api_call_counter)
