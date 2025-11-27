@@ -173,7 +173,7 @@ class LocatorRetrieving:
 
                         #Update locator element status
                         db_locator.update_locator_element_status(locator_element_id, Status.FAILURE)
-                        return "Locator process finished FAILURE"
+                        break
                     action_details = action_list[0]
 
                     if action_details.get("action") == "finish":
