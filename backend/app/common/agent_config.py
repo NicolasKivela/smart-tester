@@ -1,6 +1,6 @@
 #"moonshot/kimi-k2-turbo-preview"
 #"moonshot/moonshot-v1-32k"
-moonshot = "moonshot/moonshot-v1-32k"
+moonshot = "moonshot/kimi-k2-0711-preview"
 
 gemini_lite = "gemini/gemini-2.5-flash-lite"
 class AgentConfig:
@@ -22,7 +22,7 @@ class AgentConfig:
         )
 
     class ScriptGenAgent:
-        model = "moonshot/moonshot-v1-32k"
+        model = gemini_lite
         max_tokens = 32768
         system_message = (
             "Your job is to write test test scripts for web applications using robotframework. "
@@ -76,7 +76,7 @@ class AgentConfig:
 
     class NavigatorAgent:
         model = moonshot
-        max_tokens = 32000
+        max_tokens =100000
         use_aria_snapshot = True
         use_screenshot = True
         record_video = False
