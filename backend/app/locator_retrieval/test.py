@@ -8,11 +8,11 @@ from app.locator_retrieval.agents.task_agent import BDDTaskAgent
 
 async def main():
     URL = "https://www.hsl.fi/en"
-    task = f"""1. Navigate to the tickets and fares.
-               2. Choose student as the customer groupd in ABC zone
-               3. Show prices
-               4. See price for the single day ticket
-               5. When all steps are done finish the task
+    task = f"""1. Verify you have a journey planner available
+               2. Use 'Kamppi' as the starting address
+               3. Use 'Helsinki train station' as the destination address
+               4. Search the route from 'Kamppi' to 'Helsinki train station'
+               6. Verify that route suggestions are visible
                """
 
     all_found_locators = []
@@ -87,10 +87,13 @@ async def main():
             print(f"\n--- Iteration {i+1} ---")
             print(f"Current URL: {navigator.page.url}")
             
-            # 1. Scrape page using the navigator
-            locator_input = await navigator.get_page_content_for_agent(current_task)
+            # Capture aria snapshot and screenshot. Used for locator agent and navigator agent to understand the page.
+            aria_snapshot = await navigator.get_aria_snapshot()
+            screenshot = await navigator.get_screenshot()
+
+            scraped_elements = await navigator.get_page_content_for_agent(task)
+            locator_input = locator_agent.construct_prompt(scraped_elements, aria_snapshot, screenshot)
             
-            print("Asking LocatorAgent to find relevant locators...")
             relevant_locators_json_str = await locator_agent.execute_task(locator_input)
            
             
@@ -136,10 +139,6 @@ async def main():
                 print(f"Could not decode JSON from LocatorAgent response: {relevant_locators_json_str}")
 
             # 2. Decide next action with NavigatorAgent
-            
-            # Capture aria snapshot and screenshot
-            aria_snapshot = await navigator.get_aria_snapshot()
-            screenshot = await navigator.get_screenshot()
 
             # Construct prompt using NavigatorAgent's method
             navigator_prompt = navigator_agent.construct_prompt(

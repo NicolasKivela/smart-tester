@@ -1,6 +1,11 @@
+#"moonshot/kimi-k2-turbo-preview"
+#"moonshot/moonshot-v1-32k"
+moonshot = "moonshot/kimi-k2-0711-preview"
+
+gemini_lite = "gemini/gemini-2.5-flash-lite"
 class AgentConfig:
     class BaseAgent:
-        model = "moonshot/moonshot-v1-32k"
+        model =  "moonshot/moonshot-v1-32k"
         temperature = 0.1
         max_tokens = 32000
         timeout = 3000
@@ -17,7 +22,7 @@ class AgentConfig:
         )
 
     class ScriptGenAgent:
-        model = "gemini/gemini-2.5-flash"
+        model = gemini_lite
         max_tokens = 32768
         system_message = (
             "Your job is to write test test scripts for web applications using robotframework. "
@@ -44,15 +49,17 @@ class AgentConfig:
         )
 
     class LocatorRetrievalAgent:
-        model = "gemini/gemini-2.5-flash"
-        max_tokens = 32000
+        model = moonshot
+        max_tokens = 100000
+        use_aria_snapshot = True
+        use_screenshot = True
         system_message = (
             """You are a senior Test Automation Engineer.
         You will be given scraped locators and the BDD scenarios related to the navigation plan and the current URL.
         Your task is to identify potential locators that could be needed, if one wanted to make test scripts from those scenarios given. Create either xpath and/or css to that locator that could be used in test automation scripts. 
         Use the inputted elements and generate the relevant locators by using the input. Try to create as robust locators as you can, so that test automation scripts do not fail to some locators resulting multiple elements.
-        If some locators are not found, do not make them up yourself, just dont return anything, if you cant find relevant locators.
-        Stop prosessing when the plan has come to an end
+        If some locators are not found, do not make them up yourself, just dont return anything, if you cant find relevant locators. You will be given atleast an aria snapshot of the page, so you can understand it better. Make sure to always include the cookie acceptance button in the output.
+        If there is some dropdowns, select-options make sure to include all options with a clear description. Also if some elements have the same xpath or css make sure to index them correctly.
         Add also the current url to the output
         Return only valid JSON in this format:
         {{
@@ -70,8 +77,8 @@ class AgentConfig:
         )
 
     class NavigatorAgent:
-        model = "gemini/gemini-2.5-flash"
-        max_tokens = 32000
+        model = moonshot
+        max_tokens =100000
         use_aria_snapshot = True
         use_screenshot = True
         record_video = False
@@ -80,11 +87,14 @@ class AgentConfig:
         You will be given all the relevant found locators and the task list. Your job is to decide what parts of the task are already done and what could be the next logical step to complete the task list. Most pages have some cookie acceptance in the first page, so make sure to accpet all cookies before continuing navigation. If you see that there is no cookies questioned ignore this. 
         
         You must also track the progress of the task. If a step in the task list is completed, mark it with "(done)" at the end of the line. Return the updated task list in the "updated_task" field.
-
-        Choose the relevant locator and action to take using that locator. Available actions are 'click', 'fill', 'press_enter', and 'goto'.
+        
+        If you are in the HSL.fi page and using the Journey planners start and destination address fields are in use. Always first click the input field, then fill the search term and choose the corresponding address from the suggestions. If no suggestion are provided press Enter. Also if you need to open some specific route suggestion details, you must use xpath=(//div[@title='Show itinerary details'])[index], where the index tells the serach results number you are interested in.
+        
+        Choose the relevant locator and action to take using that locator. Available actions are 'click', 'fill', 'press_enter', 'wait_loading' and 'goto'.
         - 'click': Clicks the element using the locator.
         - 'fill': Fills the element chosen by the selector with the text given.
         - 'press_enter': Simulates pressing the Enter key on the element.
+        - 'wait_loading': Simulates waiting for example some loading screen or some other loading still happening in the page. Include 'time' parameter with milliseconds to wait.
         - 'goto': Navigates to a specific URL. Use this only when you find yourself stuck on wrong page. This way you can reset your session in a way and start again.
         Dont include any reasoning or other explanations. Only return the json output. 
         Return the information as valid json:
@@ -103,7 +113,7 @@ class AgentConfig:
         )
 
     class BDDTaskAgent:
-        model = "moonshot/moonshot-v1-32k"
+        model = moonshot
         max_tokens = 32000
         system_message = (
             """ 
@@ -126,7 +136,7 @@ class AgentConfig:
         )
 
     class BDDGenerationAgent:
-        model = "moonshot/moonshot-v1-32k"
+        model = moonshot
         max_tokens = 32000
         system_message = (
             "You are a BDD Scenario Generator Agent. Your task is to generate comprehensive Behavior-Driven Development (BDD) scenarios in Gherkin syntax based on the provided feature and its related requirements."
