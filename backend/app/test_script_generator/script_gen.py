@@ -63,8 +63,11 @@ class ScriptGen:
 
                 response = await self.__call_agent(feature,bdd_scenarios,locators,login,url)
 
+                # if error, return http response to router
                 if type(response) is not str:
-                    return {"status_code": response["status_code"], "detail":f"Error response from the model: {response['detail']}"}
+                    # if server error (status code 5xx) try again
+                    if response["status_code"] < 500:
+                        return {"status_code": response["status_code"], "detail":f"Error response from the model: {response['detail']}"}
 
                 self.__no_new_scripts = False
                 # collect and validate keywords
@@ -89,6 +92,11 @@ class ScriptGen:
 
                     # try again
                     response = await self.__call_agent(feature,bdd_scenarios,locators, login,url)
+
+                    # if error, return http response to router
+                    if type(response) is not str:
+                        return {"status_code": response["status_code"], "detail": f"Error response from the model: {response['detail']}"}
+
                     self.__failed_keyword_counter = 0
                     self.temp_collect_test_lines(response)
                     self.collect_keywords(response)
