@@ -1,16 +1,10 @@
 #"moonshot/kimi-k2-turbo-preview"
 #"moonshot/moonshot-v1-32k"
-<<<<<<< HEAD
-<<<<<<< HEAD
 moonshot = "moonshot/kimi-k2-0711-preview"
-=======
-moonshot = "moonshot/moonshot-v1-32k"
->>>>>>> 4429759 (Fix improvements)
-=======
-moonshot = "moonshot/kimi-k2-0711-preview"
->>>>>>> ebf17d1 (Changed models to moonshot and flash-lite combo)
 
 gemini_lite = "gemini/gemini-2.5-flash-lite"
+gemini_flash = "gemini/gemini-2.5-flash"
+
 class AgentConfig:
     class BaseAgent:
         model =  "moonshot/moonshot-v1-32k"
@@ -30,19 +24,11 @@ class AgentConfig:
         )
 
     class ScriptGenAgent:
-<<<<<<< HEAD
-<<<<<<< HEAD
-        model = gemini_lite
-=======
-        model = "moonshot/moonshot-v1-32k"
->>>>>>> 4429759 (Fix improvements)
-=======
-        model = gemini_lite
->>>>>>> ebf17d1 (Changed models to moonshot and flash-lite combo)
+        model = gemini_flash
         max_tokens = 32768
         system_message = (
             "Your job is to write test test scripts for web applications using robotframework. "
-            "Write atleast one test case per scenario. "
+            "Write at least one test case per scenario. "
             "Generate the test scripts based on the given BDD-scenarios. "
             "You are also given login information that can be used if needed. "
             "You are given a list of locators. to use. If a needed locator is not provided, use |@| as placeholder. "
@@ -52,8 +38,8 @@ class AgentConfig:
             "You can use previously generated keywords that you are given, or generate new ones if needed. "
             "Make sure that every line in the BDD scenario test case is a defined keyword. "
             "If testcase starts from the frontpage, verify that frontpage is open. "
+            "To do that use 'Location Should Contain' keyword. Otherwise avoid 'Location Should Contain' keyword. "
             "Do not put any arguments to test cases. "
-            "To do that use 'Location Should Contain' keyword "
             "Include 'Wait Until Page Contains' Before 'Click Element' in keywords. "
             "Include timeout argument if necessary. "
             "You can use selenium library but no other external libraries. "
@@ -67,11 +53,8 @@ class AgentConfig:
     class LocatorRetrievalAgent:
         model = moonshot
         max_tokens = 100000
-<<<<<<< HEAD
         use_aria_snapshot = True
         use_screenshot = True
-=======
->>>>>>> 4429759 (Fix improvements)
         system_message = (
             """You are a senior Test Automation Engineer.
         You will be given scraped locators and the BDD scenarios related to the navigation plan and the current URL.
@@ -97,15 +80,7 @@ class AgentConfig:
 
     class NavigatorAgent:
         model = moonshot
-<<<<<<< HEAD
-<<<<<<< HEAD
         max_tokens =100000
-=======
-        max_tokens = 32000
->>>>>>> 4429759 (Fix improvements)
-=======
-        max_tokens =100000
->>>>>>> ebf17d1 (Changed models to moonshot and flash-lite combo)
         use_aria_snapshot = True
         use_screenshot = True
         record_video = False
