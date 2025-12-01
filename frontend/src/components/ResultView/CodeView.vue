@@ -22,7 +22,7 @@ const parseJSON = (original: string) => {
 // Render & highlight the generated code
 const highlightCode = async () => {
   if (!codeRef.value) return
-  console.log("code view ",props.scripts)
+  console.log('code view ', props.scripts)
   // Parse the JSON
   let code = parseJSON(props.scripts)
 
@@ -33,7 +33,7 @@ const highlightCode = async () => {
   codeRef.value.textContent = code
 
   // Delete any previous highlights
-  delete (codeRef.value as any).dataset.highlighted
+  delete (codeRef.value as HTMLElement).dataset.highlighted
 
   // Highlight the code
   hljs.highlightAll()
@@ -52,7 +52,7 @@ const resetCodeBlock = () => {
   if (!codeRef.value) return
 
   // Delete any previous highlights
-  delete (codeRef.value as any).dataset.highlighted
+  delete (codeRef.value as HTMLElement).dataset.highlighted
 
   // Clear the current code content
   codeRef.value.textContent = ''
@@ -98,11 +98,15 @@ const copyToClipboard = () => {
   <div class="code-view">
     <div class="column">
       <h3 class="title">Generated Code</h3>
-      <button class="secondary" @click="copyToClipboard">Copy</button>
-      <button class="primary" @click="resetSession">Reset Session</button>
+      <button class="secondary" data-testid="code-view-copy-btn" @click="copyToClipboard">
+        Copy
+      </button>
+      <button class="primary" data-testid="code-view-reset-session-btn" @click="resetSession">
+        Reset Session
+      </button>
     </div>
     <pre class="code-block">
-      <code ref="codeRef" class="language-robot"></code>
+      <code ref="codeRef" data-testid="code-view-code-text" class="language-robot"></code>
     </pre>
   </div>
 </template>
