@@ -28,7 +28,7 @@ const handleTests = (tests) => {
 const loaderStart = (message: string) => {
   emit('start-loader', message)
 }
-const loaderStop = (message: string) => {
+const loaderStop = () => {
   emit('stop-loader')
 }
 </script>
