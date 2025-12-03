@@ -115,7 +115,7 @@ const processdata = async () => {
         name: item.name
       }))
     } catch (error) {
-      cosole.log("Empty topics moving to processing requirements")
+      console.log("Empty topics moving to processing requirements")
     }
     try {
       if (topics.value.length === 0){
