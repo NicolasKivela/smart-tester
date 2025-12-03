@@ -20,6 +20,11 @@ const disabledButton = computed(() => {
   return !props.featureId || props.bddScenarios.length === 0 || !locatorsFetched.value
 })
 
+// Function to check if the "Fetch locators" -button should be activated
+const disabledLocButton = computed(() => {
+  return !props.featureId || props.bddScenarios.length === 0
+})
+
 const getLocators = async () => {
   // Start loader
   emit('start-tests-loader', 'Generating locators, please wait...')
@@ -54,15 +59,21 @@ const getLocators = async () => {
 const generateTests = async () => {
   // Start loader
   emit('start-tests-loader', 'Generating tests, please wait...')
-  await createTests(props.featureId)
 
-  const result = await getTests(props.featureId)
+  try{
+    await createTests(props.featureId)
+    const result = await getTests(props.featureId)
 
-  console.log('test scripts', result)
-  emit('updateTests', result)
+    console.log('test scripts', result)
+    emit('updateTests', result)
 
-  // Stop loader
-  emit('stop-tests-loader')
+    // Stop loader
+    emit('stop-tests-loader')
+  }
+  catch (error: any) {
+    emit('stop-tests-loader')
+    throw error
+  }
 }
 
 //TODO: Handle adding new scenarios
@@ -80,6 +91,7 @@ watch(
   () => props.bddScenarios,
   (newValue) => {
     mutatedBddScenarios.value = newValue
+    locatorsFetched.value = false
   },
 )
 </script>
@@ -88,7 +100,12 @@ watch(
   <div class="bdd-view">
     <div class="column">
       <h3 class="title">BDD Scenarios</h3>
-      <button class="primary" data-testid="bdd-view-fetch-locators-btn" @click="getLocators">
+      <button 
+        class="primary" 
+        data-testid="bdd-view-fetch-locators-btn" 
+        @click="getLocators"
+        :disabled="disabledLocButton"
+      >
         Fetch Locators
       </button>
       <button
