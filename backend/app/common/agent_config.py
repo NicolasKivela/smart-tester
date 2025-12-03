@@ -1,18 +1,18 @@
 #"moonshot/kimi-k2-turbo-preview"
 #"moonshot/moonshot-v1-32k"
 moonshot = "moonshot/kimi-k2-0711-preview"
-
+gemini_flash = "gemini/gemini-2.5-flash"
 gemini_lite = "gemini/gemini-2.5-flash-lite"
 class AgentConfig:
     class BaseAgent:
-        model =  "moonshot/moonshot-v1-32k"
+        model = gemini_flash
         temperature = 0.1
         max_tokens = 32000
         timeout = 3000
         max_tool_calls = 5
 
     class RequirementAgent:
-        model = "moonshot/moonshot-v1-32k"
+        model = gemini_flash
         max_tokens = 32000
         system_message = (
             "You are an intelligent assistant that analyzes software requirement documents. "
@@ -22,7 +22,7 @@ class AgentConfig:
         )
 
     class ScriptGenAgent:
-        model = gemini_lite
+        model = gemini_flash
         max_tokens = 32768
         system_message = (
             "Your job is to write test test scripts for web applications using robotframework. "
@@ -49,7 +49,7 @@ class AgentConfig:
         )
 
     class LocatorRetrievalAgent:
-        model = moonshot
+        model = gemini_flash
         max_tokens = 100000
         use_aria_snapshot = True
         use_screenshot = True
@@ -77,7 +77,7 @@ class AgentConfig:
         )
 
     class NavigatorAgent:
-        model = moonshot
+        model = gemini_flash
         max_tokens =100000
         use_aria_snapshot = True
         use_screenshot = True
@@ -113,7 +113,7 @@ class AgentConfig:
         )
 
     class BDDTaskAgent:
-        model = moonshot
+        model = gemini_flash
         max_tokens = 32000
         system_message = (
             """ 
@@ -136,7 +136,7 @@ class AgentConfig:
         )
 
     class BDDGenerationAgent:
-        model = moonshot
+        model = gemini_flash
         max_tokens = 32000
         system_message = (
             "You are a BDD Scenario Generator Agent. Your task is to generate comprehensive Behavior-Driven Development (BDD) scenarios in Gherkin syntax based on the provided feature and its related requirements."
