@@ -3,8 +3,8 @@ from app.common.agent_config import AgentConfig
 
 
 class BDDTaskAgent(BaseAgent):
-    def __init__(self):
-        super().__init__(model=AgentConfig.BDDTaskAgent.model, max_tokens=AgentConfig.BDDTaskAgent.max_tokens)
+    def __init__(self, session_id: str):
+        super().__init__(model=AgentConfig.BDDTaskAgent.model, max_tokens=AgentConfig.BDDTaskAgent.max_tokens, session_id=session_id, agent="bdd_task_agent")
    
     def _get_system_message(self):
         return AgentConfig.BDDTaskAgent.system_message
