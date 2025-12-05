@@ -5,6 +5,7 @@ frontend/dist-ssr
 frontend/coverage
 frontend/cypress/videos/
 frontend/cypress/screenshots/
+frontend/html
 
 # Frontend editor files
 frontend/.vscode/*
