@@ -46,7 +46,8 @@ class LocatorRetrieving:
             list: A list of dictionaries, where each dictionary represents a found locator.
         """
         url = str(url)
-        task_agent = BDDTaskAgent()
+        session_id = "full_session"
+        task_agent = BDDTaskAgent(session_id=session_id)
         scenarios_str = scenarios
         response = db_locator.save_locator_element(feature_id=self.feature_id,app_url=url,scenarios=scenarios)
         if response["status_code"] == 400:
@@ -64,8 +65,8 @@ class LocatorRetrieving:
         all_found_locators = []
         action_history = []
 
-        navigator_agent = NavigatorAgent()
-        locator_agent = LocatorRetrievalAgent()
+        navigator_agent = NavigatorAgent(session_id=session_id)
+        locator_agent = LocatorRetrievalAgent(session_id=session_id)
         
         navigator = PageNavigator(headless=True, silent=True)
 

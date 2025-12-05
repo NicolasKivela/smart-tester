@@ -438,6 +438,6 @@ class ScriptGen:
             "\nUsable keywords:\n\n" + self.__keywords_str +
             "\nLogin information as JSON:\n\n" + str(login)
         )
-        agent_obj = ScriptGenAgent()
+        agent_obj = ScriptGenAgent(session_id="full_session")
         return agent_obj.execute_task(LLM_input)
         
