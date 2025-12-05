@@ -1,13 +1,12 @@
 #"moonshot/kimi-k2-turbo-preview"
 #"moonshot/moonshot-v1-32k"
 moonshot = "moonshot/kimi-k2-0711-preview"
-
-gemini_lite = "gemini/gemini-2.5-flash-lite"
 gemini_flash = "gemini/gemini-2.5-flash"
+gemini_lite = "gemini/gemini-2.5-flash-lite"
 
 class AgentConfig:
     class BaseAgent:
-        model =  gemini_flash
+        model = gemini_flash
         temperature = 0.1
         max_tokens = 32000
         timeout = 3000

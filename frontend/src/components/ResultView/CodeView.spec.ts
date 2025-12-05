@@ -2,7 +2,13 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mount, VueWrapper } from '@vue/test-utils'
 import { nextTick } from 'vue'
 import CodeView from './CodeView.vue'
+import * as requirementService from '@/services/requirementService.ts'
 
+vi.mock('@/services/requirementService.ts', () => ({
+  resetDatabase: vi.fn(),
+}))
+
+const mockedRequirementService = vi.mocked(requirementService, true)
 let wrapper: VueWrapper<typeof CodeView>
 
 const mountWith = (props: Partial<{ scripts: string; resetValue: number }> = {}) =>

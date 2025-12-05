@@ -3,7 +3,7 @@ import { ref, watch, onMounted, nextTick } from 'vue'
 import hljs from 'highlight.js/lib/core'
 import 'highlight.js/styles/github-dark.css'
 import hljsDefineRobot from 'highlightjs-robot'
-
+import {resetDatabase} from '@/services/requirementService.ts'
 hljsDefineRobot(hljs)
 
 const props = defineProps<{ scripts: string; resetValue: number }>()
@@ -59,7 +59,8 @@ const resetCodeBlock = () => {
 }
 
 // Reset the whole session, refreshes the page
-const resetSession = () => {
+const resetSession = async () => {
+  await resetDatabase()
   window.location.reload()
 }
 

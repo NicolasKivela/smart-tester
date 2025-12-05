@@ -12,6 +12,7 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     include: ['src/**/**/*.spec.ts'],
+    reporters: ['default', 'html'],
   },
   resolve: {
     alias: {
