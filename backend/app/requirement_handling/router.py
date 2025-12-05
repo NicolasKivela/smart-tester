@@ -34,6 +34,3 @@ async def process_requirements(url: str = Form(...),
     response = await process.run_pipeline()
     
     return response
-
-
-
