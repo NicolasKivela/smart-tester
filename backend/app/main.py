@@ -4,7 +4,7 @@ from .bdd_scenarios.router import router as bdd_router
 from .test_script_generator.router import router as test_script_gen
 from .requirement_handling.router import router as req_processing
 from .locator_retrieval.router import router as locator_processing
-from app.common.database import init_db
+from app.common.database import init_db, router as database_router
 app = FastAPI()
 
 #Call database init function
@@ -22,6 +22,7 @@ app.add_middleware(
 )
 
 app.include_router(bdd_router)
+app.include_router(database_router)
 app.include_router(test_script_gen)
 app.include_router(req_processing)
 app.include_router(locator_processing)

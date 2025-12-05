@@ -45,4 +45,20 @@ const postSelectedTopic = async (id: number) => {
   }
 }
 
-export { postRequirements, getTopics, postSelectedTopic }
+const resetDatabase = async () => {
+  try {
+    console.log("RESETTING DATABASE")
+    const response = await axios.post(`${API_URL}/database/reset`)
+    console.log(response)
+    if (response.status === 200) {
+      return 'success'
+    } else {
+      return response.data.message
+    }
+  } catch (e) {
+    throw e
+  }
+
+}
+
+export { postRequirements, getTopics, postSelectedTopic,resetDatabase }

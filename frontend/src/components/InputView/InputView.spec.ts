@@ -1,13 +1,22 @@
 import { mount, flushPromises } from '@vue/test-utils'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import InputView from '@/components/InputView/InputView.vue'
-import * as service from '@/services/requirementService'
+import * as requirementService from '@/services/requirementService.ts'
+import * as resultsService from '@/services/resultsService.ts'
 
-vi.mock('@/services/requirementService', () => ({
+// IMPORTANT: use the same path (with .ts) that the component uses
+vi.mock('@/services/requirementService.ts', () => ({
   postRequirements: vi.fn(),
   getTopics: vi.fn(),
   postSelectedTopic: vi.fn(),
 }))
+
+vi.mock('@/services/resultsService.ts', () => ({
+  getBddScenarios: vi.fn(),
+}))
+
+const mockedRequirementService = vi.mocked(requirementService, true)
+const mockedResultsService = vi.mocked(resultsService, true)
 
 describe('InputView', () => {
   beforeEach(() => {
@@ -43,29 +52,36 @@ describe('InputView', () => {
 
   it('clicking Process Data button calls processdata when enabled', async () => {
     const wrapper = mountComponent()
-
     setValidInputs(wrapper)
 
-    await wrapper.vm.$nextTick() // Ensure button state updates
-    vi.mocked(service.postRequirements).mockResolvedValue({})
-    vi.mocked(service.getTopics).mockResolvedValue([])
+    // 1st getTopics -> no topics (so we POST requirements)
+    // 2nd getTopics -> topics returned for popup
+    mockedRequirementService.getTopics
+      .mockResolvedValueOnce({}) // first call => []
+      .mockResolvedValueOnce({
+        1: { id: 1, name: 'Feature A' },
+      })
+
+    mockedRequirementService.postRequirements.mockResolvedValueOnce({})
+
+    await wrapper.vm.$nextTick()
 
     const processBtn = wrapper.get('[data-testid="process-data-btn"]')
     expect((processBtn.element as HTMLButtonElement).disabled).toBe(false)
 
     await processBtn.trigger('click')
-
-    // Wait for async calls to resolve
     await flushPromises()
 
-    expect(service.postRequirements).toHaveBeenCalledWith(expect.any(File), {
-      url: 'http://example.com',
-      username: '',
-      password: '',
-    })
-    expect(service.getTopics).toHaveBeenCalled()
+    expect(mockedRequirementService.postRequirements).toHaveBeenCalledWith(
+      expect.any(File),
+      {
+        url: 'http://example.com',
+        username: '',
+        password: '',
+      },
+    )
+    expect(mockedRequirementService.getTopics).toHaveBeenCalledTimes(2)
     expect(wrapper.vm.showPopup).toBe(true)
-
     expect(processBtn.text()).toContain('Select a different feature')
   })
 
@@ -81,13 +97,11 @@ describe('InputView', () => {
     // Check that button is enabled if inputs are valid
     setValidInputs(wrapper)
     await wrapper.vm.$nextTick()
-
     expect((processBtn.element as HTMLButtonElement).disabled).toBe(false)
 
     // Check that button is disabled if only one input is provided
     wrapper.vm.url = ''
     await wrapper.vm.$nextTick()
-
     expect((processBtn.element as HTMLButtonElement).disabled).toBe(true)
   })
 
@@ -113,9 +127,8 @@ describe('InputView', () => {
 
     expect(wrapper.vm.showError).toBe(true)
     expect(wrapper.vm.errorMessage).toBe('Please enter a valid URL!')
-    expect(service.postRequirements).not.toHaveBeenCalled()
-    expect(service.getTopics).not.toHaveBeenCalled()
-    // URL is reset by component
+    expect(mockedRequirementService.postRequirements).not.toHaveBeenCalled()
+    expect(mockedRequirementService.getTopics).not.toHaveBeenCalled()
     expect(wrapper.vm.url).toBe('')
   })
 
@@ -123,12 +136,16 @@ describe('InputView', () => {
     const wrapper = mountComponent()
     setValidInputs(wrapper)
 
-    service.postRequirements.mockResolvedValue({})
-    service.getTopics.mockResolvedValue([
-      { id: 1, name: 'Feature A' },
-      { id: 2, name: 'Feature B' },
-    ])
-    service.postSelectedTopic.mockResolvedValue({})
+    // First & second getTopics: backend already has topics
+    mockedRequirementService.getTopics.mockResolvedValue({
+      1: { id: 1, name: 'Feature A' },
+      2: { id: 2, name: 'Feature B' },
+    })
+
+    // When continuing, component calls getBddScenarios(selected)
+    // and only calls postSelectedTopic if the response is empty
+    mockedResultsService.getBddScenarios.mockResolvedValueOnce([])
+    mockedRequirementService.postSelectedTopic.mockResolvedValueOnce({})
 
     await wrapper.vm.$nextTick()
     await wrapper.get('[data-testid="process-data-btn"]').trigger('click')
@@ -138,9 +155,8 @@ describe('InputView', () => {
     await wrapper.get('[data-testid="popup-continue-test"]').trigger('click')
     await flushPromises()
 
-    expect(service.postSelectedTopic).toHaveBeenCalledWith(1)
+    expect(mockedRequirementService.postSelectedTopic).toHaveBeenCalledWith(1)
 
-    // Parent emits loader and scenario events
     const startLoaderMsg = wrapper.emitted()['start-loader']?.pop()?.[0]
     expect(startLoaderMsg).toContain('Generating BDD scenarios')
 
@@ -149,7 +165,6 @@ describe('InputView', () => {
     expect(wrapper.emitted()['bddScenariosUpdated']).toBeTruthy()
     expect(wrapper.emitted()['stop-loader']).toBeTruthy()
 
-    // Popup should be closed
     expect(wrapper.vm.showPopup).toBe(false)
   })
 
@@ -157,7 +172,11 @@ describe('InputView', () => {
     const wrapper = mountComponent()
     setValidInputs(wrapper)
 
-    service.postRequirements.mockRejectedValue(new Error('fail'))
+    // First getTopics resolves to empty -> triggers postRequirements
+    mockedRequirementService.getTopics.mockResolvedValueOnce({})
+    mockedRequirementService.postRequirements.mockRejectedValueOnce(
+      new Error('fail'),
+    )
 
     await wrapper.vm.$nextTick()
     await wrapper.get('[data-testid="process-data-btn"]').trigger('click')
@@ -178,8 +197,13 @@ describe('InputView', () => {
     const wrapper = mountComponent()
     setValidInputs(wrapper)
 
-    service.postRequirements.mockResolvedValue({})
-    service.getTopics.mockRejectedValue(new Error('fail'))
+    // 1st getTopics -> empty (so we POST requirements)
+    // 2nd getTopics -> fails (the one that should trigger the GET-error branch)
+    mockedRequirementService.getTopics
+      .mockResolvedValueOnce({}) // first call (before POST)
+      .mockRejectedValueOnce(new Error('fail')) // second call (after POST)
+
+    mockedRequirementService.postRequirements.mockResolvedValueOnce({})
 
     await wrapper.vm.$nextTick()
     await wrapper.get('[data-testid="process-data-btn"]').trigger('click')
@@ -192,7 +216,6 @@ describe('InputView', () => {
     expect(wrapper.vm.errorMessage).toBe('Failed to GET topics!')
     expect(wrapper.vm.showPopup).toBe(false)
 
-    //Check that clicking close button hides error
     const closeBtn = wrapper.get('[data-testid="error-close"]')
     await closeBtn.trigger('click')
 

@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import ErrorPopup from '@/components/InputView/ErrorPopup.vue'
 import ProcessDataPopup from '@/components/InputView/ProcessDataPopup.vue'
 import { postRequirements, getTopics, postSelectedTopic } from '@/services/requirementService.ts'
+import { getBddScenarios } from '@/services/resultsService.ts'
 
 // Emits for loader functionality and bdd scenario updates
 const emit = defineEmits([
@@ -107,10 +108,20 @@ const processdata = async () => {
 
     // Start loader
     emit('start-loader', 'Processing requirements, please wait...')
-
     try {
+      const getResponse = await getTopics()
+      topics.value = Object.values(getResponse).map((item: any) => ({
+        id: item.id,
+        name: item.name
+      }))
+    } catch (error) {
+      console.log("Empty topics moving to processing requirements")
+    }
+    try {
+      if (topics.value.length === 0){
       // Post requirements to backend
       await postRequirements(file.value!, jsonItem)
+      }
     } catch (error) {
       emit('stop-loader')
       errorMessage.value = 'Failed to POST requirements!'
@@ -151,6 +162,7 @@ const resetInputs = () => {
   password.value = ''
   fileInputKey.value++
   dataProcessed.value = false
+  
 }
 
 // "Continue" button pressed in popup
@@ -163,11 +175,14 @@ const handleContinue = async (selected: number) => {
   emit('chosen-feature-updated', selected)
   emit('start-loader', 'Generating BDD scenarios, please wait...')
   emit('reset-code-block')
-
+  
+  
   try {
+    const getResponse = await getBddScenarios(selected)
     // Post the selected topic's id to backend
-    await postSelectedTopic(selected)
-
+    if (getResponse.length === 0){
+      await postSelectedTopic(selected)
+    }
     // Emit the generated scenarios to parent component
     emit('bddScenariosUpdated')
     emit('stop-loader')
