@@ -9,6 +9,7 @@ import json
 import traceback
 
 from app.test_script_generator.script_gen_agent import ScriptGenAgent
+from app.common import agent_config
 
 
 SECTION_MARKER_START_INDEX = 3
@@ -17,6 +18,10 @@ MIN_VARIABLE_SPACE = 4
 MAX_WRONG_WORDS = 2
 MIN_MATCHING_WORD_COUNT_TO_FIX = 3
 
+KEYWORD_HEALING_ENABLED = {
+    "gemini/gemini-2.5-flash",
+    "gemini/gemini-2.5-flash-lite"
+}
 BDD_PREFIXES = {
     "And",
     "Then",
@@ -57,11 +62,12 @@ class ScriptGen:
             for feature in features:
 
                 response = await self.__call_agent(feature,bdd_scenarios,locators,login,url)
-                try: 
-                    if response["status_code"] == 400:
-                        return {"status_code": 400, "detail":f"Error response from the model{e}"} 
-                except:
-                    print("model succesfully responses")
+
+                # if error, return http response to router
+                if type(response) is not str:
+                    # if server error (status code 5xx) try again
+                    if response["status_code"] < 500:
+                        return {"status_code": response["status_code"], "detail":f"Error response from the model: {response['detail']}"}
 
                 self.__no_new_scripts = False
                 # collect and validate keywords
@@ -86,6 +92,11 @@ class ScriptGen:
 
                     # try again
                     response = await self.__call_agent(feature,bdd_scenarios,locators, login,url)
+
+                    # if error, return http response to router
+                    if type(response) is not str:
+                        return {"status_code": response["status_code"], "detail": f"Error response from the model: {response['detail']}"}
+
                     self.__failed_keyword_counter = 0
                     self.temp_collect_test_lines(response)
                     self.collect_keywords(response)
@@ -158,7 +169,9 @@ class ScriptGen:
                 if line not in self.__keywords:
                     is_new_keyword = True
                     new_keyword = line
-                    new_keyword = self.__validate_keyword(new_keyword)
+                    # only do keyword healing if using gemini flash model
+                    if agent_config.AgentConfig.ScriptGenAgent.model in KEYWORD_HEALING_ENABLED:
+                        new_keyword = self.__validate_keyword(new_keyword)
                     self.__keywords.add(new_keyword)
 
                 else:

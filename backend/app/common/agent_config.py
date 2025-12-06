@@ -1,18 +1,20 @@
 #"moonshot/kimi-k2-turbo-preview"
 #"moonshot/moonshot-v1-32k"
 moonshot = "moonshot/kimi-k2-0711-preview"
-
+gemini_flash = "gemini/gemini-2.5-flash"
 gemini_lite = "gemini/gemini-2.5-flash-lite"
+gemini_flash = "gemini/gemini-2.5-flash"
+
 class AgentConfig:
     class BaseAgent:
-        model =  "moonshot/moonshot-v1-32k"
+        model = gemini_flash
         temperature = 0.1
         max_tokens = 32000
         timeout = 3000
         max_tool_calls = 5
 
     class RequirementAgent:
-        model = "moonshot/moonshot-v1-32k"
+        model = gemini_flash
         max_tokens = 32000
         system_message = (
             "You are an intelligent assistant that analyzes software requirement documents. "
@@ -22,11 +24,11 @@ class AgentConfig:
         )
 
     class ScriptGenAgent:
-        model = gemini_lite
+        model = gemini_flash
         max_tokens = 32768
         system_message = (
             "Your job is to write test test scripts for web applications using robotframework. "
-            "Write atleast one test case per scenario. "
+            "Write at least one test case per scenario. "
             "Generate the test scripts based on the given BDD-scenarios. "
             "You are also given login information that can be used if needed. "
             "You are given a list of locators. to use. If a needed locator is not provided, use |@| as placeholder. "
@@ -36,8 +38,8 @@ class AgentConfig:
             "You can use previously generated keywords that you are given, or generate new ones if needed. "
             "Make sure that every line in the BDD scenario test case is a defined keyword. "
             "If testcase starts from the frontpage, verify that frontpage is open. "
+            "To do that use 'Location Should Contain' keyword. Otherwise avoid 'Location Should Contain' keyword. "
             "Do not put any arguments to test cases. "
-            "To do that use 'Location Should Contain' keyword "
             "Include 'Wait Until Page Contains' Before 'Click Element' in keywords. "
             "Include timeout argument if necessary. "
             "You can use selenium library but no other external libraries. "
@@ -49,7 +51,7 @@ class AgentConfig:
         )
 
     class LocatorRetrievalAgent:
-        model = moonshot
+        model = gemini_flash
         max_tokens = 100000
         use_aria_snapshot = True
         use_screenshot = True
@@ -77,7 +79,7 @@ class AgentConfig:
         )
 
     class NavigatorAgent:
-        model = moonshot
+        model = gemini_flash
         max_tokens =100000
         use_aria_snapshot = True
         use_screenshot = True
@@ -113,7 +115,7 @@ class AgentConfig:
         )
 
     class BDDTaskAgent:
-        model = moonshot
+        model = gemini_flash
         max_tokens = 32000
         system_message = (
             """ 
@@ -136,7 +138,7 @@ class AgentConfig:
         )
 
     class BDDGenerationAgent:
-        model = moonshot
+        model = gemini_flash
         max_tokens = 32000
         system_message = (
             "You are a BDD Scenario Generator Agent. Your task is to generate comprehensive Behavior-Driven Development (BDD) scenarios in Gherkin syntax based on the provided feature and its related requirements."
