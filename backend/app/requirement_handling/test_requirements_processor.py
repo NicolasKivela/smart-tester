@@ -9,8 +9,8 @@ The system must support login and password reset.
 The user can purchase tickets and view schedules.
 """
 
-processor = RequirementsProcessor(fake_json_input, fake_text, req_file=None)
-processor.run_pipeline()
+# processor = RequirementsProcessor(fake_json_input, fake_text, req_file=None)
+# processor.run_pipeline()
 
 print("\n=== REQUIREMENTS OUTPUT ===")
 for topic, data in REQUIREMENTS.items():
