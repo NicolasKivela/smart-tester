@@ -1,6 +1,8 @@
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import text
 from sqlmodel import SQLModel, create_engine, Session
+from app.common.logs.logger_config import reset_logs
+from app.common.token_logging.service import reset_token_logs
 import os
 import stat
 DATABASE_URL = "sqlite:///app/database.db"  
@@ -36,10 +38,15 @@ async def reset_database():
             os.remove(db_path)
 
         # Reset logs
-        from app.common.logs.logger_config import reset_logs
-        from app.common.token_logging.service import reset_token_logs
-        reset_logs()
-        reset_token_logs()
+        logs_status = reset_logs()
+        token_logs_status = reset_token_logs()
+
+        if logs_status != 200:
+            raise HTTPException(status_code=400, detail="Failed to reset logs")
+
+        if token_logs_status != 200:
+            raise HTTPException(status_code=400, detail="Failed to reset token logs")
+
 
         init_db()
 
@@ -48,4 +55,5 @@ async def reset_database():
         return {"status": "200", "message": "Database successfully reset"}
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) 
+        print("ERROR:", type(e).__name__, str(e))
+        raise HTTPException(status_code=500, detail=str(e))

@@ -55,7 +55,12 @@ class TokenLoggerService:
 def reset_token_logs():
     """
     Clears the in-memory token logging session data.
+    Returns 200 on success, 400 on error.
     """
-    global SESSION_TOKEN_LOGGERS
-    SESSION_TOKEN_LOGGERS.clear()
-    print("Token logs cleared.")
+    try:
+        SESSION_TOKEN_LOGGERS.clear()
+        print("Token logs cleared.")
+        return 200
+    except Exception as e:
+        print(f"Error clearing token logs: {e}")
+        return 400
