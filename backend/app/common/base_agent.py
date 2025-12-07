@@ -7,6 +7,7 @@ from app.common.token_logging.service import TokenLoggerService, SESSION_TOKEN_L
 import asyncio
 import inspect
 from app.common.agent_config import AgentConfig
+import pprint
 
 class BaseAgent(ABC):
     """
@@ -235,7 +236,7 @@ class BaseAgent(ABC):
                 # Logging input
                 logger.info("LITELLM INPUT")
                 print(completion_kwargs)
-                logger.info(json.dumps(completion_kwargs, indent=2, ensure_ascii=False))
+                logger.info(pprint.pformat(completion_kwargs, indent=2))
 
                 response = await litellm.acompletion(**completion_kwargs)
                 print(response)
@@ -247,7 +248,7 @@ class BaseAgent(ABC):
                 logger.info("LITELLM RESPONSE")
                 try:
                     # If response on LLMResponse-object is turned into JSON
-                    logger.info(json.dumps(response.dict(), indent=2, ensure_ascii=False))
+                    logger.info(pprint.pformat(response, indent=2))
 
                 except Exception:
                     logger.info(str(response))

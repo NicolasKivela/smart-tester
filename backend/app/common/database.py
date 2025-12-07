@@ -35,6 +35,12 @@ async def reset_database():
         if os.path.exists(db_path):
             os.remove(db_path)
 
+        # Reset logs
+        from app.common.logs.logger_config import reset_logs
+        from app.common.token_logging.service import reset_token_logs
+        reset_logs()
+        reset_token_logs()
+
         init_db()
 
         # Fix permissions for Docker

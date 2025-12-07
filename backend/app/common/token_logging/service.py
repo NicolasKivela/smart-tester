@@ -51,3 +51,11 @@ class TokenLoggerService:
                 for agent in self.agent_totals
             }
         }
+
+def reset_token_logs():
+    """
+    Clears the in-memory token logging session data.
+    """
+    global SESSION_TOKEN_LOGGERS
+    SESSION_TOKEN_LOGGERS.clear()
+    print("Token logs cleared.")

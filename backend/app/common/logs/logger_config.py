@@ -23,3 +23,13 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger("ai_agent_logger")
+
+def reset_logs():
+    """
+    Clears the content of the log file.
+    """
+    try:
+        open(LOG_FILE, 'w').close()
+        print(f"Logs cleared: {LOG_FILE}")
+    except Exception as e:
+        print(f"Error clearing logs: {e}")
