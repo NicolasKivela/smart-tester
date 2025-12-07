@@ -16,12 +16,14 @@ async def create_test(feature_id: int):
     process = ScriptGen()
     
     feature_data = db_requirements.get_feature_data_by_id(feature_id)
+    print("feature_data", feature_data)
     if not feature_data:
         return f"Feature not found with id:{feature_id}"
     bdd_scenarios= db_bdd_scenarios.get_all_bdd_scenarios_by_feature(feature_id)
     if not bdd_scenarios:
         return f"Error: No bdd scenarios found for feature_id:{feature_id}"
     locators = db_locator.get_selectors_by_feature(feature_id)
+    print("get locators", locators)
     if not locators:
         return JSONResponse(status_code=400, content={"error": "Locators not found"})
     login = db_requirements.get_credentials()
