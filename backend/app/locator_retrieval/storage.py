@@ -116,7 +116,17 @@ class db_locator():
                     .join(LocatorItem.locator)                     
                     .where(LocatorElements.feature_id == feature_id)
                 )
-                return session.exec(stmt).all()
+                selectors = session.exec(stmt).all()
+                output = []
+                for s in selectors:
+                    s_output = {
+                    "css": s.css,
+                    "xpath": s.xpath,
+                    "description": s.locator_item.description,
+                    "page_url": s.locator_item.page_url,
+                    }
+                    output.append(s_output)
+                return output
         except Exception as e:
             return {"status_code":400, "message": "Error fetching locator selectors"}
 
