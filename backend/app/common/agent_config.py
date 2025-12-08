@@ -59,6 +59,7 @@ class AgentConfig:
             "Include all Test cases and keywords in a single file and do not utilize a .resource file. "
             "Only answer with code. Use BDD format. "
             "Make the result in order: settings, variables test cases, keywords"
+            "If you are doing tests for HSL.fi page, eventhough you might be given multiple accept cookies buttons, use exactly this xpath for the accept cookies button: xpath=//button[contains(@class, 'hslfi-cb__button-primary')]"
         )
 
     class LocatorRetrievalAgent:
