@@ -3,8 +3,8 @@ from app.common.agent_config import AgentConfig
 
 
 class NavigatorAgent(BaseAgent):
-    def __init__(self):
-        super().__init__(model=AgentConfig.NavigatorAgent.model, max_tokens=AgentConfig.NavigatorAgent.max_tokens)
+    def __init__(self, session_id: str):
+        super().__init__(model=AgentConfig.NavigatorAgent.model, max_tokens=AgentConfig.NavigatorAgent.max_tokens, session_id=session_id, agent="navigator_agent")
         self.use_aria_snapshot = getattr(AgentConfig.NavigatorAgent, 'use_aria_snapshot', True)
         self.use_screenshot = getattr(AgentConfig.NavigatorAgent, 'use_screenshot', False)
     

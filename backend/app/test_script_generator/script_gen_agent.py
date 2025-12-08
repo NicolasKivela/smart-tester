@@ -11,9 +11,9 @@ from app.common.agent_config import AgentConfig
 
 class ScriptGenAgent(BaseAgent):
 
-    def __init__(self):
+    def __init__(self, session_id: str):
         # increased max tokens for script generation
-        super().__init__(model=AgentConfig.ScriptGenAgent.model, max_tokens=AgentConfig.ScriptGenAgent.max_tokens)
+        super().__init__(model=AgentConfig.ScriptGenAgent.model, max_tokens=AgentConfig.ScriptGenAgent.max_tokens, session_id=session_id, agent="script_gen_agent")
 
     def _get_system_message(self):
         return AgentConfig.ScriptGenAgent.system_message

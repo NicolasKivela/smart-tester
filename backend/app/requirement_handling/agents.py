@@ -4,9 +4,11 @@ from app.common.agent_config import AgentConfig
 import json, re
 
 class RequirementAgent(BaseAgent):
-    def __init__(self):
-        super().__init__(model=AgentConfig.RequirementAgent.model, max_tokens=AgentConfig.RequirementAgent.max_tokens)
-
+    def __init__(self,  session_id: str):
+        super().__init__(model=AgentConfig.RequirementAgent.model,
+                        max_tokens=AgentConfig.RequirementAgent.max_tokens,
+                        session_id=session_id, agent="requirement_agent")
+        
     def _get_system_message(self) -> str:
         return AgentConfig.RequirementAgent.system_message
 

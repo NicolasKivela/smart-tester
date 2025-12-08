@@ -48,8 +48,9 @@ async def generate_bdd_scenarios_logic(item_id: int) -> list[BDDScenario]:
     """
     feature_data = db_requirements.get_feature_data_by_id(item_id)
 
-    agent = BddGenerationAgent()
-
+    session_id = "full_session"
+    agent = BddGenerationAgent(session_id=session_id)
+    
     # Construct the user message for the agent
     user_message = f"Feature: {feature_data.name}\nRequirements:\n{feature_data.requirements}"
 

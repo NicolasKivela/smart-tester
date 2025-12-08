@@ -3,8 +3,8 @@ from app.common.agent_config import AgentConfig
 
 
 class LocatorRetrievalAgent(BaseAgent):
-    def __init__(self):
-        super().__init__(model=AgentConfig.LocatorRetrievalAgent.model, max_tokens=AgentConfig.LocatorRetrievalAgent.max_tokens)
+    def __init__(self, session_id: str):
+        super().__init__(model=AgentConfig.LocatorRetrievalAgent.model, max_tokens=AgentConfig.LocatorRetrievalAgent.max_tokens, session_id=session_id, agent="locator_retrieval_agent")
         self.use_aria_snapshot = getattr(AgentConfig.LocatorRetrievalAgent, 'use_aria_snapshot', True)
         self.use_screenshot = getattr(AgentConfig.LocatorRetrievalAgent, 'use_screenshot', False)
 

@@ -2,9 +2,12 @@ import litellm
 import json
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Callable
+from app.common.logs.logger_config import logger
+from app.common.token_logging.service import TokenLoggerService, SESSION_TOKEN_LOGGERS
 import asyncio
 import inspect
 from app.common.agent_config import AgentConfig
+import pprint
 
 class BaseAgent(ABC):
     """
@@ -21,6 +24,8 @@ class BaseAgent(ABC):
     """
     def __init__(
         self,
+        session_id: str,
+        agent: str,
         model: str = AgentConfig.BaseAgent.model, 
         temperature: float = AgentConfig.BaseAgent.temperature,
         max_tokens: int = AgentConfig.BaseAgent.max_tokens,
@@ -32,7 +37,17 @@ class BaseAgent(ABC):
         self.max_tokens = max_tokens
         self.timeout = timeout
         self.max_tool_calls = max_tool_calls
+        self.agent = agent
+        
+        # Initialize token logger ONCE per session
+        if session_id not in SESSION_TOKEN_LOGGERS:
+            SESSION_TOKEN_LOGGERS[session_id] = TokenLoggerService(session_id)
+
+        self.token_logger = SESSION_TOKEN_LOGGERS[session_id]
+        self.session_id = session_id
         self.api_call_counter = 0
+
+
 
     @abstractmethod
     def _get_system_message(self) -> str:
@@ -218,12 +233,38 @@ class BaseAgent(ABC):
                 completion_kwargs["tool_choice"] = "auto"
 
             try:
-                # Use dictionary unpacking to pass the conditional arguments.
+                # Logging input
+                logger.info("LITELLM INPUT")
+                print(completion_kwargs)
+                logger.info(pprint.pformat(completion_kwargs, indent=2))
+
                 response = await litellm.acompletion(**completion_kwargs)
                 print(response)
                 self.api_call_counter += 1
+                
                 print("API calls made",self.api_call_counter)
+
+                # Logging output
+                logger.info("LITELLM RESPONSE")
+                try:
+                    # If response on LLMResponse-object is turned into JSON
+                    logger.info(pprint.pformat(response, indent=2))
+
+                except Exception:
+                    logger.info(str(response))
+
+                # log token usage
+                usage = getattr(response, "usage", None)
+                if usage:
+                    print("entry loading")
+                    entry = self.token_logger.log_api_call(usage, completion_kwargs, agent=self.agent)
+                    print("Entry",entry)
+                    logger.info(f"TOKENS USED: {entry}")
+
+                logger.info(f"API CALL COUNT: {self.api_call_counter}")
+
             except Exception as e:
+                logger.error(f"Error in LLM call: {e}")
                 return {"status_code": 400,"detail":f"Error: Failed to get a response from the model. Details: {e}"}
             
             if not response.choices or not response.choices[0].message:
@@ -240,4 +281,7 @@ class BaseAgent(ABC):
             )
             
             messages.extend(tool_outputs)
+
         return "Error: Agent could not complete the task within the maximum number of tool calls."
+    
+

@@ -1,3 +1,4 @@
+import uuid
 import time
 from .agents import RequirementAgent
 from .schemas import Credentials,UrlCredentials
@@ -5,9 +6,9 @@ from .storage import db_requirements
 import re
 
 class RequirementsProcessor:
-    agent = RequirementAgent()
-
-    def __init__(self,url,credentials_input: UrlCredentials, text, req_file):
+    def __init__(self,url,credentials_input: UrlCredentials, text, req_file,session_id:str):
+        self.session_id = session_id
+        self.agent = RequirementAgent(session_id=session_id)
         self.credentials_input = credentials_input
         self.req_file = req_file
         self.text = text

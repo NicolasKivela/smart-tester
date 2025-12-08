@@ -8,6 +8,7 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules  # prevent overwriting node_modules
+
     environment:
       - NODE_ENV=development
       - CHOKIDAR_USEPOLLING=true

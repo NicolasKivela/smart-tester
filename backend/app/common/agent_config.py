@@ -3,7 +3,6 @@
 moonshot = "moonshot/kimi-k2-0711-preview"
 gemini_flash = "gemini/gemini-2.5-flash"
 gemini_lite = "gemini/gemini-2.5-flash-lite"
-gemini_flash = "gemini/gemini-2.5-flash"
 
 class AgentConfig:
     class BaseAgent:
