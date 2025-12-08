@@ -1,3 +1,9 @@
+"""This file contains the configurations of each agent in the system. Configurations include the models each agent is using (note:.env file must contain the API key for the configure model proivider)
+   Here one can also configure the system prompts, temperature and max_tokens(how many tokens can the model generate in one call). All agents inherit the BaseAgents configurations like the timeout and max_tool_calls.
+   Currently none of the agents use the tool calling capabilities natively. 
+   Locator retrieval system contains variable for max iterations to prevent the loop for running forever. Sometimes the system can get stuck so this way it is cut atleast when the max iterations is filled. It is recommended to use the 15 iterations since longer tasks are really hard for LLM's.
+"""
+
 #"moonshot/kimi-k2-turbo-preview"
 #"moonshot/moonshot-v1-32k"
 moonshot = "moonshot/kimi-k2-0711-preview"
@@ -5,6 +11,10 @@ gemini_flash = "gemini/gemini-2.5-flash"
 gemini_lite = "gemini/gemini-2.5-flash-lite"
 
 class AgentConfig:
+
+    #Locator retreival systems max iterations. Iteration can be considered as a step on navigation, keeping in mind that sometimes a step can fail.
+    LOCATOR_SYSTEM_MAX_ITERATIONS = 15
+
     class BaseAgent:
         model = gemini_flash
         temperature = 0.1
@@ -37,7 +47,8 @@ class AgentConfig:
             "You can use previously generated keywords that you are given, or generate new ones if needed. "
             "Make sure that every line in the BDD scenario test case is a defined keyword. "
             "If testcase starts from the frontpage, verify that frontpage is open. "
-            "To do that use 'Location Should Contain' keyword. Otherwise avoid 'Location Should Contain' keyword. "
+            "To do that use 'Wait Until Location Contains' keyword with suitable timeout. Also whenever test scripts transitions to some other page/view or start a search or any other actions that might need some loading."
+            "Then Remember to add some waiting."
             "Do not put any arguments to test cases. "
             "Include 'Wait Until Page Contains' Before 'Click Element' in keywords. "
             "Include timeout argument if necessary. "
@@ -47,6 +58,7 @@ class AgentConfig:
             "Include all Test cases and keywords in a single file and do not utilize a .resource file. "
             "Only answer with code. Use BDD format. "
             "Make the result in order: settings, variables test cases, keywords"
+            "If you are doing tests for HSL.fi page, eventhough you might be given multiple accept cookies buttons, use exactly this xpath for the accept cookies button: xpath=//button[contains(@class, 'hslfi-cb__button-primary')]"
         )
 
     class LocatorRetrievalAgent:
