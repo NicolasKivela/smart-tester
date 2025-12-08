@@ -78,7 +78,7 @@ class LocatorRetrieving:
             await navigator.start(record_video_dir=record_video_dir)
             await navigator.goto(url)
 
-            for i in range(15): # Max 15 iterations
+            for i in range(AgentConfig.LOCATOR_SYSTEM_MAX_ITERATIONS): # Max iterations configured in agent_config.py
                 
                 # DEBUG PRINT
                 print(f"still going: iteration {i}")

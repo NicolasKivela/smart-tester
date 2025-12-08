@@ -1,3 +1,9 @@
+"""This file contains the configurations of each agent in the system. Configurations include the models each agent is using (note:.env file must contain the API key for the configure model proivider)
+   Here one can also configure the system prompts, temperature and max_tokens(how many tokens can the model generate in one call). All agents inherit the BaseAgents configurations like the timeout and max_tool_calls.
+   Currently none of the agents use the tool calling capabilities natively. 
+   Locator retrieval system contains variable for max iterations to prevent the loop for running forever. Sometimes the system can get stuck so this way it is cut atleast when the max iterations is filled. It is recommended to use the 15 iterations since longer tasks are really hard for LLM's.
+"""
+
 #"moonshot/kimi-k2-turbo-preview"
 #"moonshot/moonshot-v1-32k"
 moonshot = "moonshot/kimi-k2-0711-preview"
@@ -6,6 +12,10 @@ gemini_lite = "gemini/gemini-2.5-flash-lite"
 gemini_flash = "gemini/gemini-2.5-flash"
 
 class AgentConfig:
+
+    #Locator retreival systems max iterations. Iteration can be considered as a step on navigation, keeping in mind that sometimes a step can fail.
+    LOCATOR_SYSTEM_MAX_ITERATIONS = 15
+
     class BaseAgent:
         model = gemini_flash
         temperature = 0.1
