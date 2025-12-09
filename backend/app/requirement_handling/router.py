@@ -1,6 +1,18 @@
+"""
+API routes for handling requirement documents.
 
+This module exposes endpoints to:
+- Fetch stored requirement topics and related data from the database.
+- Upload and process a new requirement document (plus optional URL credentials),
+  run it through the requirements processing pipeline, and store the results.
+
+The actual storage and processing logic is delegated to:
+- `db_requirements` for database interactions.
+- `RequirementsProcessor` for LLM-based analysis and extraction.
+- `extract_text` for parsing raw file content into plain text.
+"""
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException,Form, UploadFile, File
+from fastapi import APIRouter,Form, UploadFile, File
 from app.common.database import get_session
 from .schemas import UrlCredentials
 import json
@@ -25,12 +37,10 @@ async def process_requirements(url: str = Form(...),
         username=username,
         password=password
     )
-    print("ROUTEER CALLED PROCESSING")
     content = await file.read()
     text = extract_text(content,file.filename)
     session_id = "full_session"
     process=RequirementsProcessor(url,credentials, text, req_file=file.filename, session_id=session_id)
-    print(process)
     response = await process.run_pipeline()
     
     return response

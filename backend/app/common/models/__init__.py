@@ -1,3 +1,7 @@
+"""
+Docstring for backend.app.common.models
+In Models the database tables and their relations are being implemented
+"""
 from .req_model import Requirement, Feature, RequirementDocument
 from .bdd_model import BDDScenario
 from .locator_model import LocatorElements

@@ -1,3 +1,16 @@
+"""
+Requirement processing pipeline.
+
+This module defines the `RequirementsProcessor` class, which coordinates:
+- Topic detection from a requirement document.
+- Topic-based summaries.
+- Extraction of testable requirements per topic.
+- Persistence of processed data (credentials, requirement document, topics,
+  summaries, and extracted requirements) via `db_requirements`.
+
+It uses an LLM-driven `RequirementAgent` to analyze the raw text and
+`db_requirements` as the storage layer.
+"""
 import uuid
 import time
 from .agents import RequirementAgent

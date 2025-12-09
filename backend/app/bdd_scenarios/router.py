@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import Session, select
+from sqlmodel import Session
 from app.common.database import get_session
 from app.common.models.bdd_model import BDDScenario
 from app.bdd_scenarios.schemas import BDD_Scenario

@@ -1,5 +1,6 @@
 import litellm
 import json
+import logging
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Callable
 from app.common.logs.logger_config import logger
@@ -46,6 +47,11 @@ class BaseAgent(ABC):
         self.token_logger = SESSION_TOKEN_LOGGERS[session_id]
         self.session_id = session_id
         self.api_call_counter = 0
+
+        lite_logger = logging.getLogger("LiteLLM")
+
+        # Option 1: completely silence LiteLLM
+        lite_logger.disabled = True
 
 
 
@@ -235,11 +241,9 @@ class BaseAgent(ABC):
             try:
                 # Logging input
                 logger.info("LITELLM INPUT")
-                print(completion_kwargs)
                 logger.info(pprint.pformat(completion_kwargs, indent=2))
 
                 response = await litellm.acompletion(**completion_kwargs)
-                print(response)
                 self.api_call_counter += 1
                 
                 print("API calls made",self.api_call_counter)
@@ -256,9 +260,7 @@ class BaseAgent(ABC):
                 # log token usage
                 usage = getattr(response, "usage", None)
                 if usage:
-                    print("entry loading")
                     entry = self.token_logger.log_api_call(usage, completion_kwargs, agent=self.agent)
-                    print("Entry",entry)
                     logger.info(f"TOKENS USED: {entry}")
 
                 logger.info(f"API CALL COUNT: {self.api_call_counter}")
