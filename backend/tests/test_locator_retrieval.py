@@ -2,9 +2,12 @@ import pytest
 from unittest.mock import patch
 from app.locator_retrieval.agents.navigator_agent import NavigatorAgent
 
+#Session id
+session_id = "full_session"
+
 def test_construct_prompt_basic():
     """Test the basic prompt construction with task, history, and locators."""
-    agent = NavigatorAgent()
+    agent = NavigatorAgent(session_id=session_id)
     task = "Test task"
     history = ["Step 1", "Step 2"]
     locators = {"locator1": "css_selector"}
@@ -21,7 +24,7 @@ def test_construct_prompt_basic():
 
 def test_construct_prompt_with_aria_snapshot():
     """Test the prompt construction when aria_snapshot is provided."""
-    agent = NavigatorAgent()
+    agent = NavigatorAgent(session_id=session_id)
     agent.use_aria_snapshot = True
     task = "Test task"
     history = []
@@ -36,7 +39,7 @@ def test_construct_prompt_with_aria_snapshot():
 @patch('app.locator_retrieval.agents.navigator_agent.AgentConfig.NavigatorAgent.use_aria_snapshot', False)
 def test_construct_prompt_without_aria_snapshot_when_disabled():
     """Test that the aria_snapshot is not included when use_aria_snapshot is False."""
-    agent = NavigatorAgent()
+    agent = NavigatorAgent(session_id=session_id)
     task = "Test task"
     history = []
     locators = {}
@@ -48,7 +51,7 @@ def test_construct_prompt_without_aria_snapshot_when_disabled():
 
 def test_construct_prompt_with_screenshot():
     """Test the prompt construction when a screenshot is provided and enabled."""
-    agent = NavigatorAgent()
+    agent = NavigatorAgent(session_id=session_id)
     agent.use_screenshot = True
     task = "Test task"
     history = []
@@ -66,7 +69,7 @@ def test_construct_prompt_with_screenshot():
 @patch('app.locator_retrieval.agents.navigator_agent.AgentConfig.NavigatorAgent.use_screenshot', False)
 def test_construct_prompt_without_screenshot_when_disabled():
     """Test that the screenshot is not included when use_screenshot is False."""
-    agent = NavigatorAgent()
+    agent = NavigatorAgent(session_id=session_id)
     task = "Test task"
     history = []
     locators = {}
