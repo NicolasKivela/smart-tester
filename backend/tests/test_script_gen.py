@@ -58,10 +58,10 @@ class ScriptGenTests(unittest.TestCase):
         expected_warnings = (
             "Successful keyword validation\n"
             "Successful keyword validation\n"
-            "Waring: Failed keyword: The this should fail\n"
+            "Warning: Failed keyword: The this should fail\n"
             "Warning: variable duplicate value mismatch: ${LOC_ROUTE}\n"
-            "Waring: '***' not found\n"
-            "Waring: unexpected text after: '***': <\n"
+            "Warning: '***' not found\n"
+            "Warning: unexpected text after: '***': <\n"
             "Warning: 1 failed keywords\n"
         )
 
@@ -128,17 +128,17 @@ class ScriptGenTests(unittest.TestCase):
             "Warning: No test cases found.\n"
             "Warning: No keywords found.\n"
             "Warning: No variables found.\n"
-            "Waring: '***' not found\n"
-            "Waring: '***' not found\n"
-            "Waring: '***' not found\n"
-            "Waring: '***' not found\n"
-            "Waring: '***' not found\n"
-            "Waring: '***' not found\n"
-            "Waring: '***' not found\n"
-            "Waring: '***' not found\n"
-            "Waring: '***' not found\n"
-            "Waring: '***' not found\n"
-            "Waring: unexpected text after: '***': J\n"
+            "Warning: '***' not found\n"
+            "Warning: '***' not found\n"
+            "Warning: '***' not found\n"
+            "Warning: '***' not found\n"
+            "Warning: '***' not found\n"
+            "Warning: '***' not found\n"
+            "Warning: '***' not found\n"
+            "Warning: '***' not found\n"
+            "Warning: '***' not found\n"
+            "Warning: '***' not found\n"
+            "Warning: unexpected text after: '***': J\n"
         )
 
         self.assertEqual(result, json.loads(obj.assemble_result())[RESULT_KEY])

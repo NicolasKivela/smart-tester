@@ -1,8 +1,18 @@
 """
-Author: Kalle Hirvijärvi - kalle.hirvijarvi@tuni.fi
+Author: Kalle Hirvijärvi
 
 Generates robotframework test scripts from BDD-scenarios, login information
 and locators by calling LLM agent. Assembles all outputs to a single string
+
+---------------------------------------------------------------------------
+Note future developer:
+
+This component is designed to handle generating tests for multiple features at once.
+However, this is not allowed currently by the GUI. The function that calls the API can be
+modified to make multiple smaller API calls and all the responses will be parsed and
+combined into a single script. Implementing this would require modifying the parameters for
+generate script() and __call_agent(). If this is implemented, all input information would
+be inside "features" parameter so that useless input is not being sent to LLM API.
 """
 
 import json
@@ -14,6 +24,7 @@ from app.common import agent_config
 
 SECTION_MARKER_START_INDEX = 3
 MIN_VARIABLE_SPACE = 4
+ACCEPTABLE_KEYWORD_FAILURE_RATE = 0.2
 
 MAX_WRONG_WORDS = 2
 MIN_MATCHING_WORD_COUNT_TO_FIX = 3
@@ -36,32 +47,32 @@ class ScriptGen:
         Constructor: initializes internal attributes
         Used to temporarily hold LLM output during execution
         """
-        self.__keywords = set()   # used to detect duplicates
-        self.__keywords_str = ""  # used to store in order
-        self.__variables = {}
-        self.scripts = []
+        self.__keywords = set()     # used to detect duplicates
+        self.__keywords_str = ""    # used to store in order
+        self.__variables = {}       # used to detect duplicates
+        self.scripts = []           # stores the API responses as a whole
 
-        self.__variable_offset = 0      # used to align variable values in final output
-        self.__no_new_scripts = False   # is set to false if API call is made
-        self.__temp_case_lines = set()
+        self.__variable_offset = 0          # used to align variable values in final output
+        self.__temp_case_lines = set()      # used for keyword self healing
         self.__failed_keyword_counter = 0
 
         self.__init_keywords()
 
-    async def generate_script(self, features, bdd_scenarios, locators, login, url):
+    async def generate_script(self, features, bdd_scenarios, locators, url):
         """
         Top level public method - returns robotframework test scripts from
         BDD-scenarios and locators by calling LLM agent
-        :param features: Feature data as: list[Processed_req]
+        :param features: Feature description as: list[Processed_req] (List with single element)
+        :param bdd_scenarios: test scenarios to base test scripts on
         :param locators: target locators as JSON
+        :param url: address for target website
         :return: result: robotframework test script as JSON object
         """
         try:
-            self.__no_new_scripts = True
 
             for feature in features:
 
-                response = await self.__call_agent(feature,bdd_scenarios,locators,login,url)
+                response = await self.__call_agent(feature,bdd_scenarios,locators,url)
 
                 # if error, return http response to router
                 if type(response) is not str:
@@ -69,7 +80,6 @@ class ScriptGen:
                     if response["status_code"] < 500:
                         return {"status_code": response["status_code"], "detail":f"Error response from the model: {response['detail']}"}
 
-                self.__no_new_scripts = False
                 # collect and validate keywords
                 self.__failed_keyword_counter = 0
                 self.temp_collect_test_lines(response)
@@ -81,7 +91,7 @@ class ScriptGen:
                 if number_of_case_lines == 0:   # avoid dividing by 0
                     number_of_case_lines = 1
                     self.__failed_keyword_counter += 1
-                if float(self.__failed_keyword_counter) / float(number_of_case_lines) > 0.5:
+                if float(self.__failed_keyword_counter) / float(number_of_case_lines) > ACCEPTABLE_KEYWORD_FAILURE_RATE:
                     # initialize attributes
                     self.__temp_case_lines.clear()
                     self.scripts.clear()
@@ -91,7 +101,7 @@ class ScriptGen:
                     print("Warning: generation failed, trying again...")
 
                     # try again
-                    response = await self.__call_agent(feature,bdd_scenarios,locators, login,url)
+                    response = await self.__call_agent(feature,bdd_scenarios,locators,url)
 
                     # if error, return http response to router
                     if type(response) is not str:
@@ -106,7 +116,7 @@ class ScriptGen:
                 self.collect_variables(response)
                 self.scripts.append(response)
 
-            return {"status_code":200,"detail":"Scripts generated succesfully","body":self.assemble_result()}
+            return {"status_code":200,"detail":"Scripts generated successfully","body":self.assemble_result()}
 
         except Exception as e:
             tb = traceback.format_exc()
@@ -224,7 +234,7 @@ class ScriptGen:
             matching_words.append(num_of_matching_words)
 
         if not matching_words:
-            print("Waring: Failed keyword:", keyword)
+            print("Warning: Failed keyword:", keyword)
             self.__failed_keyword_counter += 1
             return keyword
 
@@ -243,7 +253,7 @@ class ScriptGen:
                 # recursively tries again (only once) by adding "the " at the beginning
                 return  self.__validate_keyword(keyword, True)
             # if validation fails:
-            print("Waring: Failed keyword:", keyword, end="")
+            print("Warning: Failed keyword:", keyword, end="")
             self.__failed_keyword_counter += 1
             return keyword
 
@@ -382,10 +392,9 @@ class ScriptGen:
                             break
                             # Print warnings instead of raising exception (for now)
                         case "U":
-                            print("Waring: '***' not found")
+                            print("Warning: '***' not found")
                         case _:
-                            print("Waring: unexpected text after: '***':", phase)
-
+                            print("Warning: unexpected text after: '***':", phase)
 
         # build final result
 
@@ -411,19 +420,17 @@ class ScriptGen:
         if self.__failed_keyword_counter > 0:
             print("Warning:", self.__failed_keyword_counter, "failed keywords")
 
-        if self.__no_new_scripts:
-            return None
-        else:
-            # convert to JSON
-            return json.dumps({"test_script": result})
+        # convert to JSON
+        return json.dumps({"test_script": result})
 
 
-    def __call_agent(self, feature, bdd_scenarios, locators, login, url):
+    def __call_agent(self, feature, bdd_scenarios, locators, url):
         """
         Assembles input to a single string and calls LLM-agent
-        :param feature: Feature as Processed_Req
-        :param locators: All known locators as JSON
-        :param login: known valid login information as JSON
+        :param feature: Feature description string
+        :param bdd_scenarios: test scenarios to base test scripts on
+        :param locators: target locators as JSON
+        :param url: address for target website
         :return: LLM response as string
         """
         feature_desc = str(feature.summary)
@@ -435,8 +442,7 @@ class ScriptGen:
             "\nURL tested web application:\n\n" + str_url +
             "\nBDD scenarios:\n\n" + scenarios +
             "\nLocators as JSON:\n\n" + locators_str +
-            "\nUsable keywords:\n\n" + self.__keywords_str +
-            "\nLogin information as JSON:\n\n" + str(login)
+            "\nUsable keywords:\n\n" + self.__keywords_str
         )
         agent_obj = ScriptGenAgent(session_id="full_session")
         return agent_obj.execute_task(LLM_input)
