@@ -1,3 +1,10 @@
+## Automatic keyword self healing
+Wrong keyword is detected by comparing keyword names to lines in test cases. Keyword self-healing works
+by trying to match a keyword to lines in test cases with most number of matching words. The system is only allowed
+to add two new words and there has to be at least 3 matching words in the beginning. If this criteria isn't met, the
+keyword remains unmodified and causes "Failed keyword" warning. The keyword self-healing is only enabled for
+specific Gemini models.
+
 ## Script generator warnings
 
 The script generator will print warnings if there's some problem with parsing the API response but will try to keep going so that issues with the code can be fixed manually Here's all possible warnings, their cause and associated behavior:
