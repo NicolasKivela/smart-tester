@@ -5,7 +5,7 @@ Generates robotframework test scripts from BDD-scenarios, login information
 and locators by calling LLM agent. Assembles all outputs to a single string
 
 ---------------------------------------------------------------------------
-Note future developer:
+Note for future developer:
 
 This component is designed to handle generating tests for multiple features at once.
 However, this is not allowed currently by the GUI. The function that calls the API can be
