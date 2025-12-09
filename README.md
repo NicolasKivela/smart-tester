@@ -30,13 +30,13 @@ The service should now be running locally.
 - Switching models and model providers requires the provideres API key in the .env file. See .env.example for more information about this.
 
 ---
-##**Contribution rules**
+## Contribution rules
 - Pick or create an issue
 - Create new branch following the branching rules
 - When finished, create a pull request to the **dev** branch
 - **main** branch will be secured for now
+---
 #  Branching Rules
-
 ## Main Branches
 - main → production-ready
 - dev → integration branch for new work
