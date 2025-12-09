@@ -1,3 +1,16 @@
+"""
+Database setup and maintenance utilities.
+
+This module configures the SQLModel engine for the local SQLite database,
+provides a FastAPI dependency for obtaining a database session, and exposes
+an endpoint for resetting the database.
+
+The `/database/reset` endpoint:
+- Drops the existing SQLite database file (if it exists).
+- Recreates all tables defined in the SQLModel metadata.
+- Resets application logs and token logs.
+- Fixes file permissions (useful in Docker environments).
+"""
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import text
 from sqlmodel import SQLModel, create_engine, Session
@@ -7,7 +20,7 @@ import os
 import stat
 DATABASE_URL = "sqlite:///app/database.db"  
 
-engine = create_engine(DATABASE_URL, echo=True)  
+engine = create_engine(DATABASE_URL, echo=False)  
 
 def init_db():
     from app.common.models.req_model import Feature, RequirementDocument,Requirement

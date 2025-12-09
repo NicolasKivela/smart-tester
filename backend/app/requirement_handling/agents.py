@@ -1,3 +1,16 @@
+"""
+Agents for analyzing requirement documents and extracting structured information.
+
+This module defines the `RequirementAgent`, a specialized LLM-powered agent
+for working with requirement documents. It provides utilities to:
+
+- Detect high-level feature topics from a raw requirements text.
+- Extract functional or testable requirements for a given topic.
+- Summarize all information related to a specific topic.
+
+The agent is built on top of `BaseAgent` and uses configuration values
+from `AgentConfig.RequirementAgent`.
+"""
 from app.common.base_agent import BaseAgent
 from app.requirement_handling.schemas import Extracted_Reqs
 from app.common.agent_config import AgentConfig
