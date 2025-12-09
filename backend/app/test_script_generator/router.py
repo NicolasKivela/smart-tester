@@ -21,13 +21,8 @@ async def create_test(feature_id: int):
     locators = db_locator.get_selectors_by_feature(feature_id)
     if not locators:
         return JSONResponse(status_code=400, content={"error": "Locators not found"})
-
-    login = db_requirements.get_credentials()
-    login = {"username": "username","password": "password"}
-    
     url = feature_data.app_url 
-    result = await process.generate_script([feature_data],bdd_scenarios,locators, login, url)
-
+    result = await process.generate_script([feature_data],bdd_scenarios,locators, url)
     if result["status_code"] != 200:
         raise HTTPException(status_code=result["status_code"], detail=result["detail"])
     response = db_test_scripts.save_testscript(feature_id=feature_id,
