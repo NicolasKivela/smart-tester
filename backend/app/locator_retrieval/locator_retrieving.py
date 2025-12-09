@@ -2,12 +2,12 @@ import asyncio
 import json
 from .page_navigator import PageNavigator
 from app.locator_retrieval.agents import BDDTaskAgent,LocatorRetrievalAgent,NavigatorAgent
-from app.requirement_handling.storage import REQUIREMENTS, URL_DATA, db_requirements
+from app.requirement_handling.storage import db_requirements
 from app.bdd_scenarios.storage import db_bdd_scenarios
 from app.bdd_scenarios.storage import db_requirements
-from app.requirement_handling.schemas import UrlCredentials, Credentials
+from app.requirement_handling.schemas import Credentials
 from app.common.models.locator_model import Status
-from app.locator_retrieval.storage import LOCATORS,db_locator
+from app.locator_retrieval.storage import db_locator
 from app.common.agent_config import AgentConfig
 import os
 
@@ -26,7 +26,6 @@ class LocatorRetrieving:
             scenarios = db_bdd_scenarios.get_all_bdd_scenarios_by_feature(self.feature_id)
             user_creds = db_requirements.get_credentials()
             locators = asyncio.create_task(self.locator_retrieving_service(scenarios,url,user_creds))
-            #locators = self.locator_retrieving_service(scenarios,url_data)
             return {"status_code":200,"message":f"Locator process started,{locators}"}
         except Exception as e:
             print(f"Unexpected {e=}, {type(e)=}")
@@ -53,12 +52,8 @@ class LocatorRetrieving:
         if response["status_code"] == 400:
             return response
         locator_element_id = response["body"]
-        #scenarios_str = "\n".join(scenarios)
         task_prompt = f"URL: {url}\n\nBDD Scenarios:\n{scenarios_str}"
         task = await task_agent.execute_task(task_prompt)
-        
-        # DEBUG, remove later
-        print(task)
 
         self.task = task
         current_task = task

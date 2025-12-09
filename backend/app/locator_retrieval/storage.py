@@ -5,8 +5,6 @@ from app.common.database import engine
 from app.common.models import LocatorElements,BDDScenario
 from app.common.models.locator_model import LocatorItem,LocatorSelector,Status
 LOCATORS = {}
-#TODO: Add locator database CRUD logic here
-
 class db_locator():
     def save_locator_element(feature_id, app_url,scenarios):
         try:
@@ -90,7 +88,6 @@ class db_locator():
             return {"status_code":400, "message": "Error when fetching locator element"}
     def save_locator_item(locator_element_id,description,page_url,task,css,xpath):
         try:
-            print("locator element id",locator_element_id)
             with Session(engine) as session:
                 new_locator_item = LocatorItem(locator_id=locator_element_id,description=description,page_url=page_url,task=task)
                 session.add(new_locator_item)

@@ -1,4 +1,17 @@
-# temporary storage
+"""
+Temporary storage and database helpers for requirements data.
+
+This module provides a thin data-access layer around the requirements-related
+SQLModel models, plus some in-memory caching for convenience:
+
+- Fetch single or all features (with related requirements).
+- Save requirement documents and create processed requirement records.
+- Add BDD scenarios linked to a feature.
+- Store and retrieve URL/credentials data in a simple in-memory cache.
+
+The main entry point is the `db_requirements` utility class, which exposes
+static methods for these operations.
+"""
 import logging
 from sqlmodel import Session, select
 from sqlalchemy.orm import selectinload
