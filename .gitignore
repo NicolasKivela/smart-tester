@@ -5,18 +5,20 @@ frontend/dist-ssr
 frontend/coverage
 frontend/cypress/videos/
 frontend/cypress/screenshots/
+frontend/html
 
 # Frontend editor files
 frontend/.vscode/*
 !frontend/.vscode/extensions.json
 frontend/.idea
 
+# Virtual environment
+venv
 
 # Poetry
 #backend/poetry.lock   # ❌ OPTIONAL: keep if you want always latest; ✅ RECOMMENDED: commit for reproducible builds
 __pycache__/
 *.pyc
-
 
 # Docker
 *.log
@@ -36,3 +38,14 @@ docker-compose.override.yml  # local-only config
 # OS files
 .DS_Store
 Thumbs.db
+
+
+
+# Ignore Requirement handeling outputs
+/backend/app/requirement_handling/output/
+
+# Ignore Playwright failure screenshots
+backend/*.png
+
+#database
+backend/**/*.db
