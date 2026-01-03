@@ -1,5 +1,18 @@
 # smart-tester
-Smart testing tool for software engineering project course.
+
+An LLM-driven test automation tool for UI and System Testing, that converts software requirements into executable test suites.
+
+- Extracts functional features from raw documentation via LLMs.
+
+- Automatically transforms features into Gherkin/BDD scenarios.
+
+- Uses LLMs to dynamically identify and extract UI elements from target URLs.
+
+- Generates Robot Framework test scripts.
+
+- Integrated token usage monitoring for LLM operations.
+
+https://github.com/user-attachments/assets/4896c8cf-d96f-49a6-90a0-97c4e6fa8703
 
 
 ##  Getting Started
@@ -23,7 +36,7 @@ The service should now be running locally.
 
 - API documentation: http://localhost:8010/docs
 - App frontend: http://localhost:5174
-- To reset the database, at the moment you have to manually remove the database file (located at backend/app/database.db). After removing database the app should be restarted with docker
+- To reset the database, press "Reset Session" button in the UI.
 
 ## Configurations
 - backend/app/common/agent_config.py has configurations for all the different AI agents in our system including their system messages
